@@ -30,9 +30,9 @@ const rawData = [
             25.3
         ],
         base: {
-            s: 115,
-            v: 820,
-            e: 128,
+            s: 125,
+            v: 880,
+            e: 112,
             t: "29 輛 (3.3%)"
         },
         tire_history: [
@@ -96,8 +96,8 @@ const rawData = [
         ],
         base: {
             s: 36,
-            v: 248,
-            e: 34,
+            v: 287,
+            e: 42,
             t: "15 輛 (5.2%)"
         },
         tire_history: [
@@ -160,9 +160,9 @@ const rawData = [
             24.7
         ],
         base: {
-            s: 14,
-            v: 88,
-            e: 2,
+            s: 13,
+            v: 92,
+            e: 25,
             t: "2 輛 (2.2%)"
         },
         tire_history: [
@@ -224,9 +224,9 @@ const rawData = [
             24.3
         ],
         base: {
-            s: 7,
+            s: 8,
             v: 50,
-            e: 2,
+            e: 25,
             t: "2 輛 (4%)"
         },
         tire_history: [
@@ -289,9 +289,9 @@ const rawData = [
             23.9
         ],
         base: {
-            s: 32,
-            v: 259,
-            e: 59,
+            s: 33,
+            v: 261,
+            e: 9,
             t: "1 輛 (0.4%)"
         },
         tire_history: [
@@ -354,8 +354,8 @@ const rawData = [
             23.5
         ],
         base: {
-            s: 11,
-            v: 80,
+            s: 9,
+            v: 60,
             e: 10,
             t: "0 輛 (0%)"
         },
@@ -419,8 +419,8 @@ const rawData = [
             23.1
         ],
         base: {
-            s: 20,
-            v: 142,
+            s: 22,
+            v: 152,
             e: 32,
             t: "2 輛 (1.3%)"
         },
@@ -483,9 +483,9 @@ const rawData = [
             22.7
         ],
         base: {
-            s: 39,
+            s: 45,
             v: 268,
-            e: 39,
+            e: 38,
             t: "19 輛 (7.1%)"
         },
         tire_history: [
@@ -547,7 +547,7 @@ const rawData = [
             22.3
         ],
         base: {
-            s: 8,
+            s: 6,
             v: 40,
             e: 14,
             t: "6 輛 (15%)"
@@ -612,9 +612,9 @@ const rawData = [
             22.7
         ],
         base: {
-            s: 5,
+            s: 4,
             v: 24,
-            e: 1,
+            e: 12,
             t: "0 輛 (0%)"
         },
         tire_history: [
@@ -651,6 +651,24 @@ const rawData = [
         sim_c_var: "0.0%"
     }
 ];
+
+const globalAverages = {
+    overall_feb: 91.84,
+    total_s: 301,
+    total_v: 2114,
+    total_e: 319,
+    station: 96,
+    appearance: 88,
+    functionality: 97,
+    overall: 92.51,
+    operability: 96.64,
+    m_fleet: 109961,
+    m_accident: 329,
+    m_records: 96708,
+    maintenance_rate: 90.49,
+    ems: 90.49,
+    m_var: "0.00%"
+};
 
 // 子選單邏輯
 const statsMetrics = [

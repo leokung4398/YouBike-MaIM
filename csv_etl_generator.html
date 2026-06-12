@@ -161,7 +161,10 @@
             'eval': [
                 { key: 'station', keywords: ['場站妥善度', '妥善'], isNum: true },
                 { key: 'appearance', keywords: ['外觀', '自行車外觀與重要標示'], isNum: true },
-                { key: 'functionality', keywords: ['車輛功能與配件', '功能', '機能'], isNum: true }
+                { key: 'functionality', keywords: ['車輛功能與配件', '功能', '機能'], isNum: true },
+                { key: 'base_s', keywords: ['施測站數'], isNum: true, exact: true },
+                { key: 'base_v', keywords: ['施測車輛數', '施測車輛總數'], isNum: true, exact: true },
+                { key: 'base_e', keywords: ['2.0E施測車數', '2.0E車輛數', '2.0E'], isNum: true }
             ],
             'operability': [
                 { key: 'operability', keywords: ['在站車輛可動率', '可動率'], isNum: true }
@@ -185,8 +188,15 @@
         }
 
         // --- 處理 CSV 資料合併 ---
+        let oldGlobalAverages = { overall: 91.84 };
+
         let uploadedFilesCount = 0;
         let globalTargetMonth = ""; // 儲存動態抓取到的最新月份 (例如 2026/05)
+        
+        // 全域平均也必須強制降級：將舊的 4 月總體分 91.84 備份到 overall_feb 供下月對比
+        let exportedAverages = {
+            overall_feb: oldGlobalAverages.overall
+        };
 
         function handleCSV(file, type) {
             Papa.parse(file, {
@@ -200,6 +210,7 @@
                     let targetMonth = "";
                     let isHeaderParsed = false; // 1. 新增標題判斷旗標
                     let cityColMap = {}; 
+                    let avgColIdx = -1;
                     let parsedCount = 0;
                     let isNextRowTirePercent = false; // 跨行讀取胎壓百分比旗標
                     let mappingRules = fieldMapping[type] || [];
@@ -221,6 +232,11 @@
                                     let colName = row[colIdx];
                                     if (!colName) continue;
                                     
+                                    if (colName.includes('總計') || colName.includes('總數') || colName.includes('平均')) {
+                                        avgColIdx = colIdx;
+                                    }
+                                    
+                                    
                                     let matchedRegion = null;
                                     for (let r in regionAliases) {
                                         if (regionAliases[r].includes(colName) || regionAliases[r].some(alias => colName.includes(alias))) {
@@ -236,6 +252,9 @@
                             } else if (val0 === targetMonth && isHeaderParsed) {
                                 // 攔截「第二個」相同月份字串作為綜合分數
                                 if (type === 'eval') {
+                                    if (avgColIdx !== -1 && row[avgColIdx]) {
+                                        exportedAverages['overall'] = parseNumberValue(row[avgColIdx]);
+                                    }
                                     for (let colIdx in cityColMap) {
                                         let region = cityColMap[colIdx];
                                         let targetData = finalOutputData.find(d => d.region === region);
@@ -307,9 +326,16 @@
                             // 一般指標對齊擷取
                             let matchedRule = null;
                             for (let rule of mappingRules) {
-                                if (rule.keywords.some(kw => val0.includes(kw))) {
-                                    matchedRule = rule;
-                                    break;
+                                if (rule.exact) {
+                                    if (rule.keywords.some(kw => val0 === kw)) {
+                                        matchedRule = rule;
+                                        break;
+                                    }
+                                } else {
+                                    if (rule.keywords.some(kw => val0.includes(kw))) {
+                                        matchedRule = rule;
+                                        break;
+                                    }
                                 }
                             }
 
@@ -324,8 +350,19 @@
                                         let finalVal = matchedRule.isNum ? parseNumberValue(rawVal) : String(rawVal).trim();
                                         
                                         // 嚴格分流：只准覆寫當月主數字 (如 overall)，絕對不碰 _feb 欄位
-                                        targetData[matchedRule.key] = finalVal;
-                                        updatedFields[region][matchedRule.key] = true;
+                                        if (matchedRule.key === 'base_s') {
+                                            targetData.base.s = finalVal;
+                                            updatedFields[region]['base_s'] = true;
+                                        } else if (matchedRule.key === 'base_v') {
+                                            targetData.base.v = finalVal;
+                                            updatedFields[region]['base_v'] = true;
+                                        } else if (matchedRule.key === 'base_e') {
+                                            targetData.base.e = finalVal;
+                                            updatedFields[region]['base_e'] = true;
+                                        } else {
+                                            targetData[matchedRule.key] = finalVal;
+                                            updatedFields[region][matchedRule.key] = true;
+                                        }
 
                                         if (matchedRule.key === 'maintenance_rate') {
                                             targetData.ems = finalVal;
@@ -333,6 +370,21 @@
                                         }
 
                                         parsedCount++;
+                                    }
+                                }
+
+                                if (avgColIdx !== -1 && row[avgColIdx] !== undefined && row[avgColIdx] !== "") {
+                                    let rawStr = String(row[avgColIdx]).trim();
+                                    let parsedIntAvg = parseInt(rawStr.replace(/[^0-9.]/g, ''), 10);
+                                    let avgVal = matchedRule.isNum ? parseNumberValue(rawStr) : rawStr;
+                                    
+                                    if (matchedRule.key === 'base_s') exportedAverages['total_s'] = isNaN(parsedIntAvg) ? 0 : parsedIntAvg;
+                                    else if (matchedRule.key === 'base_v') exportedAverages['total_v'] = isNaN(parsedIntAvg) ? 0 : parsedIntAvg;
+                                    else if (matchedRule.key === 'base_e') exportedAverages['total_e'] = isNaN(parsedIntAvg) ? 0 : parsedIntAvg;
+                                    else exportedAverages[matchedRule.key] = avgVal;
+
+                                    if (matchedRule.key === 'maintenance_rate') {
+                                        exportedAverages['ems'] = avgVal;
                                     }
                                 }
                             }
@@ -443,7 +495,7 @@ if (typeof rawData !== 'undefined' && rawData.length > 0) {
             }
 
             // 【守住 UI 禁忌，產出乾淨格式】: 移除 JSON 雙引號，完全匹配手寫風格
-            let outputString = `// js/data.js\n\n// 核心資料庫 (透過 CSV ETL 自動生成)\nconst rawData = ${JSON.stringify(finalOutputData, null, 4).replace(/"([^"]+)":/g, '$1:')};\n\n// 子選單邏輯\nconst statsMetrics = [\n    { key: 'station', label: '場站妥善度' },\n    { key: 'appearance', label: '自行車外觀與標示' },\n    { key: 'functionality', label: '自行車重要機能' },\n    { key: 'ems', label: '一級維護率(EMS)' },\n    { key: 'operability', label: '可動率' }\n];\n\nconst maintenanceMetrics = [\n    { key: 'm_accident', label: '事故車輛數' },\n    { key: 'm_records', label: '一級維護記錄數' },\n    { key: 'maintenance_rate', label: '一級維護率' },\n    { key: 'm_info', label: '一級維護補充說明' }\n];\n\n// 模擬體驗數據\nconst simulationMetrics = [\n    { key: 'sim_a', label: 'A級' },\n    { key: 'sim_b', label: 'B級' },\n    { key: 'sim_c', label: 'C級' }\n];\n${domInjectionScript}`;
+            let outputString = `// js/data.js\n\n// 核心資料庫 (透過 CSV ETL 自動生成)\nconst rawData = ${JSON.stringify(finalOutputData, null, 4).replace(/"([^"]+)":/g, '$1:')};\n\nconst globalAverages = ${JSON.stringify(exportedAverages, null, 4).replace(/"([^"]+)":/g, '$1:')};\n\n// 子選單邏輯\nconst statsMetrics = [\n    { key: 'station', label: '場站妥善度' },\n    { key: 'appearance', label: '自行車外觀與標示' },\n    { key: 'functionality', label: '自行車重要機能' },\n    { key: 'ems', label: '一級維護率(EMS)' },\n    { key: 'operability', label: '可動率' }\n];\n\nconst maintenanceMetrics = [\n    { key: 'm_accident', label: '事故車輛數' },\n    { key: 'm_records', label: '一級維護記錄數' },\n    { key: 'maintenance_rate', label: '一級維護率' },\n    { key: 'm_info', label: '一級維護補充說明' }\n];\n\n// 模擬體驗數據\nconst simulationMetrics = [\n    { key: 'sim_a', label: 'A級' },\n    { key: 'sim_b', label: 'B級' },\n    { key: 'sim_c', label: 'C級' }\n];\n${domInjectionScript}`;
 
             const blob = new Blob([outputString], { type: 'application/javascript' });
             const url = URL.createObjectURL(blob);

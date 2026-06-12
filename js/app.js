@@ -33,6 +33,79 @@ document.addEventListener('DOMContentLoaded', () => {
     if (elCurrFleet) elCurrFleet.innerText = currYearMonthStr;
     let elCurrSim = document.getElementById('dyn-curr-sim-month');
     if (elCurrSim) elCurrSim.innerText = currYearMonthStr;
+
+    // 🌟 實作「全台動態總計與平均計算器」與「全台綜合分數卡片」
+    if (typeof rawData !== 'undefined' && rawData.length > 0) {
+        let totalS = typeof globalAverages !== 'undefined' && globalAverages.total_s ? globalAverages.total_s : 0;
+        let totalV = typeof globalAverages !== 'undefined' && globalAverages.total_v ? globalAverages.total_v : 0;
+        let totalE = typeof globalAverages !== 'undefined' && globalAverages.total_e ? globalAverages.total_e : 0;
+        let totalTire = 0;
+        let sumOverall = 0;
+        let sumOverallFeb = 0;
+        
+        rawData.forEach(r => {
+            if (typeof globalAverages === 'undefined' || !globalAverages.total_s) {
+                if (r.base) {
+                    totalS += r.base.s || 0;
+                    totalV += r.base.v || 0;
+                    totalE += r.base.e || 0;
+                }
+            }
+            totalTire += r.tire_count || 0;
+            sumOverall += r.overall || 0;
+            sumOverallFeb += r.overall_feb || 0;
+        });
+        
+        let tireRatio = totalV > 0 ? ((totalTire / totalV) * 100).toFixed(1) : 0;
+        
+        // 如果有 globalAverages.overall 優先使用，否則自己算平均
+        let avgOverall = typeof globalAverages !== 'undefined' && globalAverages.overall ? globalAverages.overall : (sumOverall / rawData.length).toFixed(2);
+        
+        // 完全移除簡單除法，強制讀取 ETL 降級備份的全台總分 (官方 91.84)
+        let avgOverallFeb = typeof globalAverages !== 'undefined' && globalAverages.overall_feb ? globalAverages.overall_feb : 91.84;
+        
+        let diff = (avgOverall - avgOverallFeb).toFixed(2);
+        let diffIcon = diff > 0 ? '▲' : (diff < 0 ? '▼' : '-');
+        let diffColor = diff > 0 ? 'var(--safe-color)' : (diff < 0 ? 'var(--danger-color)' : 'var(--text-secondary)');
+
+        let gridContainer = document.querySelector('.floating-base-metrics .base-metrics-grid');
+        if (gridContainer) {
+            // 更新既有四個格子數值
+            let cards = gridContainer.querySelectorAll('.metric-card:not(.highlight-card) .metric-value');
+            if (cards.length >= 4) {
+                cards[0].innerText = `${totalS} 站`;
+                cards[1].innerText = `${totalV.toLocaleString()} 輛`;
+                cards[2].innerText = `${totalE.toLocaleString()} 輛`;
+                cards[3].innerText = `${totalTire.toLocaleString()} 輛 (${tireRatio}%)`;
+            }
+            
+            // 插入全台平均綜合分數 Banner
+            if (!document.getElementById('dyn-overall-avg-card')) {
+                let avgCard = document.createElement('div');
+                avgCard.id = 'dyn-overall-avg-card';
+                avgCard.className = 'metric-card highlight-card';
+                avgCard.style.gridColumn = '1 / -1';
+                avgCard.style.display = 'flex';
+                avgCard.style.flexDirection = 'column';
+                avgCard.style.alignItems = 'center';
+                avgCard.style.justifyContent = 'center';
+                avgCard.style.padding = '12px';
+                avgCard.style.border = '2px solid var(--accent-color)';
+                avgCard.style.backgroundColor = 'rgba(14, 165, 233, 0.05)';
+                avgCard.style.marginBottom = '5px';
+                
+                avgCard.innerHTML = `
+                    <div style="font-size: 13px; font-weight: bold; color: var(--text-secondary); margin-bottom: 5px;">全台綜合平均分數</div>
+                    <div style="font-size: 26px; font-weight: bold; color: var(--accent-color); line-height: 1;">${avgOverall} <span style="font-size:14px;">分</span></div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">
+                        ${prevMonthStr}: ${avgOverallFeb} 
+                        <span style="color: ${diffColor}; margin-left: 4px; font-size: 11px;">${diffIcon} ${Math.abs(diff)}</span>
+                    </div>
+                `;
+                gridContainer.insertBefore(avgCard, gridContainer.firstChild);
+            }
+        }
+    }
 });
 
 let isLightMode = true; 
@@ -621,6 +694,18 @@ function updateBarChart() {
     }, true);
 }
 
+// 🌟 智慧型標紅機制：定義正向指標白名單
+const positiveMetrics = ['overall', 'station', 'appearance', 'functionality', 'ems', 'operability', 'maintenance_rate'];
+
+function getRedStyle(key, val) {
+    if (typeof globalAverages !== 'undefined' && positiveMetrics.includes(key) && globalAverages[key] !== undefined) {
+        if (val < globalAverages[key]) {
+            return 'color: var(--danger-color); font-weight: bold;';
+        }
+    }
+    return '';
+}
+
 // 🌟 核心：透過 HTML 標籤點擊呼叫對應按鈕，並加入高級雙層微排版
 function renderDataView() {
     const container = document.getElementById('data-view-container');
@@ -645,18 +730,29 @@ function renderDataView() {
             let diffIcon = diff > 0 ? '▲' : (diff < 0 ? '▼' : '-');
             let diffColor = diff > 0 ? 'var(--safe-color)' : (diff < 0 ? 'var(--danger-color)' : 'var(--text-secondary)');
 
+            // 智慧標紅
+            let overallStyle = getRedStyle('overall', r.overall) || 'color:var(--accent-color); font-weight:bold;';
+            let stStyle = getRedStyle('station', r.station);
+            let apStyle = getRedStyle('appearance', r.appearance);
+            let fuStyle = getRedStyle('functionality', r.functionality);
+            let emStyle = getRedStyle('ems', r.ems);
+            let opStyle = getRedStyle('operability', r.operability);
+
             // 🌟 3. 補完「綜合分數 (overall)」雙月對比副數字渲染
             html += `${trStr(r)}<td style="font-weight:bold;color:var(--text-primary);">${r.region}</td>
                 <td ${cl('overall')}>
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.3;">
-                        <span style="color:var(--accent-color); font-weight:bold; font-size: 14px;">${r.overall} 分</span>
+                        <span style="${overallStyle} font-size: 14px;">${r.overall} 分</span>
                         <div class="sub-value" style="font-size: 0.85em; color: var(--text-secondary); margin-top: 4px;">
                             ${prevMonthStr}: ${r.overall_feb} <span style="color: ${diffColor}; margin-left: 2px; font-size: 10px;">${diffIcon}</span>
                         </div>
                     </div>
                 </td>
-                <td ${cl('station')}>${r.station} 分</td><td ${cl('appearance')}>${r.appearance} 分</td>
-                <td ${cl('functionality')}>${r.functionality} 分</td><td ${cl('ems')}>${r.ems}%</td><td ${cl('operability')}>${r.operability}%</td></tr>`;
+                <td ${cl('station')}><span style="${stStyle}">${r.station} 分</span></td>
+                <td ${cl('appearance')}><span style="${apStyle}">${r.appearance} 分</span></td>
+                <td ${cl('functionality')}><span style="${fuStyle}">${r.functionality} 分</span></td>
+                <td ${cl('ems')}><span style="${emStyle}">${r.ems}%</span></td>
+                <td ${cl('operability')}><span style="${opStyle}">${r.operability}%</span></td></tr>`;
         });
     } else if (currentMode === 'tire') {
         html += `<th>縣市</th>`;
@@ -684,9 +780,10 @@ function renderDataView() {
             let variance = (r.operability - r.operability_feb).toFixed(2);
             let varianceSign = variance > 0 ? '+' : '';
             let varColor = variance < 0 ? 'var(--danger-color)' : 'var(--safe-color)';
+            let opStyle = getRedStyle('operability', r.operability) || 'color:var(--accent-color);font-weight:bold;';
             html += `${trStr(r)}<td style="font-weight:bold;color:var(--text-primary);">${r.region}</td>
                 <td>${r.operability_feb.toFixed(2)}%</td>
-                <td style="color:var(--accent-color);font-weight:bold;">${r.operability.toFixed(2)}%</td>
+                <td><span style="${opStyle}">${r.operability.toFixed(2)}%</span></td>
                 <td style="color:${varColor};font-weight:bold;">${varianceSign}${variance}%</td></tr>`;
         });
     } else if (currentMode === 'maintenance') {
@@ -695,9 +792,10 @@ function renderDataView() {
         rawData.forEach(r => {
             let cl = (key) => currentMaintenanceMetric === key ? 'class="active-col"' : '';
             let varColor = r.m_var.includes('-') ? 'var(--danger-color)' : 'var(--safe-color)';
+            let mrStyle = getRedStyle('maintenance_rate', r.maintenance_rate) || 'color:var(--accent-color);font-weight:bold;';
             html += `${trStr(r)}<td style="font-weight:bold;color:var(--text-primary);">${r.region}</td>
                 <td>${r.m_fleet.toLocaleString()}</td><td ${cl('m_accident')} style="color:var(--danger-color);font-weight:bold;">${r.m_accident}</td>
-                <td ${cl('m_records')}>${r.m_records.toLocaleString()}</td><td ${cl('maintenance_rate')} style="color:var(--accent-color);font-weight:bold;">${r.maintenance_rate}%</td>
+                <td ${cl('m_records')}>${r.m_records.toLocaleString()}</td><td ${cl('maintenance_rate')}><span style="${mrStyle}">${r.maintenance_rate}%</span></td>
                 <td style="color:${varColor};font-weight:bold;">${r.m_var}</td></tr>`;
         });
     } else if (currentMode === 'simulation') {
