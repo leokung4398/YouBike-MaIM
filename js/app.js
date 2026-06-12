@@ -718,6 +718,17 @@ function renderDataView() {
     
     html += '<table class="clean-data-table"><thead><tr>';
     const trStr = (r) => `<tr id="row-${r.region}" onclick="highlightRow('${r.region}')" ondblclick="handleRowDblClick('${r.region}')">`;
+    const getRegionCol = (r) => {
+        let bs = r.base ? r.base.s : 0;
+        let bv = r.base ? r.base.v : 0;
+        let be = r.base ? r.base.e : 0;
+        return `<td style="font-weight:bold;color:var(--text-primary);">
+            <div class="region-swap-container">
+                <span class="swap-default">${r.region} <span style="font-size:10px; opacity:0.6; margin-left:4px;">ⓘ</span></span>
+                <span class="swap-hover">站:${bs}<br>車:${bv}<br>E:${be}</span>
+            </div>
+        </td>`;
+    };
 
     if (currentMode === 'stats') {
         let th = (key, label) => `<th class="${currentStatsMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')">${label}</th>`;
@@ -739,7 +750,7 @@ function renderDataView() {
             let opStyle = getRedStyle('operability', r.operability);
 
             // 🌟 3. 補完「綜合分數 (overall)」雙月對比副數字渲染
-            html += `${trStr(r)}<td style="font-weight:bold;color:var(--text-primary);">${r.region}</td>
+            html += `${trStr(r)}${getRegionCol(r)}
                 <td ${cl('overall')}>
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.3;">
                         <span style="${overallStyle} font-size: 14px;">${r.overall} 分</span>
@@ -768,7 +779,7 @@ function renderDataView() {
             let hist = r.tire_history.slice(-6); // 嚴格擷取最後 6 個月
             let v4m = hist[5];
             let v4mColor = v4m > 4.5 ? 'var(--danger-color)' : (v4m > 4.0 ? 'var(--warning-color)' : 'var(--safe-color)');
-            html += `${trStr(r)}<td style="font-weight:bold;color:var(--text-primary);">${r.region}</td>
+            html += `${trStr(r)}${getRegionCol(r)}
                 <td>${hist[0]}%</td><td>${hist[1]}%</td><td>${hist[2]}%</td>
                 <td>${hist[3]}%</td><td>${hist[4]}%</td>
                 <td style="color:${v4mColor};font-weight:bold;">${v4m}% (${r.tire_count}輛)</td></tr>`;
@@ -781,7 +792,7 @@ function renderDataView() {
             let varianceSign = variance > 0 ? '+' : '';
             let varColor = variance < 0 ? 'var(--danger-color)' : 'var(--safe-color)';
             let opStyle = getRedStyle('operability', r.operability) || 'color:var(--accent-color);font-weight:bold;';
-            html += `${trStr(r)}<td style="font-weight:bold;color:var(--text-primary);">${r.region}</td>
+            html += `${trStr(r)}${getRegionCol(r)}
                 <td>${r.operability_feb.toFixed(2)}%</td>
                 <td><span style="${opStyle}">${r.operability.toFixed(2)}%</span></td>
                 <td style="color:${varColor};font-weight:bold;">${varianceSign}${variance}%</td></tr>`;
@@ -793,9 +804,23 @@ function renderDataView() {
             let cl = (key) => currentMaintenanceMetric === key ? 'class="active-col"' : '';
             let varColor = r.m_var.includes('-') ? 'var(--danger-color)' : 'var(--safe-color)';
             let mrStyle = getRedStyle('maintenance_rate', r.maintenance_rate) || 'color:var(--accent-color);font-weight:bold;';
-            html += `${trStr(r)}<td style="font-weight:bold;color:var(--text-primary);">${r.region}</td>
+            
+            // 🌟 實裝一級維護率雙月數據對比
+            let mrDiff = (r.maintenance_rate - r.maintenance_rate_feb).toFixed(2);
+            let mrDiffIcon = mrDiff > 0 ? '▲' : (mrDiff < 0 ? '▼' : '-');
+            let mrDiffColor = mrDiff > 0 ? 'var(--safe-color)' : (mrDiff < 0 ? 'var(--danger-color)' : 'var(--text-secondary)');
+            
+            html += `${trStr(r)}${getRegionCol(r)}
                 <td>${r.m_fleet.toLocaleString()}</td><td ${cl('m_accident')} style="color:var(--danger-color);font-weight:bold;">${r.m_accident}</td>
-                <td ${cl('m_records')}>${r.m_records.toLocaleString()}</td><td ${cl('maintenance_rate')}><span style="${mrStyle}">${r.maintenance_rate}%</span></td>
+                <td ${cl('m_records')}>${r.m_records.toLocaleString()}</td>
+                <td ${cl('maintenance_rate')}>
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.3;">
+                        <span style="${mrStyle} font-size: 14px;">${r.maintenance_rate}%</span>
+                        <div class="sub-value" style="font-size: 0.85em; color: var(--text-secondary); margin-top: 4px;">
+                            ${prevMonthStr}: ${r.maintenance_rate_feb}% <span style="color: ${mrDiffColor}; margin-left: 2px; font-size: 10px;">${mrDiffIcon}</span>
+                        </div>
+                    </div>
+                </td>
                 <td style="color:${varColor};font-weight:bold;">${r.m_var}</td></tr>`;
         });
     } else if (currentMode === 'simulation') {
@@ -806,7 +831,7 @@ function renderDataView() {
             let aColor = r.sim_a_ratio > 5.0 ? 'var(--danger-color)' : 'var(--text-primary)';
             let bColor = r.sim_b_ratio > 20.0 ? 'var(--danger-color)' : 'var(--text-primary)';
             let cColor = r.sim_c_ratio > 50.0 ? 'var(--danger-color)' : 'var(--text-primary)';
-            html += `${trStr(r)}<td style="font-weight:bold;color:var(--text-primary);">${r.region}</td>
+            html += `${trStr(r)}${getRegionCol(r)}
                 <td ${cl('sim_a')} style="color:${aColor};font-weight:bold;">${r.sim_a_count} 輛 (${r.sim_a_ratio}%)</td>
                 <td ${cl('sim_b')} style="color:${bColor};font-weight:bold;">${r.sim_b_count} 輛 (${r.sim_b_ratio}%)</td>
                 <td ${cl('sim_c')} style="color:${cColor};font-weight:bold;">${r.sim_c_count} 輛 (${r.sim_c_ratio}%)</td></tr>`;
