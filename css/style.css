@@ -7,9 +7,9 @@
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
     --accent-color: #38bdf8;
-    --danger-color: #f43f5e;
+    --danger-color: #10b981;  /* 台灣股市邏輯：綠色=下降/警示 */
     --warning-color: #f59e0b;
-    --safe-color: #10b981;
+    --safe-color: #ef4444;   /* 台灣股市邏輯：紅色=上升/達標 */
     --border-color: #334155;
     --chart-grid: #1e293b;
     --map-base: #1e293b;
@@ -23,9 +23,9 @@ body.light-mode {
     --text-primary: #0f172a; 
     --text-secondary: #334155; 
     --accent-color: #2563eb;
-    --danger-color: #e11d48;
+    --danger-color: #10b981;  /* 台灣股市邏輯：綠色=下降/警示 */
     --warning-color: #d97706;
-    --safe-color: #059669;
+    --safe-color: #ef4444;   /* 台灣股市邏輯：紅色=上升/達標 */
     --border-color: rgba(148, 163, 184, 0.4);
     --chart-grid: rgba(148, 163, 184, 0.2);
     --map-base: #cbd5e1;
@@ -224,14 +224,10 @@ button.presentation-toggle.active, button.laser-toggle.active {
 }
 
 /* --- 雷射點特效 --- */
-.laser-dot {
-    position: fixed; top: 0; left: 0; width: 16px; height: 16px;
-    background-color: #ff0000; border-radius: 50%; pointer-events: none; z-index: 999999;
-    box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000;
-    opacity: 0; display: none;
-}
-.laser-dot.active { display: block; opacity: 1; }
+/* 🔴 注意：.laser-dot 的完整樣式已移至檔案末尾（銳利化微雕版），
+         此處不做重複定義，避免被舊版覆蓋。 */
 body.laser-active, body.laser-active * { cursor: none !important; }
+
 
 
 /* --- 🌟 數據報表視窗與連動高光 --- */
@@ -278,13 +274,13 @@ body.laser-active, body.laser-active * { cursor: none !important; }
 }
 .clean-data-table tbody tr:last-child td.active-col { border-bottom: 2px solid var(--accent-color) !important; }
 
-/* 🌟 橫列高光 (與右側折線圖連動雙向點擊) */
+/* 🌟 橫列高光 (與右側折線圖連動雙向點擊) —— 棄用紅色，改用天藍加重邊框，決不讓長官誤以為成績差 */
 .clean-data-table tbody tr.row-highlight td {
-    background: rgba(244, 63, 94, 0.15) !important;
-    color: var(--danger-color) !important;
+    background: rgba(56, 189, 248, 0.18) !important;
+    color: var(--text-primary) !important;  /* 文字保持原色，不變紅 */
     font-weight: bold;
-    border-bottom: 2px solid var(--danger-color);
-    border-top: 2px solid var(--danger-color);
+    border-bottom: 2px solid var(--accent-color);
+    border-top: 2px solid var(--accent-color);
     transition: all 0.3s;
 }
 
@@ -667,8 +663,8 @@ body.light-mode kbd {
 }
 .swap-hover {
     display: none;
-    font-size: 11px; /* 使用微型字體確保能塞進原有的行高中 */
-    line-height: 1.3;
+    font-size: 14px; /* 從原來 11px 放大至 14px */
+    line-height: 1.4;
     color: var(--accent-color); /* 採用科技感強調色 */
     font-weight: bold;
     white-space: nowrap;
@@ -684,3 +680,471 @@ body.light-mode kbd {
     from { opacity: 0; transform: translateY(2px); } 
     to { opacity: 1; transform: translateY(0); } 
 }
+
+
+/* ====================================================
+   🔴 雷射筆樣式微雕：縮小銳利化，老舊投影機友善版
+==================================================== */
+.laser-dot {
+    position: fixed; top: 0; left: 0;
+    width: 10px;  /* 從 16px 縮小至 10px */
+    height: 10px;
+    background-color: #ff0000;
+    border-radius: 50%;
+    pointer-events: none; z-index: 999999;
+    /* box-shadow 模糊半徑大幅縮減，外光圈更銳利，顏色不透明度提高 */
+    box-shadow:
+        0 0 0   1px rgba(255, 0, 0, 1.0),   /* 硬邊框：最銳利 */
+        0 0 4px 2px rgba(255, 0, 0, 0.95),  /* 緊縮內光圈 */
+        0 0 8px 3px rgba(255, 0, 0, 0.7);   /* 小外光圈 */
+    opacity: 0; display: none;
+    transition: none; /* 雷射筆移動不需要 transition */
+}
+.laser-dot.active { display: block; opacity: 1; }
+body.laser-active, body.laser-active * { cursor: none !important; }
+
+
+/* ====================================================
+   📋 專屬報告模式 (Report Mode) v2.0 - 長官會議投影專用
+   快捷鍵：P
+   設計：全畫面覆蓋層 + 7 頁 Snap Slides + 滾輪/中鍵切頁
+==================================================== */
+
+/* 1. 啟動報告模式時，隱藏原始儀表板（但不影響 DOM 結構）*/
+body.report-mode .header,
+body.report-mode .top-nav,
+body.report-mode .controls,
+body.report-mode .dashboard,
+body.report-mode #helpFabBtn,
+body.report-mode #zenRestoreBtn,
+body.report-mode #simModal,
+body.report-mode #helpModal {
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* 2. 報告模式全畫面覆蓋容器（疊加在一切之上）*/
+#report-mode-container {
+    display: none; /* 預設隱藏，由 JS 控制 */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    z-index: 99998; /* 確保在所有元素之上，低於雷射筆 */
+    background: var(--bg-color);
+}
+
+/* 3. slides 外框容器 */
+#report-slides-wrapper {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; 
+    /* 總高度 = 7 頁 × 100vh */
+    height: calc(100vh * 7);
+    will-change: transform;
+    transform: translateY(0);
+    /* 過渡效果由 JS 動態控制 */
+}
+
+/* 4. 每一個 slide = 完美防禦版面 (嚴格鎖死 100vh) */
+.report-slide {
+    width: 100%;
+    height: 100vh;
+    box-sizing: border-box;
+    padding: 4vh 5%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* 防止任何內容溢出產生捲軸 */
+}
+
+/* 5. slide 內框：置中收納、高度自適應但不超過外框 */
+.report-slide-inner {
+    width: 100%;
+    max-width: 1200px; /* 稍微放寬以容納巨大字體 */
+    max-height: 100%;  /* 絕對不超出父層 */
+    margin: 0 auto;    /* 內部元素與表格置中 */
+    padding: 0 40px 20px 40px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+
+    background: var(--panel-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 12px 50px rgba(0, 0, 0, 0.35);
+    overflow: hidden; /* 內框也防溢出 */
+}
+
+/* 6. slide 頂部標題欄 */
+.report-slide-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 0 14px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--accent-color);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+}
+
+.report-page-num {
+    font-size: 13px;
+    font-weight: normal;
+    color: var(--text-secondary);
+    background: var(--bg-color);
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+/* 7. slide 內容區：可垂直捲動（萬一資料超出 1 頁高）*/
+.report-slide-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px 0 16px 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+.report-slide-content::-webkit-scrollbar { width: 5px; }
+.report-slide-content::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 5px; }
+
+/* 8. 報告模式中的表格樣式強化（字體+20px 極致巨大化，老舊投影機友善）*/
+#report-mode-container .clean-data-table {
+    width: 100%;
+    font-size: 18px;  /* 已由底部 !important 版本覆蓋，此為備援 */
+}
+#report-mode-container .clean-data-table th {
+    font-size: 17px;
+    padding: 14px 12px;
+    position: sticky; top: 0;
+    background: var(--bg-color);
+    backdrop-filter: blur(10px);
+    z-index: 2;
+}
+#report-mode-container .clean-data-table td {
+    font-size: 18px;
+    padding: 14px 12px;
+    line-height: 1.6;
+    white-space: nowrap;
+}
+
+/* 9. 右側頁碼指示器（圓點） */
+#report-page-indicator {
+    position: fixed;
+    right: 22px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 99999;
+}
+.report-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border-color);
+    border: 1px solid var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.report-dot.active {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+    transform: scale(1.35);
+}
+.report-dot:hover:not(.active) {
+    background: var(--text-secondary);
+    transform: scale(1.2);
+}
+
+/* 10. 退出報告模式按鈕（右上角）*/
+#report-exit-btn {
+    position: fixed;
+    top: 16px;
+    right: 50px;
+    z-index: 99999;
+    background: rgba(244, 63, 94, 0.15);
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+    padding: 7px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+}
+#report-exit-btn:hover {
+    background: var(--danger-color);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.5);
+}
+
+/* 11. 雷射筆快捷按鈕（右上角，緊鄰退出按鈕）*/
+#report-laser-btn {
+    position: fixed;
+    top: 16px;
+    right: 230px;
+    z-index: 99999;
+    background: rgba(248, 113, 113, 0.12);
+    border: 1px solid rgba(248, 113, 113, 0.5);
+    color: var(--text-primary);
+    padding: 7px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+}
+#report-laser-btn:hover {
+    background: rgba(248, 113, 113, 0.3);
+    border-color: #f87171;
+    box-shadow: 0 0 10px rgba(248, 113, 113, 0.4);
+}
+
+/* 12. 確保雷射筆 dot 在報告模式下依然置頂可見 */
+body.report-mode .laser-dot {
+    z-index: 9999999 !important;
+    visibility: visible !important;
+}
+
+/* 13. 淺色模式下的報告容器背景 */
+body.light-mode #report-mode-container {
+    background-color: #dde4f0;
+}
+body.light-mode .report-slide-inner {
+    box-shadow: 0 12px 50px rgba(15, 23, 42, 0.15);
+}
+
+/* 14. 左下角頁面切換提示 */
+#report-mode-container::after {
+    content: "↕ 滾輪切頁  ●  中鍵循環跳頁  ●  ← → 方向鍵切頁";
+    position: fixed;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--text-secondary);
+    opacity: 0.55;
+    letter-spacing: 1px;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* ====================================================
+   📋 報告模式 - 終極潔淨投影畫面
+   隱藏所有浮動控制 UI，維持絕對乾淨
+==================================================== */
+
+/* 報告模式下隱藏所有導覽控制按鈕與提示文字 */
+body.report-mode #report-exit-btn,
+body.report-mode #report-laser-btn,
+body.report-mode #report-page-indicator {
+    display: none !important;
+}
+
+/* 報告模式的底部提示文字也徹底隱藏 */
+body.report-mode #report-mode-container::after {
+    display: none !important;
+}
+
+/* ====================================================
+   🔍 報告模式 Simulation 單擊 Tooltip
+==================================================== */
+#report-sim-tooltip {
+    position: fixed;
+    z-index: 9999999;
+    background: var(--bg-color);
+    border: 2px solid var(--accent-color);
+    border-radius: 12px;
+    padding: 20px 24px;
+    min-width: 500px;
+    max-width: 800px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(15px);
+    animation: fadeIn 0.2s ease;
+    pointer-events: none; /* 預設不攔截點擊 */
+}
+
+#report-sim-tooltip .tooltip-title {
+    font-size: 26px;
+    font-weight: bold;
+    color: var(--accent-color);
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+}
+
+#report-sim-tooltip ul {
+    padding-left: 0;
+    margin: 0;
+    list-style: none;
+}
+
+#report-sim-tooltip li {
+    font-size: 22px;
+    color: var(--text-primary);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    line-height: 1.6;
+}
+
+#report-sim-tooltip li:last-child {
+    border-bottom: none;
+}
+
+#report-sim-tooltip li::before {
+    content: "▸";
+    color: var(--accent-color);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* ====================================================
+   📸 第八頁多媒體實證區 (CSS Grid)
+==================================================== */
+.evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+    padding: 20px 40px 100px 40px; /* 底部留白避免貼底 */
+    height: 100%;
+    overflow-y: auto; /* 內部獨立滾動 */
+    align-content: start;
+}
+
+/* 美化滾動條 */
+.evidence-grid::-webkit-scrollbar {
+    width: 8px;
+}
+.evidence-grid::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+.evidence-grid::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 4px;
+}
+
+.evidence-card {
+    background: var(--surface-color);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    border: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+}
+
+.evidence-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
+    border-color: var(--accent-color);
+}
+
+.evidence-card-media {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    background: #000;
+    display: block; /* 移除底部空白 */
+}
+
+.evidence-card-caption {
+    padding: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--text-primary);
+    text-align: center;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border-color);
+}
+
+.video-overlay {
+    position: relative;
+}
+.video-overlay::after {
+    content: "▶";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 50px;
+    color: rgba(255,255,255,0.9);
+    pointer-events: none;
+    text-shadow: 0 5px 15px rgba(0,0,0,0.8);
+}
+
+#report-sim-tooltip.hidden {
+    display: none;
+}
+
+/* ====================================================
+   📋 報告模式 - 字體極致巨大化（老舊投影機友善） + 完美排版防禦
+   在現有基礎上強制增加字體大小，同時縮減內距與行高避免溢出螢幕
+==================================================== */
+#report-mode-container .clean-data-table {
+    margin: 0 auto; /* 表格整體置中 */
+}
+#report-mode-container .clean-data-table td {
+    font-size: calc(18px * var(--data-scale, 1)) !important;
+    padding: 8px 10px !important;  /* 縮減內距：14px -> 8px */
+    line-height: 1.2 !important; /* 縮減行高：1.6 -> 1.2 */
+}
+#report-mode-container .clean-data-table th {
+    font-size: calc(17px * var(--data-scale, 1)) !important;
+    padding: 8px 10px !important;  /* 縮減內距：14px -> 8px */
+}
+.report-slide-title {
+    font-size: calc(24px * var(--data-scale, 1)) !important;
+    padding: 10px 0 8px 0 !important; /* 縮減標題下方空間 */
+    margin-bottom: 5px !important; /* 縮短標題與表格間距 */
+}
+.report-slide-content span,
+.report-slide-content td span {
+    font-size: inherit !important;
+}
+/* 副數據（上月對比）在報告模式也要清晰可見 */
+#report-mode-container .clean-data-table small {
+    font-size: calc(13px * var(--data-scale, 1)) !important;
+    line-height: 1.0 !important; /* 讓副數值更緊湊 */
+}
+
+/* ====================================================
+   🖱️ 可點擊表頭（header row 直接觸發聚焦）
+==================================================== */
+.clickable-th {
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.clickable-th:hover {
+    background: rgba(56, 189, 248, 0.25) !important;
+    color: var(--accent-color) !important;
+}
+
+
+ / *   = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+       1XJT!j_�vugZ�&qؚ�NHe�g
+ = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =   * / 
+ . r e p o r t - h i g h l i g h t - c o l   { 
+         b a c k g r o u n d - c o l o r :   r g b a ( 3 7 ,   9 9 ,   2 3 5 ,   0 . 1 ) ; 
+         b o r d e r - l e f t :   2 p x   s o l i d   # 2 5 6 3 e b ; 
+         b o r d e r - r i g h t :   2 p x   s o l i d   # 2 5 6 3 e b ; 
+ } 
+  
+ 

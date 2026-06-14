@@ -671,27 +671,17 @@ const globalAverages = {
 };
 
 // 子選單邏輯
-const statsMetrics = [
-    { key: 'station', label: '場站妥善度' },
-    { key: 'appearance', label: '自行車外觀與標示' },
-    { key: 'functionality', label: '自行車重要機能' },
-    { key: 'ems', label: '一級維護率(EMS)' },
-    { key: 'operability', label: '可動率' }
-];
+// 施測數據統計：子選單已全數移除，僅顯示「綜合分數」總覽
+const statsMetrics = [];
 
+// 車輛事故與一級維護：僅保留「一級維護補充說明」
 const maintenanceMetrics = [
-    { key: 'm_accident', label: '事故車輛數' },
-    { key: 'm_records', label: '一級維護記錄數' },
-    { key: 'maintenance_rate', label: '一級維護率' },
     { key: 'm_info', label: '一級維護補充說明' }
 ];
 
 // 模擬體驗數據
-const simulationMetrics = [
-    { key: 'sim_a', label: 'A級' },
-    { key: 'sim_b', label: 'B級' },
-    { key: 'sim_c', label: 'C級' }
-];
+// 本月模擬體驗數據：子選單已全數移除
+const simulationMetrics = [];
 
 // =====================================================================
 // ETL 自動注入全域變數腳本：負責傳遞最新年份與月份給 app.js
