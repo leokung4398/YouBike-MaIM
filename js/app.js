@@ -1282,7 +1282,7 @@ function buildReportSlideHTML(page) {
 
     } else if (mode === 'operability') {
         let noteHTML = `<div style="margin-bottom: 15px; font-size: 15px; color: var(--text-secondary); background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid #f59e0b; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            📌 場站考評扣分備忘：各場站經品管判定「未達標準」之項目，每站將嚴格落實扣減 0.5 分之考評規範。
+            📌 場站考評扣分備忘：各場站經品管判定「未達標準」之項目，每站將嚴格落實扣減分之考評規範。
         </div>`;
         html = noteHTML + html;
         html += `<thead><tr><th>縣市</th><th>${prevMonthStr}可動率</th><th class="active-col">${currMonthStr}可動率</th><th>月度變動</th></tr></thead><tbody>`;
