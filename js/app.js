@@ -1044,10 +1044,10 @@ let reportScrollLocked = false; // 防止滾輪事件在動畫中重複觸發
 
 // 🌟 多媒體現場實證資料庫
 const evidenceMedia = [
-    { type: 'image', src: 'assets/images/Color issue_1.jpg', caption: '色彩對比與顯示異常 (1)' },
-    { type: 'image', src: 'assets/images/Color issue_2.jpg', caption: '色彩對比與顯示異常 (2)' },
-    { type: 'image', src: 'assets/images/Screen issues.jpg', caption: '車機螢幕毀損實證' },
-    { type: 'video', src: 'assets/videos/Screen issues.MOV', caption: '螢幕毀損現場紀錄影片' }
+    { type: 'image', src: 'assets/images/Color issue_1.jpg', caption: '後泥除外殼色彩對比異常 (1)' },
+    { type: 'image', src: 'assets/images/Color issue_2.jpg', caption: '後泥除外殼色彩對比異常 (2)' },
+    { type: 'image', src: 'assets/images/Screen issues.jpg', caption: '車機螢幕顯示異常' },
+    { type: 'video', src: 'assets/videos/Screen issues.MOV', caption: '螢幕顯示異常影片' }
 ];
 
 // 8 頁的數據設定：每頁對應 nav 模式、子指標、標題
