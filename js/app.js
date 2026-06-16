@@ -1044,8 +1044,10 @@ let reportScrollLocked = false; // 防止滾輪事件在動畫中重複觸發
 
 // 🌟 多媒體現場實證資料庫
 const evidenceMedia = [
-    { type: 'image', src: 'assets/images/Screen issues.jpg', caption: '車機螢幕毀損實證' },
-    { type: 'video', src: 'assets/videos/Screen issues.MOV', caption: '螢幕毀損現場紀錄影片' }
+    { type: 'image', src: 'assets/images/Color issue_1.jpg', caption: '後泥除外殼色彩對比異常 (1)' },
+    { type: 'image', src: 'assets/images/Color issue_2.jpg', caption: '後泥除外殼色彩對比異常 (2)' },
+    { type: 'image', src: 'assets/images/Screen issues.jpg', caption: '車機螢幕顯示異常' },
+    { type: 'video', src: 'assets/videos/Screen issues.MOV', caption: '螢幕顯示異常影片' }
 ];
 
 // 8 頁的數據設定：每頁對應 nav 模式、子指標、標題
@@ -1233,43 +1235,7 @@ function buildReportSlideHTML(page) {
         let legendHTML = `<div style="margin-bottom: 15px; font-size: 15px; background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
             💡 報告檢閱視覺指引：<span style="color:#ef4444; font-weight:bold;">■ 紅色（列管指標，需加強注意）</span> ｜ <span style="color:#2563eb; font-weight:bold;">■ 藍色（進步指標，營運績效上升）</span> ｜ <span style="color:#10b981; font-weight:bold;">■ 綠色（退步指標，較上月成績下滑）</span>
         </div>`;
-        
-        let totalTire = 0;
-        let totalV = globalAverages.total_v || 0;
-        rawData.forEach(r => { totalTire += r.tire_count || 0; });
-        let tireRatio = totalV > 0 ? ((totalTire / totalV) * 100).toFixed(1) : 0;
-        
-        let overallDiff = (globalAverages.overall - globalAverages.overall_feb).toFixed(2);
-        let overallDiffIcon = overallDiff > 0 ? '▲' : (overallDiff < 0 ? '▼' : '-');
-        let overallDiffColor = overallDiff > 0 ? '#2563eb' : (overallDiff < 0 ? '#10b981' : 'var(--text-primary)');
-        let overallSubHTML = `<div style="font-size:14px;color:${overallDiffColor};font-weight:normal;margin-top:5px;">上月: ${globalAverages.overall_feb} ${overallDiffIcon}</div>`;
-        
-        let summaryCardsHTML = `
-        <div class="report-summary-cards">
-            <div class="report-summary-card">
-                <span class="report-summary-card-title">全台綜合平均分數</span>
-                <span class="report-summary-card-value">${globalAverages.overall} 分</span>
-                ${overallSubHTML}
-            </div>
-            <div class="report-summary-card">
-                <span class="report-summary-card-title">施測站數</span>
-                <span class="report-summary-card-value">${globalAverages.total_s} 站</span>
-            </div>
-            <div class="report-summary-card">
-                <span class="report-summary-card-title">施測車輛總數</span>
-                <span class="report-summary-card-value">${(globalAverages.total_v || 0).toLocaleString()} 輛</span>
-            </div>
-            <div class="report-summary-card">
-                <span class="report-summary-card-title">2.0E 施測車數</span>
-                <span class="report-summary-card-value">${(globalAverages.total_e || 0).toLocaleString()} 輛</span>
-            </div>
-            <div class="report-summary-card">
-                <span class="report-summary-card-title">前後胎壓未達標</span>
-                <span class="report-summary-card-value">${totalTire.toLocaleString()} 輛 (${tireRatio}%)</span>
-            </div>
-        </div>`;
-        
-        html = legendHTML + summaryCardsHTML + html;
+        html = legendHTML + html;
         html += `<thead><tr><th>縣市</th><th>綜合分數</th><th>場站妥善度</th><th>外觀標示</th><th>重要機能</th><th>EMS維護率</th><th>可動率</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             let diff = (r.overall - r.overall_feb).toFixed(2);
@@ -1316,7 +1282,7 @@ function buildReportSlideHTML(page) {
 
     } else if (mode === 'operability') {
         let noteHTML = `<div style="margin-bottom: 15px; font-size: 15px; color: var(--text-secondary); background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid #f59e0b; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            📌 場站考評扣分備忘：各場站經品管判定「未達標準」之項目，每站將嚴格落實扣減 0.5 分之考評規範。
+            📌 場站考評扣分備忘：各場站經品管判定「未達標準」之項目，每站將嚴格落實扣減分之考評規範。
         </div>`;
         html = noteHTML + html;
         html += `<thead><tr><th>縣市</th><th>${prevMonthStr}可動率</th><th class="active-col">${currMonthStr}可動率</th><th>月度變動</th></tr></thead><tbody>`;
@@ -1359,6 +1325,7 @@ function buildReportSlideHTML(page) {
         rawData.forEach(r => {
             let mrDiff = (r.maintenance_rate - r.maintenance_rate_feb).toFixed(2);
             let mrDiffIcon = mrDiff > 0 ? '▲' : (mrDiff < 0 ? '▼' : '-');
+            let mrDiffColor = mrDiff > 0 ? '#2563eb' : (mrDiff < 0 ? '#10b981' : 'var(--text-primary)');
             
             // 強制紅色（#ef4444）為警示，其餘一律為黑色
             let mrStyle = getRedStyle('maintenance_rate', r.maintenance_rate) ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary); font-weight:bold;';
@@ -1372,7 +1339,7 @@ function buildReportSlideHTML(page) {
                 <td>${r.m_fleet.toLocaleString()}</td>
                 <td style="${accidentStyle}">${r.m_accident}</td>
                 <td>${r.m_records.toLocaleString()}</td>
-                <td><span style="${mrStyle}">${r.maintenance_rate}%</span><br><div style="font-size:12px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月:${r.maintenance_rate_feb}% ${mrDiffIcon}</div></td>
+                <td><span style="${mrStyle}">${r.maintenance_rate}%</span><br><small style="color:${mrDiffColor};font-size:11px;font-weight:bold;">上月:${r.maintenance_rate_feb}% ${mrDiffIcon}</small></td>
                 <td style="color:${varColor};font-weight:bold;">${r.m_var}</td></tr>`;
         });
 
@@ -1382,27 +1349,35 @@ function buildReportSlideHTML(page) {
         
         // 💡 評估視覺指引注入：極簡紅燈警示
         let legendHTML = `<div style="margin-bottom: 15px; font-size: 15px; background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            💡 評估視覺指引：<span style="color:#ef4444; font-weight:bold;">■ 紅色（異常比例超過警戒門檻，需加強注意）</span>
+            💡 評估視覺指引：<span style="color:#ef4444; font-weight:bold;">■ 紅色（異常車輛增加，需注意）</span>
         </div>`;
         html = legendHTML + html;
         
         html += `<thead><tr><th>縣市</th><th>A級異常</th><th>B級異常</th><th>C級異常</th></tr></thead><tbody>`;
         rawData.forEach(r => {
-            // 主數值根據門檻亮紅燈，否則維持黑色
-            let aMainColor = r.sim_a_ratio > 10.0 ? '#ef4444' : 'var(--text-primary)';
-            let bMainColor = r.sim_b_ratio > 20.0 ? '#ef4444' : 'var(--text-primary)';
-            let cMainColor = 'var(--text-primary)';
+            // 反向指標邏輯：大於0退步(副數值亮紅燈)，小於等於0為中性
+            let aDiff = (r.sim_a_ratio - r.sim_a_lm).toFixed(1);
+            let aSubColor = aDiff > 0 ? '#ef4444' : 'var(--text-secondary)';
+            let aSubFontWeight = aDiff > 0 ? 'bold' : 'normal';
+            
+            let bDiff = (r.sim_b_ratio - r.sim_b_lm).toFixed(1);
+            let bSubColor = bDiff > 0 ? '#ef4444' : 'var(--text-secondary)';
+            let bSubFontWeight = bDiff > 0 ? 'bold' : 'normal';
+            
+            let cDiff = (r.sim_c_ratio - r.sim_c_lm).toFixed(1);
+            let cSubColor = cDiff > 0 ? '#ef4444' : 'var(--text-secondary)';
+            let cSubFontWeight = cDiff > 0 ? 'bold' : 'normal';
             
             // 聚焦效果
             let aAttr = (grade === 'a') ? 'class="active-col"' : '';
             let bAttr = (grade === 'b') ? 'class="active-col"' : '';
             let cAttr = (grade === 'c') ? 'class="active-col"' : '';
             
-            // 主數值根據邏輯亮紅燈，副數值全面保持中性色
+            // 主數值全面回歸黑色，副數值根據邏輯亮紅燈，並放大字體為 14px
             html += `<tr class="report-sim-row" data-region="${r.region}" data-grade="${grade}" style="cursor:pointer;">${getRegionColReport(r)}
-                <td ${aAttr} style="color:${aMainColor};font-weight:bold;">${r.sim_a_count} 輛 (${r.sim_a_ratio}%)<br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_a_lm}%</div></td>
-                <td ${bAttr} style="color:${bMainColor};font-weight:bold;">${r.sim_b_count} 輛 (${r.sim_b_ratio}%)<br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_b_lm}%</div></td>
-                <td ${cAttr} style="color:${cMainColor};font-weight:bold;">${r.sim_c_count} 輛 (${r.sim_c_ratio}%)<br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_c_lm}%</div></td></tr>`;
+                <td ${aAttr} style="color:var(--text-primary);font-weight:bold;">${r.sim_a_count} 輛 (${r.sim_a_ratio}%)<br><div style="font-size:14px;color:${aSubColor};font-weight:${aSubFontWeight};margin-top:2px;">上月: ${r.sim_a_lm}%</div></td>
+                <td ${bAttr} style="color:var(--text-primary);font-weight:bold;">${r.sim_b_count} 輛 (${r.sim_b_ratio}%)<br><div style="font-size:14px;color:${bSubColor};font-weight:${bSubFontWeight};margin-top:2px;">上月: ${r.sim_b_lm}%</div></td>
+                <td ${cAttr} style="color:var(--text-primary);font-weight:bold;">${r.sim_c_count} 輛 (${r.sim_c_ratio}%)<br><div style="font-size:14px;color:${cSubColor};font-weight:${cSubFontWeight};margin-top:2px;">上月: ${r.sim_c_lm}%</div></td></tr>`;
         });
     } else if (mode === 'evidence') {
         html = `<div class="evidence-grid">`;
@@ -1411,6 +1386,7 @@ function buildReportSlideHTML(page) {
                 html += `
                 <div class="evidence-card" onclick="openLightbox('${media.src}', 'image')">
                     <img src="${media.src}" class="evidence-card-media" loading="lazy" />
+                    <div class="evidence-card-caption">${media.caption}</div>
                 </div>`;
             } else if (media.type === 'video') {
                 html += `
@@ -1418,6 +1394,7 @@ function buildReportSlideHTML(page) {
                     <div class="video-overlay">
                         <video src="${media.src}" class="evidence-card-media" muted preload="metadata"></video>
                     </div>
+                    <div class="evidence-card-caption">${media.caption}</div>
                 </div>`;
             }
         });
