@@ -212,16 +212,20 @@
         // 🌟 記錄有實際發生的問題分別被判定到哪一級
         let problemDictionary = { a: new Set(), b: new Set(), c: new Set(), unknown: new Set() };
 
-        const targetRegionOrder = [
-            "雙北", "桃園", "新竹", "苗栗", "台中", 
-            "彰化", "雲林", "嘉義", "台南", "高雄", "屏東"
-        ];
-
-        const metadataCols = [
-            "地區", "月份", "A級", "B級", "C級", "編號", "公號", 
-            "測驗日期", "城市", "車號", "車柱柱號", "一級檢修日期", 
-            "一級檢修人員", "一級異常", "車輛異常", "一級維修異常", "總計"
-        ];
+        // --- 頂部設定檔 (Config) ---
+        const DATA_PARSER_CONFIG = {
+            targetRegionOrder: [
+                "雙北", "桃園", "新竹", "苗栗", "台中", 
+                "彰化", "雲林", "嘉義", "台南", "高雄", "屏東"
+            ],
+            metadataCols: [
+                "地區", "月份", "A級", "B級", "C級", "編號", "公號", 
+                "測驗日期", "城市", "車號", "車柱柱號", "一級檢修日期", 
+                "一級檢修人員", "一級異常", "車輛異常", "一級維修異常", "總計"
+            ]
+        };
+        const targetRegionOrder = DATA_PARSER_CONFIG.targetRegionOrder;
+        const metadataCols = DATA_PARSER_CONFIG.metadataCols;
 
         // 🌟 1. 天網字典：根據最新分級表更新為「絕對文字匹配 (Exact Match)」
         const GRADING_RULES = [
@@ -345,7 +349,17 @@
             Papa.parse(file, {
                 header: false, 
                 skipEmptyLines: true,
+                error: function(err, file, inputElem, reason) {
+                    alert('CSV 讀取發生嚴重錯誤: ' + err.message);
+                    console.error('PapaParse Error:', err);
+                },
                 complete: function(results) {
+                    if (results.errors && results.errors.length > 0) {
+                        console.warn("CSV 解析警告：", results.errors);
+                        if (results.errors.some(e => e.type === "Delimiter" || e.code === "UndetectableDelimiter")) {
+                            alert("CSV 格式異常，可能欄位錯位！");
+                        }
+                    }
                     const allRows = results.data;
                     let headerIndex = -1;
                     let headers = [];

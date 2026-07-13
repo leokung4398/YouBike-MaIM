@@ -1,5 +1,20 @@
 // js/app.js
 
+// 🌟 App Configuration (提取魔法數字與硬編碼)
+const APP_CONFIG = {
+    debounceDelay: 200,
+    tireWarningThreshold: 4.5,
+    colors: {
+        dangerColors: ['#e11d48', '#be185d', '#7e22ce', '#b45309', '#a21caf', '#c2410c', '#1d4ed8'],
+        inactiveLight: '#94a3b8',
+        inactiveDark: '#475569',
+        averageLight: '#d97706',
+        averageDark: '#eab308',
+        bgTooltipLight: 'rgba(255,255,255,0.95)',
+        bgTooltipDark: 'rgba(15, 23, 42, 0.9)'
+    }
+};
+
 // 🌟 1. 實裝全自動動態月份應答
 let globalYear = window.GLOBAL_YEAR || 2026;
 let globalMonth = window.GLOBAL_MONTH || 4;
@@ -404,35 +419,15 @@ window.handleRowDblClick = function(region) {
         else if (grade === 'c') { gDesc = "一般問題 (內部管理)"; gColor = "var(--text-secondary)"; }
 
         if (item && item.top_problems && item.top_problems[grade]) {
-            // 🌟 標題加入 Top 3 說明
-            document.getElementById('simModalTitle').innerHTML = `${region} <span style="color:${gColor}; font-size:18px;">[${grade.toUpperCase()}級: ${gDesc} - Top 3 異常]</span>`;
-
-            // 🌟 解析 top_problems 字串並重組項目（正確處理括號分隔）
-            let rawStr = item.top_problems[grade];
-            let probsArray = rawStr.split(')、');
-            let top3Sum = 0;
+            document.getElementById('simModalTitle').innerHTML = `Top 異常項目 - ${region} <span style="color:${gColor}; font-size:18px;">[${grade.toUpperCase()}級: ${gDesc}]</span>`;
+            let formattedProbs = item.top_problems[grade].replace(/\((\d+)\)/g, '($1件)');
+            let probsArray = formattedProbs.split(')、');
             let probs = probsArray.map((p, index) => {
-                // 最後一項已含閉括號，其餘需補回
                 let text = index === probsArray.length - 1 ? p : p + ')';
-                // 用 Regex 抓取最後括號內的數字（如 "車鈴(無法發出鈴聲)(6)" → 6）
-                let numMatch = text.match(/\((\d+)\)$/);
-                if (numMatch) top3Sum += parseInt(numMatch[1], 10);
                 return `<li style="border-left: 5px solid ${gColor};">${text}</li>`;
             }).join('');
 
-            // 🌟 計算「其他零星異常」數量並補齊
-            let totalCount = grade === 'a' ? (item.sim_a_count || 0)
-                           : grade === 'b' ? (item.sim_b_count || 0)
-                           : (item.sim_c_count || 0);
-            let otherCount = totalCount - top3Sum;
-
-            let ulHtml = `<ul>${probs}`;
-            if (otherCount > 0) {
-                ulHtml += `<li style="border-left: 5px dashed var(--text-secondary); color: var(--text-secondary); font-style: italic;">* 其他零星異常項目 (${otherCount})</li>`;
-            }
-            ulHtml += `</ul>`;
-
-            document.getElementById('simModalBody').innerHTML = ulHtml;
+            document.getElementById('simModalBody').innerHTML = `<ul>${probs}</ul><div style="font-size:12px; color:var(--text-secondary); margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color);">* 註：一台車可能同時發生多項異常，故「異常項目件數」與外層「異常車輛數」不同。</div>`;
             document.getElementById('simModal').classList.remove('hidden');
         } else {
             document.getElementById('simModalTitle').innerHTML = `${region} - ${grade.toUpperCase()}級異常`;
@@ -599,13 +594,13 @@ function updateBarChart() {
             if (m <= 0) { m += 12; y -= 1; }
             dynamicMonths.push(`${y.toString().slice(-2)}/${m.toString().padStart(2, '0')}`);
         }
-        const dangerColors = ['#e11d48', '#be185d', '#7e22ce', '#b45309', '#a21caf', '#c2410c', '#1d4ed8'];
+        const dangerColors = APP_CONFIG.colors.dangerColors;
         let colorIdx = 0; const seriesData = [];
 
         sortedData.forEach((item, index) => {
             let hist = item.tire_history.slice(-6).reverse(); // 🌟 反轉數據，使當月在最前面
-            let val = hist[0]; let isBad = val > 4.5; // 判斷的是第 0 筆（當月）
-            let lineColor = isBad ? dangerColors[colorIdx++ % dangerColors.length] : (isLightMode ? '#94a3b8' : '#475569');
+            let val = hist[0]; let isBad = val > APP_CONFIG.tireWarningThreshold; // 判斷的是第 0 筆（當月）
+            let lineColor = isBad ? dangerColors[colorIdx++ % dangerColors.length] : (isLightMode ? APP_CONFIG.colors.inactiveLight : APP_CONFIG.colors.inactiveDark);
             seriesData.push({
                 name: item.region, type: 'line', data: hist, smooth: true, symbol: isBad ? 'circle' : 'none', symbolSize: 8,
                 lineStyle: { width: isBad ? 4 : 2, opacity: isBad ? 1 : 0.4 }, itemStyle: { color: lineColor },
@@ -617,7 +612,7 @@ function updateBarChart() {
 
         barChart.setOption({
             title: { text: '全國各縣市前後胎壓未達標趨勢 (近 6 個月)', left: 'center', textStyle: { color: textColor, fontSize: 15 * globalFontScale } },
-            tooltip: { trigger: 'axis', backgroundColor: isLightMode ? 'rgba(255,255,255,0.95)' : 'rgba(15, 23, 42, 0.9)', textStyle: { color: textColor }, valueFormatter: (value) => value + '%' },
+            tooltip: { trigger: 'axis', backgroundColor: isLightMode ? APP_CONFIG.colors.bgTooltipLight : APP_CONFIG.colors.bgTooltipDark, textStyle: { color: textColor }, valueFormatter: (value) => value + '%' },
             legend: { show: false }, grid: { left: '3%', right: '12%', bottom: '10%', top: '15%', containLabel: true }, 
             xAxis: { type: 'category', data: dynamicMonths, axisLabel: { color: textColor, fontSize: 12 * globalFontScale }, axisLine: { lineStyle: { color: gridColor } } },
             yAxis: { type: 'value', axisLabel: { color: textColor, formatter: '{value} %', fontSize: 12 * globalFontScale }, splitLine: { lineStyle: { color: gridColor, type: 'dashed' } } },
@@ -629,7 +624,7 @@ function updateBarChart() {
     let regions, currentValues, previousValues, varianceValues, chartTitle, avgValue, isPercentage = false;
 
     const getVarColor = (val) => {
-        if (val === 0) return isLightMode ? '#94a3b8' : '#475569';
+        if (val === 0) return isLightMode ? APP_CONFIG.colors.inactiveLight : APP_CONFIG.colors.inactiveDark;
         if (currentMode === 'maintenance' && currentMaintenanceMetric === 'm_accident') return val > 0 ? dangerColor : safeColor;
         if (currentMode === 'simulation') return val > 0 ? dangerColor : safeColor;
         return val > 0 ? safeColor : dangerColor;
@@ -688,33 +683,33 @@ function updateBarChart() {
             name: '較上月變動', type: 'bar', barWidth: '40%', itemStyle: { borderRadius: [4, 4, 0, 0] },
             // 🌟 將變動條狀圖從黑色(預設/文字色)改為科技藍(--accent-color)
             data: varianceValues.map(val => ({ value: val, itemStyle: { color: 'var(--accent-color)' } })),
-            label: { show: true, position: 'top', color: textColor, fontWeight: 'bold', formatter: val => (val.value > 0 ? '+' : '') + val.value + (isPercentage?'%':''), fontSize: 13 * globalFontScale * dataFontBoost },
-            markLine: { symbol: 'none', data: [{ type: 'average', name: '平均變動' }], label: { formatter: `平均\n${avgValue > 0 ? '+':''}${avgValue}${isPercentage?'%':''}`, position: 'end', color: isLightMode ? '#d97706' : '#eab308', fontWeight: 'bold', fontSize: 11 * globalFontScale }, lineStyle: { color: isLightMode ? '#d97706' : '#eab308', type: 'dashed', width: 2 } }
+            label: { show: true, position: 'top', color: 'var(--accent-color)', fontWeight: 'bold', formatter: val => (val.value > 0 ? '+' : '') + val.value + (isPercentage?'%':''), fontSize: 13 * globalFontScale * dataFontBoost },
+            markLine: { symbol: 'none', data: [{ type: 'average', name: '平均變動' }], label: { formatter: `平均\n${avgValue > 0 ? '+':''}${avgValue}${isPercentage?'%':''}`, position: 'end', color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, fontWeight: 'bold', fontSize: 11 * globalFontScale }, lineStyle: { color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, type: 'dashed', width: 2 } }
         }];
     } else {
         seriesConfig = [
-            { name: `${prevMonthStr} (前月)`, type: 'bar', barWidth: '30%', itemStyle: { color: isLightMode ? '#94a3b8' : '#475569', borderRadius: [4, 4, 0, 0] }, label: { show: false }, data: previousValues },
+            { name: `${prevMonthStr} (前月)`, type: 'bar', barWidth: '30%', itemStyle: { color: isLightMode ? APP_CONFIG.colors.inactiveLight : APP_CONFIG.colors.inactiveDark, borderRadius: [4, 4, 0, 0] }, label: { show: false }, data: previousValues },
             {
                 name: `${currMonthStr} (當月)`, type: 'bar', barWidth: '30%', itemStyle: { borderRadius: [4, 4, 0, 0] },
                 data: currentValues.map((val, idx) => {
                     let barColor = accentColor;
                     if (currentMode === 'stats' || currentMode === 'operability') barColor = val < avgValue ? dangerColor : accentColor;
-                    else if (currentMode === 'simulation') barColor = val > avgValue ? dangerColor : safeColor;
+                    else if (currentMode === 'simulation') barColor = val > avgValue ? dangerColor : accentColor;
                     else if (currentMode === 'maintenance') {
-                        if (currentMaintenanceMetric === 'm_accident') barColor = val > avgValue ? dangerColor : safeColor;
+                        if (currentMaintenanceMetric === 'm_accident') barColor = val > avgValue ? dangerColor : accentColor;
                         else if (currentMaintenanceMetric === 'maintenance_rate') barColor = val < avgValue ? dangerColor : accentColor;
                     }
                     return { value: val, itemStyle: { color: barColor } };
                 }),
                 label: { show: true, position: 'top', color: textColor, fontWeight: 'bold', formatter: isPercentage ? '{c}%' : '{c}', fontSize: 12 * globalFontScale * dataFontBoost },
-                markLine: { symbol: 'none', data: [{ type: 'average', name: '平均' }], label: { formatter: `${currMonthStr}平均\n${avgValue}${isPercentage?'%':''}`, position: 'end', color: isLightMode ? '#d97706' : '#eab308', fontWeight: 'bold', fontSize: 11 * globalFontScale }, lineStyle: { color: isLightMode ? '#d97706' : '#eab308', type: 'dashed', width: 2 } }
+                markLine: { symbol: 'none', data: [{ type: 'average', name: '平均' }], label: { formatter: `${currMonthStr}平均\n${avgValue}${isPercentage?'%':''}`, position: 'end', color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, fontWeight: 'bold', fontSize: 11 * globalFontScale }, lineStyle: { color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, type: 'dashed', width: 2 } }
             }
         ];
     }
 
     barChart.setOption({
         title: { text: chartTitle + (showVariance ? ' - 較上月變動' : ' - 本月數值'), left: 'center', textStyle: { color: textColor, fontSize: 15 * globalFontScale } },
-        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: isLightMode ? 'rgba(255,255,255,0.95)' : 'rgba(15, 23, 42, 0.9)', textStyle: { color: textColor }, formatter: (p) => { let h = `<div style="font-weight:bold;margin-bottom:5px;">${p[0].axisValue}</div>`; p.forEach(x => { h += `${x.marker} ${x.seriesName}: <b style="color:${x.color}">${(x.value > 0 && showVariance ? '+' : '')}${x.value}${isPercentage ? '%' : ''}</b><br/>`; }); return h; } },
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: isLightMode ? APP_CONFIG.colors.bgTooltipLight : APP_CONFIG.colors.bgTooltipDark, textStyle: { color: textColor }, formatter: (p) => { let h = `<div style="font-weight:bold;margin-bottom:5px;">${p[0].axisValue}</div>`; p.forEach(x => { h += `${x.marker} ${x.seriesName}: <b style="color:${x.color}">${(x.value > 0 && showVariance ? '+' : '')}${x.value}${isPercentage ? '%' : ''}</b><br/>`; }); return h; } },
         legend: { show: !showVariance, data: [`${prevMonthStr} (前月)`, `${currMonthStr} (當月)`], bottom: 0, textStyle: { color: textColor, fontSize: 12 * globalFontScale } },
         grid: { left: '3%', right: '8%', bottom: '15%', top: '15%', containLabel: true },
         xAxis: { type: 'category', data: regions, axisLabel: { color: textColor, fontSize: 12 * globalFontScale }, axisLine: { lineStyle: { color: gridColor } } },
@@ -760,7 +755,7 @@ function renderDataView() {
     };
 
     if (currentMode === 'stats') {
-        let th = (key, label) => `<th class="${currentStatsMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')">${label}</th>`;
+        let th = (key, label) => `<th class="${currentStatsMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')" ${currentStatsMetric === key ? 'style="color:#1e3a8a;"' : ''}>${label}</th>`;
         html += `<th>縣市</th>${th('overall', '綜合分數')}${th('station', '場站妥善度')}${th('appearance', '外觀標示')}${th('functionality', '重要機能')}${th('ems', 'EMS維護率')}${th('operability', '可動率')}</tr></thead><tbody>`;
         rawData.forEach(r => {
             let cl = (key) => currentStatsMetric === key ? 'class="active-col"' : '';
@@ -831,7 +826,7 @@ function renderDataView() {
                 <td style="color:${varColor};font-weight:bold;">${varianceSign}${variance}%</td></tr>`;
         });
     } else if (currentMode === 'maintenance') {
-        let th = (key, label) => `<th class="${currentMaintenanceMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')">${label}</th>`;
+        let th = (key, label) => `<th class="${currentMaintenanceMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')" ${currentMaintenanceMetric === key ? 'style="color:#1e3a8a;"' : ''}>${label}</th>`;
         html += `<th>縣市</th><th>總營運車輛</th>${th('m_accident', '事故車輛數')}${th('m_records', '維護記錄數')}${th('maintenance_rate', '一級維護率')}<th>較上月變動</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             let cl = (key) => currentMaintenanceMetric === key ? 'class="active-col"' : '';
@@ -857,7 +852,7 @@ function renderDataView() {
                 <td style="color:${varColor};font-weight:bold;">${r.m_var}</td></tr>`;
         });
     } else if (currentMode === 'simulation') {
-        let th = (key, label) => `<th class="${currentSimulationMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')">${label}</th>`;
+        let th = (key, label) => `<th class="${currentSimulationMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')" ${currentSimulationMetric === key ? 'style="color:#1e3a8a;"' : ''}>${label}</th>`;
         html += `<th>縣市</th>${th('sim_a', 'A級異常')}${th('sim_b', 'B級異常')}${th('sim_c', 'C級異常')}</tr></thead><tbody>`;
         rawData.forEach(r => {
             let cl = (key) => currentSimulationMetric === key ? 'class="active-col"' : '';
@@ -958,7 +953,7 @@ function setupMapClickEvent() {
 // 初始化佈局與圖表
 async function initDashboard() {
     try {
-        const response = await fetch('https://raw.githubusercontent.com/g0v/twgeojson/master/json/twCounty2010.geo.json');
+        const response = await fetch('./assets/twCounty2010.geo.json');
         twGeoJson = await response.json();
         echarts.registerMap('Taiwan', twGeoJson);
         
@@ -977,20 +972,29 @@ async function initDashboard() {
         setTimeout(() => { mapChart.resize(); }, 350);
 
     } catch (error) {
-        document.getElementById('loading').innerText = '地圖載入失敗，請檢查網路連線。';
+        document.getElementById('loading').innerText = '地圖載入失敗，請確認 ./assets/twCounty2010.geo.json 檔案是否存在。';
     }
 }
 
 initDashboard();
 
-// 防抖重繪
+// 優化 ECharts 防抖重繪 (Debounce + requestAnimationFrame)
 let resizeTimer;
+let isResizing = false;
 window.addEventListener('resize', () => {
+    if (!isResizing) {
+        window.requestAnimationFrame(() => {
+            if(mapChart) mapChart.resize(); 
+            if(barChart) barChart.resize();
+            isResizing = false;
+        });
+        isResizing = true;
+    }
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
         if(mapChart) mapChart.resize(); 
         if(barChart) barChart.resize();
-    }, 200); 
+    }, APP_CONFIG.debounceDelay); 
 });
 
 // ====================================================
@@ -1065,10 +1069,8 @@ let reportScrollLocked = false; // 防止滾輪事件在動畫中重複觸發
 
 // 🌟 多媒體現場實證資料庫
 const evidenceMedia = [
-    { type: 'image', src: 'assets/images/Color issue_1.jpg', caption: '後泥除外殼色彩對比異常 (1)' },
-    { type: 'image', src: 'assets/images/Color issue_2.jpg', caption: '後泥除外殼色彩對比異常 (2)' },
-    { type: 'image', src: 'assets/images/Screen issues.jpg', caption: '車機螢幕顯示異常' },
-    { type: 'video', src: 'assets/videos/Screen issues.MOV', caption: '螢幕顯示異常影片' }
+    { type: 'image', src: 'assets/images/Screen issues.jpg', caption: '車機螢幕毀損實證' },
+    { type: 'video', src: 'assets/videos/Screen issues.MOV', caption: '螢幕毀損現場紀錄影片' }
 ];
 
 // 8 頁的數據設定：每頁對應 nav 模式、子指標、標題
@@ -1246,7 +1248,7 @@ function renderAllReportSlides() {
 function buildReportSlideHTML(page) {
     const mode = page.nav;
     const subKey = page.subKey;
-    let html = '<table class="clean-data-table">';
+    let html = '<div class="report-table-wrapper"><table class="clean-data-table">';
 
     const getRegionColReport = (r) => {
         return `<td style="font-weight:bold;color:var(--text-primary);white-space:nowrap;">${r.region}</td>`;
@@ -1256,7 +1258,47 @@ function buildReportSlideHTML(page) {
         let legendHTML = `<div style="margin-bottom: 15px; font-size: 15px; background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
             💡 報告檢閱視覺指引：<span style="color:#ef4444; font-weight:bold;">■ 紅色（列管指標，需加強注意）</span> ｜ <span style="color:#2563eb; font-weight:bold;">■ 藍色（進步指標，營運績效上升）</span> ｜ <span style="color:#10b981; font-weight:bold;">■ 綠色（退步指標，較上月成績下滑）</span>
         </div>`;
-        html = legendHTML + html;
+        
+        let totalTire = 0;
+        let totalV = globalAverages.total_v || 0;
+        rawData.forEach(r => { totalTire += r.tire_count || 0; });
+        let tireRatio = totalV > 0 ? ((totalTire / totalV) * 100).toFixed(1) : 0;
+        
+        let overallDiff = (globalAverages.overall - globalAverages.overall_feb).toFixed(2);
+        let overallDiffIcon = overallDiff > 0 ? '▲' : (overallDiff < 0 ? '▼' : '-');
+        let overallDiffColor = overallDiff > 0 ? '#2563eb' : (overallDiff < 0 ? '#10b981' : 'var(--text-primary)');
+        let overallSubHTML = `<div style="font-size:14px;color:${overallDiffColor};font-weight:normal;margin-top:5px;">上月: ${globalAverages.overall_feb} ${overallDiffIcon}</div>`;
+        
+        let cardStyle = "flex: 1; background: rgba(30, 41, 59, 0.05); border-radius: 12px; padding: 15px; text-align: center; border-top: 4px solid #2563eb; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s;";
+        let valStyle = "font-size: 2em; font-weight: bold; display: block; color: var(--text-primary);";
+        let titleStyle = "font-size: 0.9em; color: var(--text-secondary); margin-bottom: 8px; display: block;";
+        
+        let summaryCardsHTML = `
+        <div class="report-summary-cards" style="display: flex; justify-content: space-between; gap: 15px; margin-bottom: 15px; width: 100%; flex-wrap: nowrap;">
+            <div class="report-summary-card hero-card-hover" style="${cardStyle}">
+                <span class="report-summary-card-title" style="${titleStyle}">全台綜合平均分數</span>
+                <span class="report-summary-card-value" style="${valStyle}">${globalAverages.overall} 分</span>
+                ${overallSubHTML}
+            </div>
+            <div class="report-summary-card hero-card-hover" style="${cardStyle}">
+                <span class="report-summary-card-title" style="${titleStyle}">施測站數</span>
+                <span class="report-summary-card-value" style="${valStyle}">${globalAverages.total_s} 站</span>
+            </div>
+            <div class="report-summary-card hero-card-hover" style="${cardStyle}">
+                <span class="report-summary-card-title" style="${titleStyle}">施測車輛總數</span>
+                <span class="report-summary-card-value" style="${valStyle}">${(globalAverages.total_v || 0).toLocaleString()} 輛</span>
+            </div>
+            <div class="report-summary-card hero-card-hover" style="${cardStyle}">
+                <span class="report-summary-card-title" style="${titleStyle}">2.0E 施測車數</span>
+                <span class="report-summary-card-value" style="${valStyle}">${(globalAverages.total_e || 0).toLocaleString()} 輛</span>
+            </div>
+            <div class="report-summary-card hero-card-hover" style="${cardStyle}">
+                <span class="report-summary-card-title" style="${titleStyle}">前後胎壓未達標</span>
+                <span class="report-summary-card-value" style="${valStyle}">${totalTire.toLocaleString()} 輛 (${tireRatio}%)</span>
+            </div>
+        </div>`;
+        
+        html = legendHTML + summaryCardsHTML + html;
         html += `<thead><tr><th>縣市</th><th>綜合分數</th><th>場站妥善度</th><th>外觀標示</th><th>重要機能</th><th>EMS維護率</th><th>可動率</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             let diff = (r.overall - r.overall_feb).toFixed(2);
@@ -1283,7 +1325,7 @@ function buildReportSlideHTML(page) {
     } else if (mode === 'tire') {
         html += `<thead><tr><th>縣市</th>`;
         // 🌟 報告模式胎壓表頭反轉：當月在最前面，並加入與第5頁相同的 active-col 聚焦效果
-        html += `<th class="active-col">${globalMonth.toString().padStart(2,'0')}月 (當月)</th>`;
+        html += `<th class="active-col" style="color:#1e3a8a;">${globalMonth.toString().padStart(2,'0')}月 (當月)</th>`;
         for (let i = 1; i <= 5; i++) {
             let m = globalMonth - i;
             let y = globalYear;
@@ -1303,10 +1345,10 @@ function buildReportSlideHTML(page) {
 
     } else if (mode === 'operability') {
         let noteHTML = `<div style="margin-bottom: 15px; font-size: 15px; color: var(--text-secondary); background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid #f59e0b; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            📌 場站考評扣分備忘：各場站經品管判定「未達標準」之項目，每站將嚴格落實扣減分之考評規範。
+            📌 場站考評扣分備忘：各場站經品管判定「未達標準」之項目，每站將嚴格落實扣減 0.5 分之考評規範。
         </div>`;
         html = noteHTML + html;
-        html += `<thead><tr><th>縣市</th><th>${prevMonthStr}可動率</th><th class="active-col">${currMonthStr}可動率</th><th>月度變動</th></tr></thead><tbody>`;
+        html += `<thead><tr><th>縣市</th><th>${prevMonthStr}可動率</th><th class="active-col" style="color:#1e3a8a;">${currMonthStr}可動率</th><th>月度變動</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             let variance = (r.operability - r.operability_feb).toFixed(2);
             let varianceSign = variance > 0 ? '+' : '';
@@ -1346,7 +1388,6 @@ function buildReportSlideHTML(page) {
         rawData.forEach(r => {
             let mrDiff = (r.maintenance_rate - r.maintenance_rate_feb).toFixed(2);
             let mrDiffIcon = mrDiff > 0 ? '▲' : (mrDiff < 0 ? '▼' : '-');
-            let mrDiffColor = mrDiff > 0 ? '#2563eb' : (mrDiff < 0 ? '#10b981' : 'var(--text-primary)');
             
             // 強制紅色（#ef4444）為警示，其餘一律為黑色
             let mrStyle = getRedStyle('maintenance_rate', r.maintenance_rate) ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary); font-weight:bold;';
@@ -1360,7 +1401,7 @@ function buildReportSlideHTML(page) {
                 <td>${r.m_fleet.toLocaleString()}</td>
                 <td style="${accidentStyle}">${r.m_accident}</td>
                 <td>${r.m_records.toLocaleString()}</td>
-                <td><span style="${mrStyle}">${r.maintenance_rate}%</span><br><small style="color:${mrDiffColor};font-size:11px;font-weight:bold;">上月:${r.maintenance_rate_feb}% ${mrDiffIcon}</small></td>
+                <td><span style="${mrStyle}">${r.maintenance_rate}%</span><br><div style="font-size:12px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月:${r.maintenance_rate_feb}% ${mrDiffIcon}</div></td>
                 <td style="color:${varColor};font-weight:bold;">${r.m_var}</td></tr>`;
         });
 
@@ -1370,35 +1411,27 @@ function buildReportSlideHTML(page) {
         
         // 💡 評估視覺指引注入：極簡紅燈警示
         let legendHTML = `<div style="margin-bottom: 15px; font-size: 15px; background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            💡 評估視覺指引：<span style="color:#ef4444; font-weight:bold;">■ 紅色（異常車輛增加，需注意）</span>
+            💡 評估視覺指引：<span style="color:#ef4444; font-weight:bold;">■ 紅色（異常比例超過警戒門檻，需加強注意）</span>
         </div>`;
         html = legendHTML + html;
         
         html += `<thead><tr><th>縣市</th><th>A級異常</th><th>B級異常</th><th>C級異常</th></tr></thead><tbody>`;
         rawData.forEach(r => {
-            // 反向指標邏輯：大於0退步(副數值亮紅燈)，小於等於0為中性
-            let aDiff = (r.sim_a_ratio - r.sim_a_lm).toFixed(1);
-            let aSubColor = aDiff > 0 ? '#ef4444' : 'var(--text-secondary)';
-            let aSubFontWeight = aDiff > 0 ? 'bold' : 'normal';
-            
-            let bDiff = (r.sim_b_ratio - r.sim_b_lm).toFixed(1);
-            let bSubColor = bDiff > 0 ? '#ef4444' : 'var(--text-secondary)';
-            let bSubFontWeight = bDiff > 0 ? 'bold' : 'normal';
-            
-            let cDiff = (r.sim_c_ratio - r.sim_c_lm).toFixed(1);
-            let cSubColor = cDiff > 0 ? '#ef4444' : 'var(--text-secondary)';
-            let cSubFontWeight = cDiff > 0 ? 'bold' : 'normal';
+            // 主數值根據門檻亮紅燈，否則維持黑色
+            let aMainColor = r.sim_a_ratio > 10.0 ? '#ef4444' : 'var(--text-primary)';
+            let bMainColor = r.sim_b_ratio > 20.0 ? '#ef4444' : 'var(--text-primary)';
+            let cMainColor = 'var(--text-primary)';
             
             // 聚焦效果
             let aAttr = (grade === 'a') ? 'class="active-col"' : '';
             let bAttr = (grade === 'b') ? 'class="active-col"' : '';
             let cAttr = (grade === 'c') ? 'class="active-col"' : '';
             
-            // 主數值全面回歸黑色，副數值根據邏輯亮紅燈，並放大字體為 14px
+            // 主數值根據邏輯亮紅燈，副數值全面保持中性色
             html += `<tr class="report-sim-row" data-region="${r.region}" data-grade="${grade}" style="cursor:pointer;">${getRegionColReport(r)}
-                <td ${aAttr} style="color:var(--text-primary);font-weight:bold;">${r.sim_a_count} 輛 (${r.sim_a_ratio}%)<br><div style="font-size:14px;color:${aSubColor};font-weight:${aSubFontWeight};margin-top:2px;">上月: ${r.sim_a_lm}%</div></td>
-                <td ${bAttr} style="color:var(--text-primary);font-weight:bold;">${r.sim_b_count} 輛 (${r.sim_b_ratio}%)<br><div style="font-size:14px;color:${bSubColor};font-weight:${bSubFontWeight};margin-top:2px;">上月: ${r.sim_b_lm}%</div></td>
-                <td ${cAttr} style="color:var(--text-primary);font-weight:bold;">${r.sim_c_count} 輛 (${r.sim_c_ratio}%)<br><div style="font-size:14px;color:${cSubColor};font-weight:${cSubFontWeight};margin-top:2px;">上月: ${r.sim_c_lm}%</div></td></tr>`;
+                <td ${aAttr} style="color:${aMainColor};font-weight:bold;">${r.sim_a_count} 輛 (${r.sim_a_ratio}%)<br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_a_lm}%</div></td>
+                <td ${bAttr} style="color:${bMainColor};font-weight:bold;">${r.sim_b_count} 輛 (${r.sim_b_ratio}%)<br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_b_lm}%</div></td>
+                <td ${cAttr} style="color:${cMainColor};font-weight:bold;">${r.sim_c_count} 輛 (${r.sim_c_ratio}%)<br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_c_lm}%</div></td></tr>`;
         });
     } else if (mode === 'evidence') {
         html = `<div class="evidence-grid">`;
@@ -1407,7 +1440,7 @@ function buildReportSlideHTML(page) {
                 html += `
                 <div class="evidence-card" onclick="openLightbox('${media.src}', 'image')">
                     <img src="${media.src}" class="evidence-card-media" loading="lazy" />
-                    <div class="evidence-card-caption">${media.caption}</div>
+                    <div class="media-caption">${media.caption}</div>
                 </div>`;
             } else if (media.type === 'video') {
                 html += `
@@ -1415,7 +1448,7 @@ function buildReportSlideHTML(page) {
                     <div class="video-overlay">
                         <video src="${media.src}" class="evidence-card-media" muted preload="metadata"></video>
                     </div>
-                    <div class="evidence-card-caption">${media.caption}</div>
+                    <div class="media-caption">${media.caption}</div>
                 </div>`;
             }
         });
@@ -1423,7 +1456,7 @@ function buildReportSlideHTML(page) {
         return html; // 直接回傳 grid，不包在 table 裡
     }
 
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
     return html;
 }
 
@@ -1538,17 +1571,21 @@ function unbindReportEvents() {
 // ====================================================
 
 // 建立 Tooltip DOMï¼只建立一次，後續重用）
+window.tooltipHideTimer = null;
 function ensureReportSimTooltip() {
     if (!document.getElementById('report-sim-tooltip')) {
         const tip = document.createElement('div');
         tip.id = 'report-sim-tooltip';
         tip.className = 'hidden';
+        tip.addEventListener('mouseenter', () => { if (window.tooltipHideTimer) clearTimeout(window.tooltipHideTimer); });
+        tip.addEventListener('mouseleave', () => { hideReportSimTooltip(); });
         document.body.appendChild(tip);
     }
     return document.getElementById('report-sim-tooltip');
 }
 
 function showReportSimTooltip(region, grade, x, y) {
+    if (window.tooltipHideTimer) clearTimeout(window.tooltipHideTimer);
     const tip = ensureReportSimTooltip();
     const item = rawData.find(r => r.region === region);
     if (!item) return;
@@ -1558,39 +1595,23 @@ function showReportSimTooltip(region, grade, x, y) {
     else if (grade === 'b') { gDesc = 'B級重點問題 (觀感)'; gColor = 'var(--warning-color)'; }
     else { gDesc = 'C級一般問題 (內部管理)'; gColor = 'var(--text-secondary)'; }
 
-    // 🌟 建立 HTML 內容（含 Top 3 標題與其他零星異常補齊）
+    // 建立 HTML 內容
     let bodyHtml = '';
     if (item.top_problems && item.top_problems[grade]) {
-        let rawStr = item.top_problems[grade];
-        let probsArray = rawStr.split(')\u3001'); // 以 ')、' 分割
-        let top3Sum = 0;
-        let listItems = probsArray.map((p, idx) => {
-            let text = idx === probsArray.length - 1 ? p : p + ')';
-            // 用 Regex 抓取最後括號內的數字
-            let numMatch = text.match(/\((\d+)\)$/);
-            if (numMatch) top3Sum += parseInt(numMatch[1], 10);
+        let formattedProbs = item.top_problems[grade].replace(/\((\d+)\)/g, '($1件)');
+        let probs = formattedProbs.split(')\u3001');
+        bodyHtml = '<ul>' + probs.map((p, idx) => {
+            let text = idx === probs.length - 1 ? p : p + ')';
             return `<li style="border-left:3px solid ${gColor};padding-left:8px;">${text}</li>`;
-        }).join('');
-
-        // 計算其他零星異常數量
-        let totalCount = grade === 'a' ? (item.sim_a_count || 0)
-                       : grade === 'b' ? (item.sim_b_count || 0)
-                       : (item.sim_c_count || 0);
-        let otherCount = totalCount - top3Sum;
-
-        bodyHtml = '<ul>' + listItems;
-        if (otherCount > 0) {
-            bodyHtml += `<li style="border-left:3px dashed var(--text-secondary);padding-left:8px;color:var(--text-secondary);font-style:italic;">* 其他零星異常項目 (${otherCount})</li>`;
-        }
-        bodyHtml += '</ul>';
+        }).join('') + '</ul>';
     } else {
         bodyHtml = `<p style="color:var(--text-secondary);margin:0;font-size:13px;">此縣市目前無具體問題紀錄。</p>`;
     }
 
-    // 🌟 標題加入 Top 3 說明
     tip.innerHTML = `
-        <div class="tooltip-title">${region} · <span style="color:${gColor};">${gDesc} - Top 3 異常</span></div>
+        <div class="tooltip-title">${region} · <span style="color:${gColor};">${gDesc}</span></div>
         ${bodyHtml}
+        <div style="font-size:12px; color:var(--text-secondary); margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color);">* 註：一台車可能同時發生多項異常，故「異常項目件數」與外層「異常車輛數」不同。</div>
     `;
 
     // 計算定位：顯示於滑鼠右側
@@ -1643,7 +1664,7 @@ function handleReportSimClick(e) {
     }
 }
 
-// 🏃 滑鼠離開 .report-sim-row 時，立即隱藏 Tooltip（防呆：保持投影畫面絕對乾淨）
+// 🏃 滑鼠離開 .report-sim-row 時，延遲隱藏 Tooltip，實現完美防呆簡報交互
 // 使用事件捕獲 (capture) 確保能精準偵測 tr 層級的 mouseleave
 function handleReportSimMouseLeave(e) {
     if (!isReportMode) return;
@@ -1655,8 +1676,10 @@ function handleReportSimMouseLeave(e) {
     // relatedTarget = 滑鼠移入的新元素，若新元素還在同一列內則不關閉
     const enteringRow = e.relatedTarget ? e.relatedTarget.closest('.report-sim-row') : null;
     if (enteringRow !== leavingRow) {
-        // 真正離開了這一列 → 立即隱藏 Tooltip
-        hideReportSimTooltip();
+        // 真正離開了這一列 → 開啟延遲隱藏，若使用者將滑鼠移入 Tooltip 則保留
+        window.tooltipHideTimer = setTimeout(() => {
+            hideReportSimTooltip();
+        }, 300);
     }
 }
 
@@ -1674,7 +1697,7 @@ window.openLightbox = function(src, type) {
         modal.style.width = '100vw';
         modal.style.height = '100vh';
         modal.style.backgroundColor = 'rgba(0,0,0,0.95)';
-        modal.style.zIndex = '99999999';
+        modal.style.zIndex = '9990';
         modal.style.display = 'flex';
         modal.style.justifyContent = 'center';
         modal.style.alignItems = 'center';
