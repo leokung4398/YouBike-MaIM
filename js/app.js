@@ -404,14 +404,35 @@ window.handleRowDblClick = function(region) {
         else if (grade === 'c') { gDesc = "一般問題 (內部管理)"; gColor = "var(--text-secondary)"; }
 
         if (item && item.top_problems && item.top_problems[grade]) {
-            document.getElementById('simModalTitle').innerHTML = `${region} <span style="color:${gColor}; font-size:18px;">[${grade.toUpperCase()}級: ${gDesc}]</span>`;
-            let probsArray = item.top_problems[grade].split(')、');
+            // 🌟 標題加入 Top 3 說明
+            document.getElementById('simModalTitle').innerHTML = `${region} <span style="color:${gColor}; font-size:18px;">[${grade.toUpperCase()}級: ${gDesc} - Top 3 異常]</span>`;
+
+            // 🌟 解析 top_problems 字串並重組項目（正確處理括號分隔）
+            let rawStr = item.top_problems[grade];
+            let probsArray = rawStr.split(')、');
+            let top3Sum = 0;
             let probs = probsArray.map((p, index) => {
+                // 最後一項已含閉括號，其餘需補回
                 let text = index === probsArray.length - 1 ? p : p + ')';
+                // 用 Regex 抓取最後括號內的數字（如 "車鈴(無法發出鈴聲)(6)" → 6）
+                let numMatch = text.match(/\((\d+)\)$/);
+                if (numMatch) top3Sum += parseInt(numMatch[1], 10);
                 return `<li style="border-left: 5px solid ${gColor};">${text}</li>`;
             }).join('');
 
-            document.getElementById('simModalBody').innerHTML = `<ul>${probs}</ul>`;
+            // 🌟 計算「其他零星異常」數量並補齊
+            let totalCount = grade === 'a' ? (item.sim_a_count || 0)
+                           : grade === 'b' ? (item.sim_b_count || 0)
+                           : (item.sim_c_count || 0);
+            let otherCount = totalCount - top3Sum;
+
+            let ulHtml = `<ul>${probs}`;
+            if (otherCount > 0) {
+                ulHtml += `<li style="border-left: 5px dashed var(--text-secondary); color: var(--text-secondary); font-style: italic;">* 其他零星異常項目 (${otherCount})</li>`;
+            }
+            ulHtml += `</ul>`;
+
+            document.getElementById('simModalBody').innerHTML = ulHtml;
             document.getElementById('simModal').classList.remove('hidden');
         } else {
             document.getElementById('simModalTitle').innerHTML = `${region} - ${grade.toUpperCase()}級異常`;
@@ -1537,20 +1558,38 @@ function showReportSimTooltip(region, grade, x, y) {
     else if (grade === 'b') { gDesc = 'B級重點問題 (觀感)'; gColor = 'var(--warning-color)'; }
     else { gDesc = 'C級一般問題 (內部管理)'; gColor = 'var(--text-secondary)'; }
 
-    // 建立 HTML 內容
+    // 🌟 建立 HTML 內容（含 Top 3 標題與其他零星異常補齊）
     let bodyHtml = '';
     if (item.top_problems && item.top_problems[grade]) {
-        let probs = item.top_problems[grade].split(')\u3001');
-        bodyHtml = '<ul>' + probs.map((p, idx) => {
-            let text = idx === probs.length - 1 ? p : p + ')';
+        let rawStr = item.top_problems[grade];
+        let probsArray = rawStr.split(')\u3001'); // 以 ')、' 分割
+        let top3Sum = 0;
+        let listItems = probsArray.map((p, idx) => {
+            let text = idx === probsArray.length - 1 ? p : p + ')';
+            // 用 Regex 抓取最後括號內的數字
+            let numMatch = text.match(/\((\d+)\)$/);
+            if (numMatch) top3Sum += parseInt(numMatch[1], 10);
             return `<li style="border-left:3px solid ${gColor};padding-left:8px;">${text}</li>`;
-        }).join('') + '</ul>';
+        }).join('');
+
+        // 計算其他零星異常數量
+        let totalCount = grade === 'a' ? (item.sim_a_count || 0)
+                       : grade === 'b' ? (item.sim_b_count || 0)
+                       : (item.sim_c_count || 0);
+        let otherCount = totalCount - top3Sum;
+
+        bodyHtml = '<ul>' + listItems;
+        if (otherCount > 0) {
+            bodyHtml += `<li style="border-left:3px dashed var(--text-secondary);padding-left:8px;color:var(--text-secondary);font-style:italic;">* 其他零星異常項目 (${otherCount})</li>`;
+        }
+        bodyHtml += '</ul>';
     } else {
         bodyHtml = `<p style="color:var(--text-secondary);margin:0;font-size:13px;">此縣市目前無具體問題紀錄。</p>`;
     }
 
+    // 🌟 標題加入 Top 3 說明
     tip.innerHTML = `
-        <div class="tooltip-title">${region} · <span style="color:${gColor};">${gDesc}</span></div>
+        <div class="tooltip-title">${region} · <span style="color:${gColor};">${gDesc} - Top 3 異常</span></div>
         ${bodyHtml}
     `;
 
