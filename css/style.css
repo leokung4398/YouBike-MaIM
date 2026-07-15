@@ -7,9 +7,9 @@
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
     --accent-color: #38bdf8;
-    --danger-color: #10b981;  /* ?啁?∪??摩嚗???銝?/霅衣內 */
+    --danger-color: #ef4444;  /* 紅色 = 警示/未達標 */
     --warning-color: #f59e0b;
-    --safe-color: #ef4444;   /* ?啁?∪??摩嚗???銝?/?? */
+    --safe-color: #10b981;   /* 綠色 = 達標/良好 */
     --border-color: #334155;
     --chart-grid: #1e293b;
     --map-base: #1e293b;
@@ -29,9 +29,9 @@ body.light-mode {
     --text-primary: #0f172a; 
     --text-secondary: #334155; 
     --accent-color: #2563eb;
-    --danger-color: #10b981;  /* ?啁?∪??摩嚗???銝?/霅衣內 */
+    --danger-color: #ef4444;  /* 紅色 = 警示/未達標 */
     --warning-color: #d97706;
-    --safe-color: #ef4444;   /* ?啁?∪??摩嚗???銝?/?? */
+    --safe-color: #10b981;   /* 綠色 = 達標/良好 */
     --border-color: rgba(148, 163, 184, 0.4);
     --chart-grid: rgba(148, 163, 184, 0.2);
     --map-base: #cbd5e1;
