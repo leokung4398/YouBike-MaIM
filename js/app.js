@@ -604,8 +604,8 @@ function updateBarChart() {
             seriesData.push({
                 name: item.region, type: 'line', data: hist, smooth: true, symbol: isBad ? 'circle' : 'none', symbolSize: 8,
                 lineStyle: { width: isBad ? 4 : 2, opacity: isBad ? 1 : 0.4 }, itemStyle: { color: lineColor },
-                emphasis: { focus: 'series', lineStyle: { width: 7, shadowBlur: 15, shadowColor: lineColor, opacity: 1 }, label: { show: true, fontSize: 16 * globalFontScale, fontWeight: 'bold' } },
-                label: { show: false }, endLabel: { show: true, formatter: '{a} {c}%', color: 'inherit', fontSize: (isBad ? 14 : 11) * globalFontScale * dataFontBoost, fontWeight: isBad ? 'bold' : 'normal' },
+                emphasis: { focus: 'series', lineStyle: { width: 7, shadowBlur: 15, shadowColor: lineColor, opacity: 1 }, label: { show: true, formatter: (p) => p.dataIndex === 0 ? p.seriesName + ' ' + p.value + '%' : '', fontSize: 16 * globalFontScale, fontWeight: 'bold' } },
+                label: { show: true, formatter: (p) => p.dataIndex === 0 ? p.seriesName + ' ' + p.value + '%' : '', position: 'right', color: 'inherit', fontSize: (isBad ? 14 : 11) * globalFontScale * dataFontBoost, fontWeight: isBad ? 'bold' : 'normal' }, endLabel: { show: false },
                 labelLayout: { moveOverlap: 'shiftY' }, zlevel: isBad ? 10 : 1
             });
         });
@@ -681,9 +681,9 @@ function updateBarChart() {
     if (showVariance) {
         seriesConfig = [{
             name: '較上月變動', type: 'bar', barWidth: '40%', itemStyle: { borderRadius: [4, 4, 0, 0] },
-            // 🌟 將變動條狀圖從黑色(預設/文字色)改為科技藍(--accent-color)
-            data: varianceValues.map(val => ({ value: val, itemStyle: { color: 'var(--accent-color)' } })),
-            label: { show: true, position: 'top', color: 'var(--accent-color)', fontWeight: 'bold', formatter: val => (val.value > 0 ? '+' : '') + val.value + (isPercentage?'%':''), fontSize: 13 * globalFontScale * dataFontBoost },
+            // 🌟 將變動條狀圖從黑色(預設/文字色)改為科技灰藍(#64748b)
+            data: varianceValues.map(val => ({ value: val, itemStyle: { color: '#64748b' } })),
+            label: { show: true, position: 'top', color: '#64748b', fontWeight: 'bold', formatter: val => (val.value > 0 ? '+' : '') + val.value + (isPercentage?'%':''), fontSize: 13 * globalFontScale * dataFontBoost },
             markLine: { symbol: 'none', data: [{ type: 'average', name: '平均變動' }], label: { formatter: `平均\n${avgValue > 0 ? '+':''}${avgValue}${isPercentage?'%':''}`, position: 'end', color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, fontWeight: 'bold', fontSize: 11 * globalFontScale }, lineStyle: { color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, type: 'dashed', width: 2 } }
         }];
     } else {
@@ -755,7 +755,7 @@ function renderDataView() {
     };
 
     if (currentMode === 'stats') {
-        let th = (key, label) => `<th class="${currentStatsMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')" ${currentStatsMetric === key ? 'style="color:#1e3a8a;"' : ''}>${label}</th>`;
+        let th = (key, label) => `<th class="${currentStatsMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')" ${currentStatsMetric === key ? 'style="color:#ffffff;"' : ''}>${label}</th>`;
         html += `<th>縣市</th>${th('overall', '綜合分數')}${th('station', '場站妥善度')}${th('appearance', '外觀標示')}${th('functionality', '重要機能')}${th('ems', 'EMS維護率')}${th('operability', '可動率')}</tr></thead><tbody>`;
         rawData.forEach(r => {
             let cl = (key) => currentStatsMetric === key ? 'class="active-col"' : '';
@@ -826,7 +826,7 @@ function renderDataView() {
                 <td style="color:${varColor};font-weight:bold;">${varianceSign}${variance}%</td></tr>`;
         });
     } else if (currentMode === 'maintenance') {
-        let th = (key, label) => `<th class="${currentMaintenanceMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')" ${currentMaintenanceMetric === key ? 'style="color:#1e3a8a;"' : ''}>${label}</th>`;
+        let th = (key, label) => `<th class="${currentMaintenanceMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')" ${currentMaintenanceMetric === key ? 'style="color:#ffffff;"' : ''}>${label}</th>`;
         html += `<th>縣市</th><th>總營運車輛</th>${th('m_accident', '事故車輛數')}${th('m_records', '維護記錄數')}${th('maintenance_rate', '一級維護率')}<th>較上月變動</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             let cl = (key) => currentMaintenanceMetric === key ? 'class="active-col"' : '';
@@ -852,7 +852,7 @@ function renderDataView() {
                 <td style="color:${varColor};font-weight:bold;">${r.m_var}</td></tr>`;
         });
     } else if (currentMode === 'simulation') {
-        let th = (key, label) => `<th class="${currentSimulationMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')" ${currentSimulationMetric === key ? 'style="color:#1e3a8a;"' : ''}>${label}</th>`;
+        let th = (key, label) => `<th class="${currentSimulationMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')" ${currentSimulationMetric === key ? 'style="color:#ffffff;"' : ''}>${label}</th>`;
         html += `<th>縣市</th>${th('sim_a', 'A級異常')}${th('sim_b', 'B級異常')}${th('sim_c', 'C級異常')}</tr></thead><tbody>`;
         rawData.forEach(r => {
             let cl = (key) => currentSimulationMetric === key ? 'class="active-col"' : '';
@@ -1314,7 +1314,12 @@ function buildReportSlideHTML(page) {
             let opStyle = getRedStyle('operability', r.operability) ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary);';
             
             html += `<tr>${getRegionColReport(r)}
-                <td><span style="${overallStyle}">${r.overall} 分</span><br><small style="color:${diffColor};font-size:11px;font-weight:bold;">上月:${r.overall_feb} ${diffIcon}</small></td>
+                <td>
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1;">
+                        <span style="${overallStyle}">${r.overall} 分</span>
+                        <small style="color:${diffColor};font-size:11px;font-weight:bold;margin-top:-2px;">上月:${r.overall_feb} ${diffIcon}</small>
+                    </div>
+                </td>
                 <td><span style="${stStyle}">${r.station} 分</span></td>
                 <td><span style="${apStyle}">${r.appearance} 分</span></td>
                 <td><span style="${fuStyle}">${r.functionality} 分</span></td>
@@ -1325,7 +1330,7 @@ function buildReportSlideHTML(page) {
     } else if (mode === 'tire') {
         html += `<thead><tr><th>縣市</th>`;
         // 🌟 報告模式胎壓表頭反轉：當月在最前面，並加入與第5頁相同的 active-col 聚焦效果
-        html += `<th class="active-col" style="color:#1e3a8a;">${globalMonth.toString().padStart(2,'0')}月 (當月)</th>`;
+        html += `<th class="active-col" style="color:#ffffff;">${globalMonth.toString().padStart(2,'0')}月 (當月)</th>`;
         for (let i = 1; i <= 5; i++) {
             let m = globalMonth - i;
             let y = globalYear;
@@ -1348,7 +1353,7 @@ function buildReportSlideHTML(page) {
             📌 場站考評扣分備忘：各場站經品管判定「未達標準」之項目，每站將嚴格落實扣減 0.5 分之考評規範。
         </div>`;
         html = noteHTML + html;
-        html += `<thead><tr><th>縣市</th><th>${prevMonthStr}可動率</th><th class="active-col" style="color:#1e3a8a;">${currMonthStr}可動率</th><th>月度變動</th></tr></thead><tbody>`;
+        html += `<thead><tr><th>縣市</th><th>${prevMonthStr}可動率</th><th class="active-col" style="color:#ffffff;">${currMonthStr}可動率</th><th>月度變動</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             let variance = (r.operability - r.operability_feb).toFixed(2);
             let varianceSign = variance > 0 ? '+' : '';
