@@ -830,13 +830,16 @@ function renderDataView() {
         html += `<th>縣市</th><th>總營運車輛</th>${th('m_accident', '事故車輛數')}${th('m_records', '維護記錄數')}${th('maintenance_rate', '一級維護率')}<th>較上月變動</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             let cl = (key) => currentMaintenanceMetric === key ? 'class="active-col"' : '';
-            let varColor = r.m_var.includes('-') ? 'var(--danger-color)' : 'var(--safe-color)';
             let mrStyle = getRedStyle('maintenance_rate', r.maintenance_rate) || 'color:var(--accent-color);font-weight:bold;';
             
             // 🌟 實裝一級維護率雙月數據對比
             let mrDiff = (r.maintenance_rate - r.maintenance_rate_feb).toFixed(2);
             let mrDiffIcon = mrDiff > 0 ? '📈' : (mrDiff < 0 ? '📉' : '-');
             let mrDiffColor = mrDiff > 0 ? 'var(--safe-color)' : (mrDiff < 0 ? 'var(--danger-color)' : 'var(--text-secondary)');
+            
+            // 動態即時運算「較上月變動」的真實數字
+            let actualMVar = (mrDiff > 0 ? '+' : '') + mrDiff + '%';
+            let varColor = mrDiff < 0 ? 'var(--danger-color)' : 'var(--safe-color)';
             
             html += `${trStr(r)}${getRegionCol(r)}
                 <td>${r.m_fleet.toLocaleString()}</td><td ${cl('m_accident')} style="color:var(--danger-color);font-weight:bold;">${r.m_accident}</td>
@@ -849,7 +852,7 @@ function renderDataView() {
                         </div>
                     </div>
                 </td>
-                <td style="color:${varColor};font-weight:bold;">${r.m_var}</td></tr>`;
+                <td style="color:${varColor};font-weight:bold;">${actualMVar}</td></tr>`;
         });
     } else if (currentMode === 'simulation') {
         let th = (key, label) => `<th class="${currentSimulationMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')" ${currentSimulationMetric === key ? 'style="color:#ffffff;"' : ''}>${label}</th>`;
@@ -1399,15 +1402,17 @@ function buildReportSlideHTML(page) {
             
             // 事故車輛強制黑色
             let accidentStyle = 'color:var(--text-primary); font-weight:bold;';
-            // 變動率顏色：原本綠的改紅，紅的改黑
-            let varColor = r.m_var.includes('-') ? '#ef4444' : 'var(--text-primary)';
+            
+            // 🌟 動態即時運算「較上月變動」的真實數字
+            let actualMVar = (mrDiff > 0 ? '+' : '') + mrDiff + '%';
+            let varColor = mrDiff < 0 ? '#ef4444' : 'var(--text-primary)';
             
             html += `<tr>${getRegionColReport(r)}
                 <td>${r.m_fleet.toLocaleString()}</td>
                 <td style="${accidentStyle}">${r.m_accident}</td>
                 <td>${r.m_records.toLocaleString()}</td>
                 <td><span style="${mrStyle}">${r.maintenance_rate}%</span><br><div style="font-size:12px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月:${r.maintenance_rate_feb}% ${mrDiffIcon}</div></td>
-                <td style="color:${varColor};font-weight:bold;">${r.m_var}</td></tr>`;
+                <td style="color:${varColor};font-weight:bold;">${actualMVar}</td></tr>`;
         });
 
     } else if (mode === 'simulation') {
