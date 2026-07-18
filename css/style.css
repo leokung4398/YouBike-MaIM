@@ -265,10 +265,10 @@ body.laser-active, body.laser-active * { cursor: none; }
 }
 .clean-data-table tbody tr:hover td { background: rgba(56, 189, 248, 0.1); color: var(--text-primary); }
 
-/* ?? 璆菔皜嚗銵???(餈質馱銝?詨) */
+/* 🌟 極致清晰：直行聚焦 (追蹤上方選單) */
 .clean-data-table th.active-col {
-    background: var(--accent-color); 
-    color: #1e3a8a;                  
+    background: #2563eb; 
+    color: #ffffff;                  
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 .clean-data-table td.active-col {
@@ -1296,3 +1296,54 @@ body.report-mode .evidence-grid {
 }
 
 
+
+/* 🌟 動態實證圖片管理樣式 */
+.evidence-card.add-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed var(--accent-color);
+    background: rgba(37, 99, 235, 0.05);
+    cursor: pointer;
+    min-height: 200px;
+    transition: all 0.2s ease;
+}
+.evidence-card.add-card:hover {
+    background: rgba(37, 99, 235, 0.15);
+    transform: scale(1.02);
+}
+.evidence-card.add-card .add-icon {
+    font-size: 40px;
+    color: var(--accent-color);
+    margin-bottom: 10px;
+}
+.evidence-card.add-card span {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--accent-color);
+}
+.delete-evidence-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 28px;
+    height: 28px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    z-index: 10;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.delete-evidence-btn:hover {
+    background: #b91c1c;
+    transform: scale(1.1);
+}

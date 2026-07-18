@@ -1071,7 +1071,7 @@ let reportCurrentPage = 0; // 0-indexed，共 7 頁
 let reportScrollLocked = false; // 防止滾輪事件在動畫中重複觸發
 
 // 🌟 多媒體現場實證資料庫
-const evidenceMedia = [
+let evidenceMedia = [
     { type: 'image', src: 'assets/images/Screen issues.jpg', caption: '車機螢幕毀損實證' },
     { type: 'video', src: 'assets/videos/Screen issues.MOV', caption: '螢幕毀損現場紀錄影片' }
 ];
@@ -1445,16 +1445,27 @@ function buildReportSlideHTML(page) {
         });
     } else if (mode === 'evidence') {
         html = `<div class="evidence-grid">`;
-        evidenceMedia.forEach(media => {
+        
+        // 新增實證的卡片
+        html += `
+        <div class="evidence-card add-card" onclick="triggerEvidenceUpload()">
+            <div class="add-icon">+</div>
+            <span>新增實證</span>
+        </div>`;
+
+        evidenceMedia.forEach((media, idx) => {
+            let deleteBtn = `<button class="delete-evidence-btn" onclick="deleteEvidence(${idx}, event)">×</button>`;
             if (media.type === 'image') {
                 html += `
-                <div class="evidence-card" onclick="openLightbox('${media.src}', 'image')">
+                <div class="evidence-card" onclick="openLightbox('${media.src}', 'image')" style="position:relative;">
+                    ${deleteBtn}
                     <img src="${media.src}" class="evidence-card-media" loading="lazy" />
                     <div class="media-caption">${media.caption}</div>
                 </div>`;
             } else if (media.type === 'video') {
                 html += `
-                <div class="evidence-card" onclick="openLightbox('${media.src}', 'video')">
+                <div class="evidence-card" onclick="openLightbox('${media.src}', 'video')" style="position:relative;">
+                    ${deleteBtn}
                     <div class="video-overlay">
                         <video src="${media.src}" class="evidence-card-media" muted preload="metadata"></video>
                     </div>
@@ -1734,5 +1745,34 @@ window.openLightbox = function(src, type) {
         modal.innerHTML = `<img src="${src}" style="max-width:90vw; max-height:90vh; object-fit:contain; border-radius:12px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); cursor: default; transition: transform 0.3s ease;" />`;
     } else {
         modal.innerHTML = `<video src="${src}" controls autoplay style="max-width:90vw; max-height:90vh; object-fit:contain; border-radius:12px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); cursor: default;"></video>`;
+    }
+};
+
+// 🌟 動態實證圖片管理功能
+window.triggerEvidenceUpload = function() {
+    let input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*, video/*';
+    input.onchange = e => {
+        let file = e.target.files[0];
+        if (!file) return;
+        
+        let url = URL.createObjectURL(file);
+        let caption = prompt('請輸入實證說明/原因：');
+        if (caption === null) return; // 使用者按取消
+        
+        let type = file.type.startsWith('video') ? 'video' : 'image';
+        evidenceMedia.push({ type: type, src: url, caption: caption || '未提供說明' });
+        
+        renderAllReportSlides();
+    };
+    input.click();
+};
+
+window.deleteEvidence = function(index, event) {
+    event.stopPropagation(); // 阻止觸發 Lightbox
+    if (confirm('確定要刪除這張實證卡片嗎？')) {
+        evidenceMedia.splice(index, 1);
+        renderAllReportSlides();
     }
 };
