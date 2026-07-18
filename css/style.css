@@ -267,8 +267,8 @@ body.laser-active, body.laser-active * { cursor: none; }
 
 /* 🌟 極致清晰：直行聚焦 (追蹤上方選單) */
 .clean-data-table th.active-col {
-    background: #2563eb; 
-    color: #ffffff;                  
+    background: #2563eb !important; 
+    color: #ffffff !important;                  
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 .clean-data-table td.active-col {
