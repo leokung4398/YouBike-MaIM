@@ -1070,11 +1070,24 @@ let isReportMode = false;
 let reportCurrentPage = 0; // 0-indexed，共 7 頁
 let reportScrollLocked = false; // 防止滾輪事件在動畫中重複觸發
 
-// 🌟 多媒體現場實證資料庫
-let evidenceMedia = [
+// 🌟 多媒體現場實證資料庫 (與 localStorage 同步)
+const DEFAULT_EVIDENCE = [
     { type: 'image', src: 'assets/images/Screen issues.jpg', caption: '車機螢幕毀損實證' },
     { type: 'video', src: 'assets/videos/Screen issues.MOV', caption: '螢幕毀損現場紀錄影片' }
 ];
+
+let evidenceMedia = [];
+try {
+    const saved = localStorage.getItem('youbike_evidence');
+    if (saved) {
+        evidenceMedia = JSON.parse(saved);
+    } else {
+        evidenceMedia = [...DEFAULT_EVIDENCE];
+    }
+} catch (e) {
+    console.error("載入實證資料失敗", e);
+    evidenceMedia = [...DEFAULT_EVIDENCE];
+}
 
 // 8 頁的數據設定：每頁對應 nav 模式、子指標、標題
 const REPORT_PAGES = [
@@ -1457,14 +1470,14 @@ function buildReportSlideHTML(page) {
             let deleteBtn = `<button class="delete-evidence-btn" onclick="deleteEvidence(${idx}, event)">×</button>`;
             if (media.type === 'image') {
                 html += `
-                <div class="evidence-card" onclick="openLightbox('${media.src}', 'image')" style="position:relative;">
+                <div class="evidence-card" onclick="openLightboxEvidence(${idx})" style="position:relative;">
                     ${deleteBtn}
                     <img src="${media.src}" class="evidence-card-media" loading="lazy" />
                     <div class="media-caption">${media.caption}</div>
                 </div>`;
             } else if (media.type === 'video') {
                 html += `
-                <div class="evidence-card" onclick="openLightbox('${media.src}', 'video')" style="position:relative;">
+                <div class="evidence-card" onclick="openLightboxEvidence(${idx})" style="position:relative;">
                     ${deleteBtn}
                     <div class="video-overlay">
                         <video src="${media.src}" class="evidence-card-media" muted preload="metadata"></video>
@@ -1752,19 +1765,59 @@ window.openLightbox = function(src, type) {
 window.triggerEvidenceUpload = function() {
     let input = document.createElement('input');
     input.type = 'file';
-    input.accept = 'image/*, video/*';
+    input.accept = 'image/*'; // 限制為圖片，以免 localStorage 塞爆
     input.onchange = e => {
         let file = e.target.files[0];
         if (!file) return;
         
-        let url = URL.createObjectURL(file);
-        let caption = prompt('請輸入實證說明/原因：');
-        if (caption === null) return; // 使用者按取消
-        
-        let type = file.type.startsWith('video') ? 'video' : 'image';
-        evidenceMedia.push({ type: type, src: url, caption: caption || '未提供說明' });
-        
-        renderAllReportSlides();
+        let reader = new FileReader();
+        reader.onload = function(event) {
+            let img = new Image();
+            img.onload = function() {
+                // 建立 Canvas 進行壓縮
+                let canvas = document.createElement('canvas');
+                let MAX_WIDTH = 1280;
+                let MAX_HEIGHT = 1280;
+                let width = img.width;
+                let height = img.height;
+
+                // 等比例縮放
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                let ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // 轉為 Base64 (70% JPEG 品質)
+                let dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                
+                let caption = prompt('請輸入實證說明/原因：');
+                if (caption === null) return; // 使用者按取消
+                
+                evidenceMedia.push({ type: 'image', src: dataUrl, caption: caption || '未提供說明' });
+                
+                // 寫入 localStorage
+                try {
+                    localStorage.setItem('youbike_evidence', JSON.stringify(evidenceMedia));
+                } catch(err) {
+                    alert('儲存失敗！可能是上傳的圖片太多，超過了瀏覽器的容量限制 (5MB)。');
+                }
+                
+                renderAllReportSlides();
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
     };
     input.click();
 };
@@ -1773,6 +1826,17 @@ window.deleteEvidence = function(index, event) {
     event.stopPropagation(); // 阻止觸發 Lightbox
     if (confirm('確定要刪除這張實證卡片嗎？')) {
         evidenceMedia.splice(index, 1);
+        try {
+            localStorage.setItem('youbike_evidence', JSON.stringify(evidenceMedia));
+        } catch(err) {}
         renderAllReportSlides();
+    }
+};
+
+// 🌟 安全的 Lightbox 呼叫方式 (避免過長的 Base64 塞爆 HTML onclick)
+window.openLightboxEvidence = function(index) {
+    let media = evidenceMedia[index];
+    if (media) {
+        openLightbox(media.src, media.type);
     }
 };
