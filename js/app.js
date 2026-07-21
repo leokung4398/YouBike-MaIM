@@ -1285,7 +1285,7 @@ function buildReportSlideHTML(page) {
 
     if (mode === 'stats') {
         let legendHTML = `<div style="margin-bottom: 15px; font-size: 15px; background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            💡 報告檢閱視覺指引：<span style="color:#ef4444; font-weight:bold;">■ 紅色（列管指標，需加強注意）</span> ｜ <span style="color:#2563eb; font-weight:bold;">■ 藍色（進步指標，營運績效上升）</span> ｜ <span style="color:#10b981; font-weight:bold;">■ 綠色（退步指標，較上月成績下滑）</span>
+            💡 報告檢閱視覺指引：<span style="color:#ef4444; font-weight:bold;">■ 紅色（列管指標，需加強注意）</span> ｜ <span style="color:var(--text-primary); font-weight:bold;">■ 黑色（進步指標，營運績效上升）</span> ｜ <span style="color:#10b981; font-weight:bold;">■ 綠色（退步指標，較上月成績下滑）</span>
         </div>`;
         
         let totalTire = 0;
@@ -1295,8 +1295,8 @@ function buildReportSlideHTML(page) {
         
         let overallDiff = (globalAverages.overall - globalAverages.overall_feb).toFixed(2);
         let overallDiffIcon = overallDiff > 0 ? '▲' : (overallDiff < 0 ? '▼' : '-');
-        let overallDiffColor = overallDiff > 0 ? '#2563eb' : (overallDiff < 0 ? '#10b981' : 'var(--text-primary)');
-        let overallSubHTML = `<div style="font-size:14px;color:${overallDiffColor};font-weight:normal;margin-top:5px;">上月: ${globalAverages.overall_feb} ${overallDiffIcon}</div>`;
+        let overallDiffColor = overallDiff > 0 ? 'var(--text-primary)' : (overallDiff < 0 ? '#10b981' : 'var(--text-primary)');
+        let overallSubHTML = `<div style="font-size:16px;color:${overallDiffColor};font-weight:normal;margin-top:5px;">上月: ${globalAverages.overall_feb} ${overallDiffIcon}</div>`;
         
         let cardStyle = "flex: 1; background: rgba(30, 41, 59, 0.05); border-radius: 12px; padding: 15px; text-align: center; border-top: 4px solid #2563eb; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s;";
         let valStyle = "font-size: 2em; font-weight: bold; display: block; color: var(--text-primary);";
@@ -1332,7 +1332,7 @@ function buildReportSlideHTML(page) {
         rawData.forEach(r => {
             let diff = (r.overall - r.overall_feb).toFixed(2);
             let diffIcon = diff > 0 ? '▲' : (diff < 0 ? '▼' : '-');
-            let diffColor = diff > 0 ? '#2563eb' : (diff < 0 ? '#10b981' : 'var(--text-primary)');
+            let diffColor = diff > 0 ? 'var(--text-primary)' : (diff < 0 ? '#10b981' : 'var(--text-primary)');
             
             let overallBg = r.overall <= 92 ? 'background-color: yellow;' : '';
             let overallStyle = r.overall <= 92 ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary); font-weight:bold;';
@@ -1353,7 +1353,7 @@ function buildReportSlideHTML(page) {
                 <td>
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; ${overallBg}">
                         <span style="${overallStyle.replace(overallBg, '')}">${r.overall} 分</span>
-                        <small style="color:${diffColor};font-size:13px;font-weight:bold;margin-top:1px;">上月:${r.overall_feb} ${diffIcon}</small>
+                        <small style="color:${diffColor};font-size:16px;font-weight:bold;margin-top:1px;">上月:${r.overall_feb} ${diffIcon}</small>
                     </div>
                 </td>
                 <td><span style="${stStyle}">${r.station} 分</span></td>
@@ -1454,15 +1454,15 @@ function buildReportSlideHTML(page) {
         
         // 💡 評估視覺指引注入：極簡紅燈警示
         let legendHTML = `<div style="margin-bottom: 15px; font-size: 15px; background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold; background-color: yellow; padding: 2px 4px; border-radius: 4px;">A級 > 5% (黃底紅字)</span> ｜ <span style="color:#ef4444; font-weight:bold; background-color: yellow; padding: 2px 4px; border-radius: 4px;">B級 > 10% (黃底紅字)</span> ｜ <span style="color:#ef4444; font-weight:bold;">C級 > 30% (紅字)</span>
+            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold; background-color: yellow; padding: 2px 4px; border-radius: 4px;">A級 > 10% (黃底紅字)</span> ｜ <span style="color:#ef4444; font-weight:bold; background-color: yellow; padding: 2px 4px; border-radius: 4px;">B級 > 20% (黃底紅字)</span> ｜ <span style="color:#ef4444; font-weight:bold;">C級 > 30% (紅字)</span>
         </div>`;
         html = legendHTML + html;
         
         html += `<thead><tr><th>縣市</th><th>A級異常</th><th>B級異常</th><th>C級異常</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             // 主數值根據門檻亮紅燈，否則維持黑色
-            let aStyle = r.sim_a_ratio > 5.0 ? 'color:#ef4444; background-color: yellow; padding: 2px 4px; border-radius: 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
-            let bStyle = r.sim_b_ratio > 10.0 ? 'color:#ef4444; background-color: yellow; padding: 2px 4px; border-radius: 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
+            let aStyle = r.sim_a_ratio > 10.0 ? 'color:#ef4444; background-color: yellow; padding: 2px 4px; border-radius: 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
+            let bStyle = r.sim_b_ratio > 20.0 ? 'color:#ef4444; background-color: yellow; padding: 2px 4px; border-radius: 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
             let cStyle = r.sim_c_ratio > 30.0 ? 'color:#ef4444; padding: 2px 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
             
             // 聚焦效果
@@ -1487,39 +1487,40 @@ function buildReportSlideHTML(page) {
         });
     } else if (mode === 'evidence') {
         const AVAILABLE_EVIDENCE_IMAGES = [
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_1.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_10.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_11.jpg",
             "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_12.jpg",
             "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_13.jpg",
             "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_14.jpg",
             "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_15.jpg",
             "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_16.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_2.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_3.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_4.jpg",
             "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_5.jpg",
             "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_6.jpg",
             "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_7.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_8.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_9.jpg"
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_8.jpg"
         ];
         
         let shuffled = [...AVAILABLE_EVIDENCE_IMAGES].sort(() => 0.5 - Math.random());
         let selected = shuffled.slice(0, 3);
         
-        // 覆寫 evidenceMedia，讓點擊放大(openLightboxEvidence)的功能能繼續運作
+        // 覆寫 evidenceMedia，讓點擊放大(openCompareLightbox)的功能能繼續運作
         evidenceMedia = selected.map(filename => ({
             type: 'image',
             src: `assets/images/${filename}`,
-            caption: '置物籃鎖頭固定器褪色'
+            caption: '現場照片：置物籃鎖頭固定器褪色'
         }));
 
-        html = `<div class="evidence-grid">`;
+        html = `
+        <h3 style="margin-bottom: 10px; color: var(--text-primary); text-align: center;">最佳樣品參考</h3>
+        <div style="display: flex; justify-content: center; margin-bottom: 30px;">
+            <div class="evidence-card" onclick="openCompareLightbox(null)" style="position:relative; cursor:zoom-in; width: 100%; max-width: 350px;">
+                <img src="assets/images/最佳樣品.jpg" class="evidence-card-media" loading="lazy" />
+                <div class="media-caption">最佳樣品</div>
+            </div>
+        </div>
+        <div class="evidence-grid">`;
         
         evidenceMedia.forEach((media, idx) => {
             html += `
-            <div class="evidence-card" onclick="openLightboxEvidence(${idx})" style="position:relative; cursor:zoom-in;">
+            <div class="evidence-card" onclick="openCompareLightbox(${idx})" style="position:relative; cursor:zoom-in;">
                 <img src="${media.src}" class="evidence-card-media" loading="lazy" />
                 <div class="media-caption">${media.caption}</div>
             </div>`;
@@ -1957,3 +1958,72 @@ window.openLightboxEvidence = function(index) {
         openLightbox(media.src, media.type);
     }
 };
+
+window.openCompareLightbox = function(index) {
+    let modal = document.getElementById('report-lightbox-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'report-lightbox-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100vw';
+        modal.style.height = '100vh';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.95)';
+        modal.style.zIndex = '999999';
+        modal.style.display = 'flex';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+        modal.style.cursor = 'zoom-out';
+        modal.style.opacity = '0';
+        modal.style.transition = 'opacity 0.2s ease';
+        
+        modal.onclick = function(e) { 
+            if (e.target === modal || e.target.id === 'compare-container') {
+                modal.style.opacity = '0';
+                setTimeout(() => {
+                    modal.style.display = 'none'; 
+                    modal.innerHTML = ''; 
+                }, 200);
+            }
+        };
+        document.body.appendChild(modal);
+    }
+    
+    modal.style.display = 'flex';
+    setTimeout(() => modal.style.opacity = '1', 10);
+    
+    let bestSampleHTML = `
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; padding: 20px;">
+            <div style="color:white; font-size: 24px; font-weight:bold; margin-bottom: 15px;">最佳樣品</div>
+            <img src="assets/images/最佳樣品.jpg" style="max-width:100%; max-height:80vh; object-fit:contain; border-radius:12px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); cursor: default;" />
+        </div>
+    `;
+
+    if (index !== null) {
+        let media = evidenceMedia[index];
+        let targetHTML = `
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; padding: 20px;">
+                <div style="color:#ef4444; font-size: 24px; font-weight:bold; margin-bottom: 15px;">現場照片</div>
+                <img src="${media.src}" style="max-width:100%; max-height:80vh; object-fit:contain; border-radius:12px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); cursor: default;" />
+            </div>
+        `;
+        modal.innerHTML = `<div id="compare-container" style="display:flex; width:90vw; max-width: 1400px; justify-content: center; align-items: center;">${bestSampleHTML}${targetHTML}</div>`;
+    } else {
+        modal.innerHTML = `<div id="compare-container" style="display:flex; width:90vw; max-width: 1400px; justify-content: center; align-items: center;">${bestSampleHTML}</div>`;
+    }
+};
+
+// 全域 Esc 鍵關閉 Lightbox 事件
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        let modal = document.getElementById('report-lightbox-modal');
+        if (modal && modal.style.display === 'flex') {
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.innerHTML = '';
+            }, 200);
+        }
+    }
+});
