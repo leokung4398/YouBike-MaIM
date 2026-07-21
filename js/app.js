@@ -1,4 +1,4 @@
-﻿// js/app.js
+// js/app.js
 
 // 🌟 App Configuration (提取魔法數字與硬編碼)
 const APP_CONFIG = {
@@ -1306,8 +1306,12 @@ function buildReportSlideHTML(page) {
         <div class="report-summary-cards" style="display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; width: 100%; flex-wrap: nowrap;">
             <div class="report-summary-card hero-card-hover" style="${cardStyle}">
                 <span class="report-summary-card-title" style="${titleStyle}">全台綜合平均分數</span>
-                <span class="report-summary-card-value" style="${valStyle}">${globalAverages.overall} 分</span>
-                ${overallSubHTML}
+                <span class="report-summary-card-value" style="${valStyle}">
+                    <div style="display: flex; flex-direction: column; align-items: center; line-height: 1;">
+                        <span>${globalAverages.overall} 分</span>
+                        <span style="font-size: 0.55em; font-weight: normal; color: ${overallDiffColor}; margin-top: 4px;">(上月: ${globalAverages.overall_feb} ${overallDiffIcon})</span>
+                    </div>
+                </span>
             </div>
             <div class="report-summary-card hero-card-hover" style="${cardStyle}">
                 <span class="report-summary-card-title" style="${titleStyle}">施測站數</span>
@@ -1328,7 +1332,7 @@ function buildReportSlideHTML(page) {
         </div>`;
         
         html = legendHTML + summaryCardsHTML + html;
-        html += `<thead><tr><th>縣市</th><th>綜合分數</th><th>場站妥善度</th><th>外觀標示</th><th>重要機能</th><th>一級維護率</th><th>可動率</th></tr></thead><tbody>`;
+        html += `<thead><tr><th>縣市</th><th>綜合分數(分)</th><th>場站妥善度(分)</th><th>外觀標示(分)</th><th>重要機能(分)</th><th>一級維護率</th><th>可動率</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             let diff = (r.overall - r.overall_feb).toFixed(2);
             let diffIcon = diff > 0 ? '▲' : (diff < 0 ? '▼' : '-');
@@ -1352,13 +1356,13 @@ function buildReportSlideHTML(page) {
             html += `<tr${trAttr}>${getRegionColReport(r)}
                 <td>
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; ${overallBg}">
-                        <span style="${overallStyle.replace(overallBg, '')}">${r.overall} 分</span>
-                        <small style="color:${diffColor};font-size:16px;font-weight:bold;margin-top:1px;">上月:${r.overall_feb} ${diffIcon}</small>
+                        <span style="${overallStyle.replace(overallBg, '')}">${r.overall}</span>
+                        <small style="color:${diffColor};font-size:18px;font-weight:bold;margin-top:1px;">上月: ${r.overall_feb} ${diffIcon}</small>
                     </div>
                 </td>
-                <td><span style="${stStyle}">${r.station} 分</span></td>
-                <td><span style="${apStyle}">${r.appearance} 分</span></td>
-                <td><span style="${fuStyle}">${r.functionality} 分</span></td>
+                <td><span style="${stStyle}">${r.station}</span></td>
+                <td><span style="${apStyle}">${r.appearance}</span></td>
+                <td><span style="${fuStyle}">${r.functionality}</span></td>
                 <td><span style="${emStyle}">${r.ems}%</span></td>
                 <td><span style="${opStyle}">${r.operability}%</span></td></tr>`;
         });
@@ -1444,7 +1448,7 @@ function buildReportSlideHTML(page) {
                 <td>${r.m_fleet.toLocaleString()}</td>
                 <td style="${accidentStyle}">${r.m_accident}</td>
                 <td>${r.m_records.toLocaleString()}</td>
-                <td><span style="${mrStyle}">${r.maintenance_rate}%</span><br><div style="font-size:12px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月:${r.maintenance_rate_feb}% ${mrDiffIcon}</div></td>
+                <td><span style="${mrStyle}">${r.maintenance_rate}%</span><br><div style="font-size:16px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.maintenance_rate_feb}% ${mrDiffIcon}</div></td>
                 <td style="color:${varColor};font-weight:bold;">${actualMVar}</td></tr>`;
         });
 
@@ -1458,7 +1462,7 @@ function buildReportSlideHTML(page) {
         </div>`;
         html = legendHTML + html;
         
-        html += `<thead><tr><th>縣市</th><th>A級異常</th><th>B級異常</th><th>C級異常</th></tr></thead><tbody>`;
+        html += `<thead><tr><th>縣市</th><th>A級異常(輛)</th><th>B級異常(輛)</th><th>C級異常(輛)</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             // 主數值根據門檻亮紅燈，否則維持黑色
             let aStyle = r.sim_a_ratio > 5.0 ? 'color:#ef4444; background-color: yellow; padding: 2px 4px; border-radius: 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
@@ -1473,15 +1477,15 @@ function buildReportSlideHTML(page) {
             // 主數值根據邏輯亮紅燈，副數值全面保持中性色
             html += `<tr class="report-sim-row" data-region="${r.region}" data-grade="${grade}" style="cursor:pointer;">${getRegionColReport(r)}
                 <td ${aAttr}>
-                    <div style="display:inline-block; ${aStyle} font-weight:bold;">${r.sim_a_count} 輛 (${r.sim_a_ratio}%)</div>
+                    <div style="display:inline-block; ${aStyle} font-weight:bold;">${r.sim_a_count} (${r.sim_a_ratio}%)</div>
                     <br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_a_lm}%</div>
                 </td>
                 <td ${bAttr}>
-                    <div style="display:inline-block; ${bStyle} font-weight:bold;">${r.sim_b_count} 輛 (${r.sim_b_ratio}%)</div>
+                    <div style="display:inline-block; ${bStyle} font-weight:bold;">${r.sim_b_count} (${r.sim_b_ratio}%)</div>
                     <br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_b_lm}%</div>
                 </td>
                 <td ${cAttr}>
-                    <div style="display:inline-block; ${cStyle} font-weight:bold;">${r.sim_c_count} 輛 (${r.sim_c_ratio}%)</div>
+                    <div style="display:inline-block; ${cStyle} font-weight:bold;">${r.sim_c_count} (${r.sim_c_ratio}%)</div>
                     <br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_c_lm}%</div>
                 </td></tr>`;
         });
@@ -2027,4 +2031,5 @@ document.addEventListener('keydown', function(e) {
         }
     }
 });
+
 
