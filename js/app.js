@@ -1284,7 +1284,7 @@ function buildReportSlideHTML(page) {
     };
 
     if (mode === 'stats') {
-        let legendHTML = `<div style="margin-bottom: 15px; font-size: 15px; background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        let legendHTML = `<div style="margin-bottom: 8px; font-size: 14px; background: var(--surface-color); padding: 8px 15px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
             💡 報告檢閱視覺指引：<span style="color:#ef4444; font-weight:bold;">■ 紅色（列管指標，需加強注意）</span> ｜ <span style="color:var(--text-primary); font-weight:bold;">■ 黑色（進步指標，營運績效上升）</span> ｜ <span style="color:#10b981; font-weight:bold;">■ 綠色（退步指標，較上月成績下滑）</span>
         </div>`;
         
@@ -1296,14 +1296,14 @@ function buildReportSlideHTML(page) {
         let overallDiff = (globalAverages.overall - globalAverages.overall_feb).toFixed(2);
         let overallDiffIcon = overallDiff > 0 ? '▲' : (overallDiff < 0 ? '▼' : '-');
         let overallDiffColor = overallDiff > 0 ? 'var(--text-primary)' : (overallDiff < 0 ? '#10b981' : 'var(--text-primary)');
-        let overallSubHTML = `<div style="font-size:16px;color:${overallDiffColor};font-weight:normal;margin-top:5px;">上月: ${globalAverages.overall_feb} ${overallDiffIcon}</div>`;
+        let overallSubHTML = `<div style="font-size:16px;color:${overallDiffColor};font-weight:normal;margin-top:2px;">上月: ${globalAverages.overall_feb} ${overallDiffIcon}</div>`;
         
-        let cardStyle = "flex: 1; background: rgba(30, 41, 59, 0.05); border-radius: 12px; padding: 15px; text-align: center; border-top: 4px solid #2563eb; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s;";
-        let valStyle = "font-size: 2em; font-weight: bold; display: block; color: var(--text-primary);";
-        let titleStyle = "font-size: 0.9em; color: var(--text-secondary); margin-bottom: 8px; display: block;";
+        let cardStyle = "flex: 1; background: rgba(30, 41, 59, 0.05); border-radius: 12px; padding: 8px 10px; text-align: center; border-top: 4px solid #2563eb; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s;";
+        let valStyle = "font-size: 1.8em; font-weight: bold; display: block; color: var(--text-primary);";
+        let titleStyle = "font-size: 0.85em; color: var(--text-secondary); margin-bottom: 4px; display: block;";
         
         let summaryCardsHTML = `
-        <div class="report-summary-cards" style="display: flex; justify-content: space-between; gap: 15px; margin-bottom: 15px; width: 100%; flex-wrap: nowrap;">
+        <div class="report-summary-cards" style="display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; width: 100%; flex-wrap: nowrap;">
             <div class="report-summary-card hero-card-hover" style="${cardStyle}">
                 <span class="report-summary-card-title" style="${titleStyle}">全台綜合平均分數</span>
                 <span class="report-summary-card-value" style="${valStyle}">${globalAverages.overall} 分</span>
@@ -1323,7 +1323,7 @@ function buildReportSlideHTML(page) {
             </div>
             <div class="report-summary-card hero-card-hover" style="${cardStyle}">
                 <span class="report-summary-card-title" style="${titleStyle}">前後胎壓未達標</span>
-                <span class="report-summary-card-value" style="${valStyle}">${totalTire.toLocaleString()} 輛 (${tireRatio}%)</span>
+                <span class="report-summary-card-value" style="${valStyle}">${totalTire.toLocaleString()} 輛 <span style="font-size: 0.55em; font-weight: normal; color: var(--text-secondary);">(${tireRatio}%)</span></span>
             </div>
         </div>`;
         
