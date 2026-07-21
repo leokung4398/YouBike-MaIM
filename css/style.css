@@ -1347,3 +1347,8 @@ body.report-mode .evidence-grid {
     background: #b91c1c;
     transform: scale(1.1);
 }
+
+/* 🌟 分區平均連動 Hover 高亮效果 */
+tr.group-hover-active td {
+    background-color: rgba(37, 99, 235, 0.08) !important;
+}

@@ -756,7 +756,7 @@ function renderDataView() {
 
     if (currentMode === 'stats') {
         let th = (key, label) => `<th class="${currentStatsMetric === key ? 'active-col' : 'clickable-th'}" onclick="triggerSubMetric('${key}')" ${currentStatsMetric === key ? 'style="color:#ffffff;"' : ''}>${label}</th>`;
-        html += `<th>縣市</th>${th('overall', '綜合分數')}${th('station', '場站妥善度')}${th('appearance', '外觀標示')}${th('functionality', '重要機能')}${th('ems', 'EMS維護率')}${th('operability', '可動率')}</tr></thead><tbody>`;
+        html += `<th>縣市</th>${th('overall', '綜合分數')}${th('station', '場站妥善度')}${th('appearance', '外觀標示')}${th('functionality', '重要機能')}${th('ems', '一級維護率')}${th('operability', '可動率')}</tr></thead><tbody>`;
         rawData.forEach(r => {
             let cl = (key) => currentStatsMetric === key ? 'class="active-col"' : '';
             
@@ -1267,6 +1267,19 @@ function buildReportSlideHTML(page) {
     let html = '<div class="report-table-wrapper"><table class="clean-data-table">';
 
     const getRegionColReport = (r) => {
+        let hoverText = '';
+        let dashColor = 'var(--accent-color)';
+        if (['桃園', '新竹', '苗栗'].includes(r.region)) { hoverText = '桃竹苗區 · 綜合平均: 92.76分'; dashColor = '#3b82f6'; }
+        else if (['台中', '嘉義'].includes(r.region)) { hoverText = '中嘉區 · 綜合平均: 93.01分'; dashColor = '#10b981'; }
+        else if (['台南', '高雄', '屏東', '台東'].includes(r.region)) { hoverText = '南高屏東區 · 綜合平均: 92.18分'; dashColor = '#f59e0b'; }
+
+        if (hoverText && mode === 'stats') {
+            return `<td style="font-weight:bold;color:var(--text-primary);white-space:nowrap;cursor:help;"
+                        onmouseover="window.showReportStatsTooltip('${hoverText}', event); window.highlightGroup(event.target.closest('tr').dataset.group)"
+                        onmouseout="hideReportSimTooltip(); window.removeGroupHighlight()">
+                        <span style="border-bottom: 2px dashed ${dashColor}; padding-bottom: 2px;">${r.region}</span>
+                    </td>`;
+        }
         return `<td style="font-weight:bold;color:var(--text-primary);white-space:nowrap;">${r.region}</td>`;
     };
 
@@ -1315,25 +1328,32 @@ function buildReportSlideHTML(page) {
         </div>`;
         
         html = legendHTML + summaryCardsHTML + html;
-        html += `<thead><tr><th>縣市</th><th>綜合分數</th><th>場站妥善度</th><th>外觀標示</th><th>重要機能</th><th>EMS維護率</th><th>可動率</th></tr></thead><tbody>`;
+        html += `<thead><tr><th>縣市</th><th>綜合分數</th><th>場站妥善度</th><th>外觀標示</th><th>重要機能</th><th>一級維護率</th><th>可動率</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             let diff = (r.overall - r.overall_feb).toFixed(2);
             let diffIcon = diff > 0 ? '▲' : (diff < 0 ? '▼' : '-');
             let diffColor = diff > 0 ? '#2563eb' : (diff < 0 ? '#10b981' : 'var(--text-primary)');
             
-            // 強制紅色（#ef4444）為警示，其餘一律為黑色（var(--text-primary)）
-            let overallStyle = getRedStyle('overall', r.overall) ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary); font-weight:bold;';
+            let overallBg = r.overall <= 92 ? 'background-color: yellow;' : '';
+            let overallStyle = r.overall <= 92 ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary); font-weight:bold;';
+            overallStyle += overallBg;
             let stStyle = getRedStyle('station', r.station) ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary);';
             let apStyle = getRedStyle('appearance', r.appearance) ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary);';
             let fuStyle = getRedStyle('functionality', r.functionality) ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary);';
-            let emStyle = getRedStyle('ems', r.ems) ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary);';
-            let opStyle = getRedStyle('operability', r.operability) ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary);';
+            let emStyle = r.ems <= 90 ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary);';
+            let opStyle = r.operability <= 98 ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary);';
             
-            html += `<tr>${getRegionColReport(r)}
+            let groupId = '';
+            if (['桃園', '新竹', '苗栗'].includes(r.region)) groupId = 'group1';
+            else if (['台中', '嘉義'].includes(r.region)) groupId = 'group2';
+            else if (['台南', '高雄', '屏東', '台東'].includes(r.region)) groupId = 'group3';
+            let trAttr = groupId ? ` data-group="${groupId}"` : '';
+
+            html += `<tr${trAttr}>${getRegionColReport(r)}
                 <td>
-                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1;">
-                        <span style="${overallStyle}">${r.overall} 分</span>
-                        <small style="color:${diffColor};font-size:11px;font-weight:bold;margin-top:-2px;">上月:${r.overall_feb} ${diffIcon}</small>
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; ${overallBg}">
+                        <span style="${overallStyle.replace(overallBg, '')}">${r.overall} 分</span>
+                        <small style="color:${diffColor};font-size:13px;font-weight:bold;margin-top:1px;">上月:${r.overall_feb} ${diffIcon}</small>
                     </div>
                 </td>
                 <td><span style="${stStyle}">${r.station} 分</span></td>
@@ -1344,6 +1364,10 @@ function buildReportSlideHTML(page) {
         });
 
     } else if (mode === 'tire') {
+        let legendHTML = `<div style="margin-bottom: 15px; font-size: 15px; background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold;">當月未達標準 ≥ 5% (紅色字體)</span> ｜ <span style="color:#10b981; font-weight:bold;">歷史月份未達標準 ≥ 5% (綠色字體)</span>
+        </div>`;
+        html = legendHTML + html;
         html += `<thead><tr><th>縣市</th>`;
         // 🌟 報告模式胎壓表頭反轉：當月在最前面，並加入與第5頁相同的 active-col 聚焦效果
         html += `<th class="active-col" style="color:#ffffff;">${globalMonth.toString().padStart(2,'0')}月 (當月)</th>`;
@@ -1359,13 +1383,20 @@ function buildReportSlideHTML(page) {
             let hist = r.tire_history.slice(-6).reverse();
             let v = hist[0];
             // 當月份字體全面調整為黑色粗體，套用 active-col
+            let vStyle = v >= 5 ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary); font-weight:bold;';
+            let getHistStyle = (val) => val >= 5 ? 'color:#10b981; font-weight:bold;' : 'color:inherit;';
             html += `<tr>${getRegionColReport(r)}
-                <td class="active-col" style="color:var(--text-primary);font-weight:bold;">${v}% (${r.tire_count}輛)</td>
-                <td>${hist[1]}%</td><td>${hist[2]}%</td><td>${hist[3]}%</td><td>${hist[4]}%</td><td>${hist[5]}%</td></tr>`;
+                <td class="active-col" style="${vStyle}">${v}% (${r.tire_count}輛)</td>
+                <td style="${getHistStyle(hist[1])}">${hist[1]}%</td>
+                <td style="${getHistStyle(hist[2])}">${hist[2]}%</td>
+                <td style="${getHistStyle(hist[3])}">${hist[3]}%</td>
+                <td style="${getHistStyle(hist[4])}">${hist[4]}%</td>
+                <td style="${getHistStyle(hist[5])}">${hist[5]}%</td></tr>`;
         });
 
     } else if (mode === 'operability') {
         let noteHTML = `<div style="margin-bottom: 15px; font-size: 15px; color: var(--text-secondary); background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid #f59e0b; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold;">當月可動率低於 98% 將以紅色字體警示。</span> (滑鼠移至當月數值可檢視扣分基準)<br>
             📌 場站考評扣分備忘：各場站經品管判定「未達標準」之項目，每站將嚴格落實扣減 0.5 分之考評規範。
         </div>`;
         html = noteHTML + html;
@@ -1376,42 +1407,31 @@ function buildReportSlideHTML(page) {
             // 變動率顏色導正：退步 (<0) 紅色警告，進步/持平 (>=0) 黑色
             let varColor = variance < 0 ? '#ef4444' : 'var(--text-primary)';
             // 最新月份一律黑色並套用 active-col
+            let vColor = r.operability < 98 ? '#ef4444' : 'var(--text-primary)';
             html += `<tr>${getRegionColReport(r)}
                 <td>${r.operability_feb.toFixed(2)}%</td>
-                <td class="active-col" style="color:var(--text-primary);font-weight:bold;">${r.operability.toFixed(2)}%</td>
+                <td class="active-col" style="color:${vColor};font-weight:bold;cursor:help;"
+                    onmouseover="window.showReportOpTooltip(event)"
+                    onmouseout="hideReportSimTooltip()">${r.operability.toFixed(2)}%</td>
                 <td style="color:${varColor};font-weight:bold;">${varianceSign}${variance}%</td></tr>`;
         });
         
-        // 🌟 插入扣分規則表
-        html += `</tbody></table>
-        <div style="margin-top: 20px; font-size: 14px; background: var(--surface-color); padding: 15px; border-radius: 8px;">
-            <div style="font-weight:bold; margin-bottom: 10px; color: var(--text-primary);">📌 場站可動率考評扣分基準</div>
-            <table class="report-deduction-table" style="width:100%; border-collapse: collapse; text-align: left;">
-                <thead>
-                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
-                        <th style="padding: 8px;">可動率 (含下不含上)</th><th style="padding: 8px;">總分</th><th style="padding: 8px;">扣分</th>
-                    </tr>
-                </thead>
-                <tbody style="color: var(--text-primary);">
-                    <tr style="border-bottom: 1px dashed var(--border-color);"><td style="padding: 8px;">未達 91%</td><td style="padding: 8px;">0.00%</td><td style="padding: 8px; color: #ef4444; font-weight: bold;">-5</td></tr>
-                    <tr style="border-bottom: 1px dashed var(--border-color);"><td style="padding: 8px;">未達 93% ~ 91%</td><td style="padding: 8px;">91.00%</td><td style="padding: 8px; color: #ef4444; font-weight: bold;">-4</td></tr>
-                    <tr style="border-bottom: 1px dashed var(--border-color);"><td style="padding: 8px;">未達 95% ~ 93%</td><td style="padding: 8px;">93.00%</td><td style="padding: 8px; color: #ef4444; font-weight: bold;">-3</td></tr>
-                    <tr style="border-bottom: 1px dashed var(--border-color);"><td style="padding: 8px;">未達 97% ~ 95%</td><td style="padding: 8px;">95.00%</td><td style="padding: 8px; color: #ef4444; font-weight: bold;">-2</td></tr>
-                    <tr style="border-bottom: 1px dashed var(--border-color);"><td style="padding: 8px;">未達 99% ~ 97%</td><td style="padding: 8px;">97.00%</td><td style="padding: 8px; color: #ef4444; font-weight: bold;">-1</td></tr>
-                    <tr><td style="padding: 8px;">100% ~ 99%</td><td style="padding: 8px;">99.00%</td><td style="padding: 8px;">0</td></tr>
-                </tbody>
-            </table>
-        </div>`;
+        // (移除底部的扣分規則表，改為 tooltip)
+        html += `</tbody></table>`;
         return html; // 已封裝 table 直接回傳
 
     } else if (mode === 'maintenance') {
+        let legendHTML = `<div style="margin-bottom: 15px; font-size: 15px; background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold;">一級維護率低於 90% 將以紅色字體警示。</span>
+        </div>`;
+        html = legendHTML + html;
         html += `<thead><tr><th>縣市</th><th>總營運車輛</th><th>事故車輛數</th><th>維護記錄數</th><th>一級維護率</th><th>較上月變動</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             let mrDiff = (r.maintenance_rate - r.maintenance_rate_feb).toFixed(2);
             let mrDiffIcon = mrDiff > 0 ? '▲' : (mrDiff < 0 ? '▼' : '-');
             
-            // 強制紅色（#ef4444）為警示，其餘一律為黑色
-            let mrStyle = getRedStyle('maintenance_rate', r.maintenance_rate) ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary); font-weight:bold;';
+            // 一級維護率低於 90% 顯示紅字
+            let mrStyle = r.maintenance_rate < 90 ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary); font-weight:bold;';
             
             // 事故車輛強制黑色
             let accidentStyle = 'color:var(--text-primary); font-weight:bold;';
@@ -1434,16 +1454,16 @@ function buildReportSlideHTML(page) {
         
         // 💡 評估視覺指引注入：極簡紅燈警示
         let legendHTML = `<div style="margin-bottom: 15px; font-size: 15px; background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            💡 評估視覺指引：<span style="color:#ef4444; font-weight:bold;">■ 紅色（異常比例超過警戒門檻，需加強注意）</span>
+            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold; background-color: yellow; padding: 2px 4px; border-radius: 4px;">A級 > 5% (黃底紅字)</span> ｜ <span style="color:#ef4444; font-weight:bold; background-color: yellow; padding: 2px 4px; border-radius: 4px;">B級 > 10% (黃底紅字)</span> ｜ <span style="color:#ef4444; font-weight:bold;">C級 > 30% (紅字)</span>
         </div>`;
         html = legendHTML + html;
         
         html += `<thead><tr><th>縣市</th><th>A級異常</th><th>B級異常</th><th>C級異常</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             // 主數值根據門檻亮紅燈，否則維持黑色
-            let aMainColor = r.sim_a_ratio > 10.0 ? '#ef4444' : 'var(--text-primary)';
-            let bMainColor = r.sim_b_ratio > 20.0 ? '#ef4444' : 'var(--text-primary)';
-            let cMainColor = 'var(--text-primary)';
+            let aStyle = r.sim_a_ratio > 5.0 ? 'color:#ef4444; background-color: yellow; padding: 2px 4px; border-radius: 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
+            let bStyle = r.sim_b_ratio > 10.0 ? 'color:#ef4444; background-color: yellow; padding: 2px 4px; border-radius: 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
+            let cStyle = r.sim_c_ratio > 30.0 ? 'color:#ef4444; padding: 2px 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
             
             // 聚焦效果
             let aAttr = (grade === 'a') ? 'class="active-col"' : '';
@@ -1452,39 +1472,57 @@ function buildReportSlideHTML(page) {
             
             // 主數值根據邏輯亮紅燈，副數值全面保持中性色
             html += `<tr class="report-sim-row" data-region="${r.region}" data-grade="${grade}" style="cursor:pointer;">${getRegionColReport(r)}
-                <td ${aAttr} style="color:${aMainColor};font-weight:bold;">${r.sim_a_count} 輛 (${r.sim_a_ratio}%)<br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_a_lm}%</div></td>
-                <td ${bAttr} style="color:${bMainColor};font-weight:bold;">${r.sim_b_count} 輛 (${r.sim_b_ratio}%)<br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_b_lm}%</div></td>
-                <td ${cAttr} style="color:${cMainColor};font-weight:bold;">${r.sim_c_count} 輛 (${r.sim_c_ratio}%)<br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_c_lm}%</div></td></tr>`;
+                <td ${aAttr}>
+                    <div style="display:inline-block; ${aStyle} font-weight:bold;">${r.sim_a_count} 輛 (${r.sim_a_ratio}%)</div>
+                    <br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_a_lm}%</div>
+                </td>
+                <td ${bAttr}>
+                    <div style="display:inline-block; ${bStyle} font-weight:bold;">${r.sim_b_count} 輛 (${r.sim_b_ratio}%)</div>
+                    <br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_b_lm}%</div>
+                </td>
+                <td ${cAttr}>
+                    <div style="display:inline-block; ${cStyle} font-weight:bold;">${r.sim_c_count} 輛 (${r.sim_c_ratio}%)</div>
+                    <br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_c_lm}%</div>
+                </td></tr>`;
         });
     } else if (mode === 'evidence') {
+        const AVAILABLE_EVIDENCE_IMAGES = [
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_1.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_10.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_11.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_12.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_13.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_14.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_15.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_16.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_2.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_3.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_4.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_5.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_6.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_7.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_8.jpg",
+            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_9.jpg"
+        ];
+        
+        let shuffled = [...AVAILABLE_EVIDENCE_IMAGES].sort(() => 0.5 - Math.random());
+        let selected = shuffled.slice(0, 3);
+        
+        // 覆寫 evidenceMedia，讓點擊放大(openLightboxEvidence)的功能能繼續運作
+        evidenceMedia = selected.map(filename => ({
+            type: 'image',
+            src: `assets/images/${filename}`,
+            caption: '置物籃鎖頭固定器褪色'
+        }));
+
         html = `<div class="evidence-grid">`;
         
-        // 新增實證的卡片
-        html += `
-        <div class="evidence-card add-card" onclick="triggerEvidenceUpload()">
-            <div class="add-icon">+</div>
-            <span>新增實證</span>
-        </div>`;
-
         evidenceMedia.forEach((media, idx) => {
-            let deleteBtn = `<button class="delete-evidence-btn" onclick="deleteEvidence(${idx}, event)">×</button>`;
-            if (media.type === 'image') {
-                html += `
-                <div class="evidence-card" onclick="openLightboxEvidence(${idx})" style="position:relative;">
-                    ${deleteBtn}
-                    <img src="${media.src}" class="evidence-card-media" loading="lazy" />
-                    <div class="media-caption">${media.caption}</div>
-                </div>`;
-            } else if (media.type === 'video') {
-                html += `
-                <div class="evidence-card" onclick="openLightboxEvidence(${idx})" style="position:relative;">
-                    ${deleteBtn}
-                    <div class="video-overlay">
-                        <video src="${media.src}" class="evidence-card-media" muted preload="metadata"></video>
-                    </div>
-                    <div class="media-caption">${media.caption}</div>
-                </div>`;
-            }
+            html += `
+            <div class="evidence-card" onclick="openLightboxEvidence(${idx})" style="position:relative; cursor:zoom-in;">
+                <img src="${media.src}" class="evidence-card-media" loading="lazy" />
+                <div class="media-caption">${media.caption}</div>
+            </div>`;
         });
         html += `</div>`;
         return html; // 直接回傳 grid，不包在 table 裡
@@ -1669,6 +1707,85 @@ function showReportSimTooltip(region, grade, x, y) {
     tip.style.left = `${left}px`;
     tip.style.top = `${top}px`;
 }
+
+window.showReportStatsTooltip = function(text, e) {
+    if (window.tooltipHideTimer) clearTimeout(window.tooltipHideTimer);
+    const tip = ensureReportSimTooltip();
+    
+    // 與模擬模式 Tooltip 樣式保持一致，但微調邊界與間距
+    tip.innerHTML = `<div class="tooltip-title" style="margin:0; padding:5px 0; border-bottom:none; font-size:24px;">${text}</div>`;
+    
+    tip.classList.remove('hidden');
+    tip.style.left = '0'; tip.style.top = '0';
+    const tipW = tip.offsetWidth || 280;
+    const tipH = tip.offsetHeight || 50;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    let left = e.clientX + 20;
+    let top = e.clientY - tipH / 2;
+    if (left + tipW + 5 > vw) left = e.clientX - tipW - 20;
+    if (top < 5) top = 5;
+    if (top + tipH + 5 > vh) top = vh - tipH - 5;
+
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+};
+
+window.highlightGroup = function(groupId) {
+    if (!groupId) return;
+    document.querySelectorAll(`tr[data-group="${groupId}"]`).forEach(tr => {
+        tr.classList.add('group-hover-active');
+    });
+};
+
+window.removeGroupHighlight = function() {
+    document.querySelectorAll('tr.group-hover-active').forEach(tr => {
+        tr.classList.remove('group-hover-active');
+    });
+};
+
+const opTooltipHTML = `<div style="font-size: 14px; background: var(--surface-color); padding: 5px; border-radius: 8px; width: 450px;">
+    <div style="font-weight:bold; margin-bottom: 10px; color: var(--text-primary);">📌 場站可動率考評扣分基準</div>
+    <table class="report-deduction-table" style="width:100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                <th style="padding: 8px;">可動率 (含下不含上)</th><th style="padding: 8px;">總分</th><th style="padding: 8px;">扣分</th>
+            </tr>
+        </thead>
+        <tbody style="color: var(--text-primary);">
+            <tr style="border-bottom: 1px dashed var(--border-color);"><td style="padding: 8px;">未達 91%</td><td style="padding: 8px;">0.00%</td><td style="padding: 8px; color: #ef4444; font-weight: bold;">-5</td></tr>
+            <tr style="border-bottom: 1px dashed var(--border-color);"><td style="padding: 8px;">未達 93% ~ 91%</td><td style="padding: 8px;">91.00%</td><td style="padding: 8px; color: #ef4444; font-weight: bold;">-4</td></tr>
+            <tr style="border-bottom: 1px dashed var(--border-color);"><td style="padding: 8px;">未達 95% ~ 93%</td><td style="padding: 8px;">93.00%</td><td style="padding: 8px; color: #ef4444; font-weight: bold;">-3</td></tr>
+            <tr style="border-bottom: 1px dashed var(--border-color);"><td style="padding: 8px;">未達 97% ~ 95%</td><td style="padding: 8px;">95.00%</td><td style="padding: 8px; color: #ef4444; font-weight: bold;">-2</td></tr>
+            <tr style="border-bottom: 1px dashed var(--border-color);"><td style="padding: 8px;">未達 99% ~ 97%</td><td style="padding: 8px;">97.00%</td><td style="padding: 8px; color: #ef4444; font-weight: bold;">-1</td></tr>
+            <tr><td style="padding: 8px;">100% ~ 99%</td><td style="padding: 8px;">99.00%</td><td style="padding: 8px;">0</td></tr>
+        </tbody>
+    </table>
+</div>`;
+
+window.showReportOpTooltip = function(e) {
+    if (window.tooltipHideTimer) clearTimeout(window.tooltipHideTimer);
+    const tip = ensureReportSimTooltip();
+    
+    tip.innerHTML = opTooltipHTML;
+    
+    tip.classList.remove('hidden');
+    tip.style.left = '0'; tip.style.top = '0';
+    const tipW = tip.offsetWidth || 450;
+    const tipH = tip.offsetHeight || 250;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    let left = e.clientX + 15;
+    let top = e.clientY - tipH / 2;
+    if (left + tipW + 5 > vw) left = e.clientX - tipW - 15;
+    if (top < 5) top = 5;
+    if (top + tipH + 5 > vh) top = vh - tipH - 5;
+
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+};
 
 function hideReportSimTooltip() {
     const tip = document.getElementById('report-sim-tooltip');

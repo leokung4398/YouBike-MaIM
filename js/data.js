@@ -10,7 +10,7 @@ const rawData = [
             "新北市"
         ],
         overall: 89.01,
-        overall_feb: 89.71,
+        overall_feb: 91.50,
         station: 95,
         station_feb: 95,
         appearance: 87,
@@ -75,7 +75,7 @@ const rawData = [
             "桃園縣"
         ],
         overall: 92.05,
-        overall_feb: 89.83,
+        overall_feb: 93.06,
         station: 97,
         station_feb: 98,
         appearance: 90,
@@ -140,7 +140,7 @@ const rawData = [
             "新竹縣"
         ],
         overall: 95.03,
-        overall_feb: 95.41,
+        overall_feb: 93.26,
         station: 98,
         station_feb: 96,
         appearance: 93,
@@ -204,7 +204,7 @@ const rawData = [
             "苗栗縣"
         ],
         overall: 92.29,
-        overall_feb: 92.96,
+        overall_feb: 97.48,
         station: 95,
         station_feb: 97,
         appearance: 85,
@@ -269,7 +269,7 @@ const rawData = [
             "台中市"
         ],
         overall: 93.13,
-        overall_feb: 96.46,
+        overall_feb: 95.48,
         station: 98,
         station_feb: 98,
         appearance: 91,
@@ -334,7 +334,7 @@ const rawData = [
             "嘉義縣"
         ],
         overall: 92.5,
-        overall_feb: 93.83,
+        overall_feb: 94.07,
         station: 98,
         station_feb: 98,
         appearance: 85,
@@ -399,7 +399,7 @@ const rawData = [
             "台南市"
         ],
         overall: 94.34,
-        overall_feb: 94.03,
+        overall_feb: 93.03,
         station: 100,
         station_feb: 99,
         appearance: 91,
@@ -463,7 +463,7 @@ const rawData = [
             "高雄市"
         ],
         overall: 90.18,
-        overall_feb: 91.72,
+        overall_feb: 90.00,
         station: 99,
         station_feb: 100,
         appearance: 81,
@@ -527,7 +527,7 @@ const rawData = [
             "屏東縣"
         ],
         overall: 93.9,
-        overall_feb: 95.2,
+        overall_feb: 93.25,
         station: 100,
         station_feb: 100,
         appearance: 89,
@@ -592,7 +592,7 @@ const rawData = [
             "台東縣"
         ],
         overall: 98,
-        overall_feb: 96.58,
+        overall_feb: 97.5,
         station: 100,
         station_feb: 100,
         appearance: 95,
@@ -653,7 +653,7 @@ const rawData = [
 ];
 
 const globalAverages = {
-    overall_feb: 91.84,
+    overall_feb: 92.51,
     total_s: 292,
     total_v: 2001,
     total_e: 323,
