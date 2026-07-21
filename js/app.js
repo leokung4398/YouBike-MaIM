@@ -1,4 +1,4 @@
-// js/app.js
+﻿// js/app.js
 
 // 🌟 App Configuration (提取魔法數字與硬編碼)
 const APP_CONFIG = {
@@ -1454,7 +1454,7 @@ function buildReportSlideHTML(page) {
         
         // 💡 評估視覺指引注入：極簡紅燈警示
         let legendHTML = `<div style="margin-bottom: 15px; font-size: 15px; background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold; background-color: yellow; padding: 2px 4px; border-radius: 4px;">A級 > 10% (黃底紅字)</span> ｜ <span style="color:#ef4444; font-weight:bold; background-color: yellow; padding: 2px 4px; border-radius: 4px;">B級 > 20% (黃底紅字)</span> ｜ <span style="color:#ef4444; font-weight:bold;">C級 > 30% (紅字)</span>
+            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold; background-color: yellow; padding: 2px 4px; border-radius: 4px;">A級 > 5% (黃底紅字)</span> ｜ <span style="color:#ef4444; font-weight:bold; background-color: yellow; padding: 2px 4px; border-radius: 4px;">B級 > 15% (黃底紅字)</span> ｜ <span style="color:#ef4444; font-weight:bold;">C級 > 30% (紅字)</span>
         </div>`;
         html = legendHTML + html;
         
@@ -2027,3 +2027,4 @@ document.addEventListener('keydown', function(e) {
         }
     }
 });
+
