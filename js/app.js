@@ -1365,7 +1365,7 @@ function buildReportSlideHTML(page) {
 
     } else if (mode === 'tire') {
         let legendHTML = `<div style="margin-bottom: 15px; font-size: 15px; background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold;">當月未達標準 ≥ 5% (紅色字體)</span> ｜ <span style="color:#10b981; font-weight:bold;">歷史月份未達標準 ≥ 5% (綠色字體)</span>
+            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold;">當月未達標準 ≥ 5% (紅色字體)</span> ｜ <span style="color:#fca5a5; font-weight:bold;">歷史月份未達標準 ≥ 5% (淺紅色字體)</span>
         </div>`;
         html = legendHTML + html;
         html += `<thead><tr><th>縣市</th>`;
@@ -1384,7 +1384,7 @@ function buildReportSlideHTML(page) {
             let v = hist[0];
             // 當月份字體全面調整為黑色粗體，套用 active-col
             let vStyle = v >= 5 ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary); font-weight:bold;';
-            let getHistStyle = (val) => val >= 5 ? 'color:#10b981; font-weight:bold;' : 'color:inherit;';
+            let getHistStyle = (val) => val >= 5 ? 'color:#fca5a5; font-weight:bold;' : 'color:inherit;';
             html += `<tr>${getRegionColReport(r)}
                 <td class="active-col" style="${vStyle}">${v}% (${r.tire_count}輛)</td>
                 <td style="${getHistStyle(hist[1])}">${hist[1]}%</td>
@@ -1396,7 +1396,7 @@ function buildReportSlideHTML(page) {
 
     } else if (mode === 'operability') {
         let noteHTML = `<div style="margin-bottom: 15px; font-size: 15px; color: var(--text-secondary); background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid #f59e0b; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold;">當月可動率低於 98% 將以紅色字體警示。</span> (滑鼠移至當月數值可檢視扣分基準)<br>
+            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold;">當月可動率低於 99% 將以紅色字體警示。</span> (滑鼠移至當月數值可檢視扣分基準)<br>
             📌 場站考評扣分備忘：各場站經品管判定「未達標準」之項目，每站將嚴格落實扣減 0.5 分之考評規範。
         </div>`;
         html = noteHTML + html;
@@ -1407,7 +1407,7 @@ function buildReportSlideHTML(page) {
             // 變動率顏色導正：退步 (<0) 紅色警告，進步/持平 (>=0) 黑色
             let varColor = variance < 0 ? '#ef4444' : 'var(--text-primary)';
             // 最新月份一律黑色並套用 active-col
-            let vColor = r.operability < 98 ? '#ef4444' : 'var(--text-primary)';
+            let vColor = r.operability < 99 ? '#ef4444' : 'var(--text-primary)';
             html += `<tr>${getRegionColReport(r)}
                 <td>${r.operability_feb.toFixed(2)}%</td>
                 <td class="active-col" style="color:${vColor};font-weight:bold;cursor:help;"
@@ -1461,8 +1461,8 @@ function buildReportSlideHTML(page) {
         html += `<thead><tr><th>縣市</th><th>A級異常</th><th>B級異常</th><th>C級異常</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             // 主數值根據門檻亮紅燈，否則維持黑色
-            let aStyle = r.sim_a_ratio > 10.0 ? 'color:#ef4444; background-color: yellow; padding: 2px 4px; border-radius: 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
-            let bStyle = r.sim_b_ratio > 20.0 ? 'color:#ef4444; background-color: yellow; padding: 2px 4px; border-radius: 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
+            let aStyle = r.sim_a_ratio > 5.0 ? 'color:#ef4444; background-color: yellow; padding: 2px 4px; border-radius: 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
+            let bStyle = r.sim_b_ratio > 15.0 ? 'color:#ef4444; background-color: yellow; padding: 2px 4px; border-radius: 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
             let cStyle = r.sim_c_ratio > 30.0 ? 'color:#ef4444; padding: 2px 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
             
             // 聚焦效果
