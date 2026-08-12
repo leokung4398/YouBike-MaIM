@@ -17,7 +17,7 @@ const APP_CONFIG = {
 
 // 🌟 1. 實裝全自動動態月份應答
 let globalYear = window.GLOBAL_YEAR || 2026;
-let globalMonth = window.GLOBAL_MONTH || 4;
+let globalMonth = window.GLOBAL_MONTH || 7;
 
 if (typeof rawData !== 'undefined' && rawData.length > 0) {
     if (rawData[0].month) {
