@@ -1,26 +1,26 @@
-// js/data.js
+﻿// js/data.js
 
-// 核心資料庫 (透過 CSV ETL 自動生成)
+// ?詨?鞈?摨?(?? CSV ETL ?芸???)
 const rawData = [
     {
-        region: "雙北",
+        region: "??",
         mapNames: [
-            "臺北市",
-            "台北市",
-            "新北市"
+            "?箏?撣?,
+            "?啣?撣?,
+            "?啣?撣?
         ],
         overall: 89.89,
-        overall_feb: 89.71,
+        overall_feb: 89.01,
         station: 95,
         station_feb: 95,
         appearance: 88,
         appearance_feb: 87,
         functionality: 97,
-        functionality_feb: 97,
+        functionality_feb: 98,
         ems: 75.12,
-        ems_feb: 84.8,
+        ems_feb: 76.69,
         operability: 97.32,
-        operability_feb: 95.85,
+        operability_feb: 95.34,
         mapCenter: [
             121.56,
             25.03
@@ -33,7 +33,7 @@ const rawData = [
             s: 150,
             v: 1053,
             e: 151,
-            t: "41 輛 (3.9%)"
+            t: "41 頛?(3.9%)"
         },
         tire_history: [
             11,
@@ -69,23 +69,23 @@ const rawData = [
         sim_c_var: "-6.8%"
     },
     {
-        region: "桃園",
+        region: "獢?",
         mapNames: [
-            "桃園市",
-            "桃園縣"
+            "獢?撣?,
+            "獢?蝮?
         ],
         overall: 91.78,
-        overall_feb: 89.83,
+        overall_feb: 92.05,
         station: 97,
-        station_feb: 98,
+        station_feb: 97,
         appearance: 91,
-        appearance_feb: 89,
+        appearance_feb: 90,
         functionality: 95,
         functionality_feb: 97,
         ems: 85.33,
-        ems_feb: 88.4,
+        ems_feb: 85.09,
         operability: 97.58,
-        operability_feb: 92.89,
+        operability_feb: 97.51,
         mapCenter: [
             121.21,
             24.95
@@ -98,7 +98,7 @@ const rawData = [
             s: 31,
             v: 246,
             e: 37,
-            t: "28 輛 (11.4%)"
+            t: "28 頛?(11.4%)"
         },
         tire_history: [
             9,
@@ -134,23 +134,23 @@ const rawData = [
         sim_c_var: "-18.9%"
     },
     {
-        region: "新竹",
+        region: "?啁姘",
         mapNames: [
-            "新竹市",
-            "新竹縣"
+            "?啁姘撣?,
+            "?啁姘蝮?
         ],
         overall: 95.52,
-        overall_feb: 95.41,
+        overall_feb: 95.03,
         station: 96,
-        station_feb: 96,
+        station_feb: 98,
         appearance: 91,
         appearance_feb: 93,
         functionality: 98,
-        functionality_feb: 98,
+        functionality_feb: 99,
         ems: 95.74,
-        ems_feb: 98.3,
+        ems_feb: 96.2,
         operability: 99.15,
-        operability_feb: 98.27,
+        operability_feb: 96.99,
         mapCenter: [
             121.01,
             24.82
@@ -163,7 +163,7 @@ const rawData = [
             s: 15,
             v: 105,
             e: 29,
-            t: "4 輛 (3.8%)"
+            t: "4 頛?(3.8%)"
         },
         tire_history: [
             8,
@@ -199,22 +199,22 @@ const rawData = [
         sim_c_var: "-20.0%"
     },
     {
-        region: "苗栗",
+        region: "??",
         mapNames: [
-            "苗栗縣"
+            "??蝮?
         ],
         overall: 96.17,
-        overall_feb: 92.96,
+        overall_feb: 92.29,
         station: 96,
-        station_feb: 97,
+        station_feb: 95,
         appearance: 94,
-        appearance_feb: 91,
+        appearance_feb: 85,
         functionality: 99,
-        functionality_feb: 95,
+        functionality_feb: 98,
         ems: 96.34,
-        ems_feb: 93,
+        ems_feb: 98.36,
         operability: 98.58,
-        operability_feb: 97.35,
+        operability_feb: 97.48,
         mapCenter: [
             120.82,
             24.56
@@ -227,7 +227,7 @@ const rawData = [
             s: 9,
             v: 60,
             e: 26,
-            t: "0 輛 (0%)"
+            t: "0 頛?(0%)"
         },
         tire_history: [
             0,
@@ -263,23 +263,23 @@ const rawData = [
         sim_c_var: "+8.0%"
     },
     {
-        region: "台中",
+        region: "?唬葉",
         mapNames: [
-            "臺中市",
-            "台中市"
+            "?箔葉撣?,
+            "?唬葉撣?
         ],
         overall: 93.94,
-        overall_feb: 96.46,
+        overall_feb: 93.13,
         station: 95,
         station_feb: 98,
         appearance: 92,
-        appearance_feb: 92,
+        appearance_feb: 91,
         functionality: 99,
-        functionality_feb: 99,
+        functionality_feb: 98,
         ems: 83.56,
-        ems_feb: 93.4,
+        ems_feb: 84.78,
         operability: 99.1,
-        operability_feb: 99.47,
+        operability_feb: 98.56,
         mapCenter: [
             120.67,
             24.14
@@ -292,7 +292,7 @@ const rawData = [
             s: 37,
             v: 264,
             e: 12,
-            t: "4 輛 (1.5%)"
+            t: "4 頛?(1.5%)"
         },
         tire_history: [
             1,
@@ -328,23 +328,23 @@ const rawData = [
         sim_c_var: "-5.0%"
     },
     {
-        region: "嘉義",
+        region: "?儔",
         mapNames: [
-            "嘉義市",
-            "嘉義縣"
+            "?儔撣?,
+            "?儔蝮?
         ],
         overall: 90.58,
-        overall_feb: 93.83,
+        overall_feb: 92.5,
         station: 99,
         station_feb: 98,
         appearance: 90,
-        appearance_feb: 88,
+        appearance_feb: 85,
         functionality: 90,
-        functionality_feb: 96,
+        functionality_feb: 97,
         ems: 97.39,
-        ems_feb: 94.9,
+        ems_feb: 100,
         operability: 99.25,
-        operability_feb: 99.25,
+        operability_feb: 97.3,
         mapCenter: [
             120.45,
             23.48
@@ -357,7 +357,7 @@ const rawData = [
             s: 10,
             v: 66,
             e: 13,
-            t: "11 輛 (16.7%)"
+            t: "11 頛?(16.7%)"
         },
         tire_history: [
             1,
@@ -393,23 +393,23 @@ const rawData = [
         sim_c_var: "-4.7%"
     },
     {
-        region: "台南",
+        region: "?啣?",
         mapNames: [
-            "臺南市",
-            "台南市"
+            "?箏?撣?,
+            "?啣?撣?
         ],
         overall: 94.83,
-        overall_feb: 94.03,
+        overall_feb: 94.34,
         station: 100,
-        station_feb: 99,
+        station_feb: 100,
         appearance: 90,
-        appearance_feb: 90,
+        appearance_feb: 91,
         functionality: 99,
-        functionality_feb: 97,
+        functionality_feb: 99,
         ems: 99.85,
-        ems_feb: 93.5,
+        ems_feb: 80.09,
         operability: 97.57,
-        operability_feb: 98.42,
+        operability_feb: 99.49,
         mapCenter: [
             120.25,
             23.14
@@ -422,7 +422,7 @@ const rawData = [
             s: 19,
             v: 156,
             e: 34,
-            t: "5 輛 (3.2%)"
+            t: "5 頛?(3.2%)"
         },
         tire_history: [
             7,
@@ -458,22 +458,22 @@ const rawData = [
         sim_c_var: "-13.5%"
     },
     {
-        region: "高雄",
+        region: "擃?",
         mapNames: [
-            "高雄市"
+            "擃?撣?
         ],
         overall: 89.53,
-        overall_feb: 91.72,
+        overall_feb: 90.18,
         station: 100,
-        station_feb: 100,
+        station_feb: 99,
         appearance: 82,
-        appearance_feb: 83,
+        appearance_feb: 81,
         functionality: 96,
-        functionality_feb: 97,
+        functionality_feb: 96,
         ems: 100,
-        ems_feb: 100,
+        ems_feb: 97.21,
         operability: 95.56,
-        operability_feb: 98.31,
+        operability_feb: 98.74,
         mapCenter: [
             120.31,
             22.62
@@ -486,7 +486,7 @@ const rawData = [
             s: 44,
             v: 268,
             e: 38,
-            t: "25 輛 (9.3%)"
+            t: "25 頛?(9.3%)"
         },
         tire_history: [
             15,
@@ -522,18 +522,18 @@ const rawData = [
         sim_c_var: "-3.4%"
     },
     {
-        region: "屏東",
+        region: "撅",
         mapNames: [
-            "屏東縣"
+            "撅蝮?
         ],
         overall: 94.85,
-        overall_feb: 95.2,
+        overall_feb: 93.9,
         station: 100,
         station_feb: 100,
         appearance: 93,
         appearance_feb: 89,
         functionality: 97,
-        functionality_feb: 98,
+        functionality_feb: 96,
         ems: 100,
         ems_feb: 100,
         operability: 98.77,
@@ -550,7 +550,7 @@ const rawData = [
             s: 6,
             v: 40,
             e: 14,
-            t: "0 輛 (0%)"
+            t: "0 頛?(0%)"
         },
         tire_history: [
             13,
@@ -586,19 +586,19 @@ const rawData = [
         sim_c_var: "-1.6%"
     },
     {
-        region: "台東",
+        region: "?唳",
         mapNames: [
-            "臺東縣",
-            "台東縣"
+            "?箸蝮?,
+            "?唳蝮?
         ],
         overall: 96.42,
-        overall_feb: 96.58,
+        overall_feb: 98,
         station: 100,
         station_feb: 100,
         appearance: 95,
-        appearance_feb: 93,
+        appearance_feb: 95,
         functionality: 97,
-        functionality_feb: 98,
+        functionality_feb: 99,
         ems: 100,
         ems_feb: 100,
         operability: 100,
@@ -615,7 +615,7 @@ const rawData = [
             s: 3,
             v: 24,
             e: 12,
-            t: "1 輛 (4.2%)"
+            t: "1 頛?(4.2%)"
         },
         tire_history: [
             0,
@@ -653,7 +653,7 @@ const rawData = [
 ];
 
 const globalAverages = {
-    overall_feb: 91.84,
+    overall_feb: 91.26,
     total_s: 324,
     total_v: 2282,
     total_e: 366,
@@ -670,36 +670,36 @@ const globalAverages = {
     m_var: "0.81%"
 };
 
-// 子選單邏輯
-const statsMetrics = [
-    { key: 'station', label: '場站妥善度' },
-    { key: 'appearance', label: '自行車外觀與標示' },
-    { key: 'functionality', label: '自行車重要機能' },
-    { key: 'ems', label: '一級維護率(EMS)' },
-    { key: 'operability', label: '可動率' }
+// 摮?桅?頛?const statsMetrics = [
+    { key: 'station', label: '?渡?憒亙?摨? },
+    { key: 'appearance', label: '?芾?頠?閫??蝷? },
+    { key: 'functionality', label: '?芾?頠?閬??? },
+    { key: 'ems', label: '銝蝝雁霅瑞?(EMS)' },
+    { key: 'operability', label: '?臬??? }
 ];
 
 const maintenanceMetrics = [
-    { key: 'm_accident', label: '事故車輛數' },
-    { key: 'm_records', label: '一級維護記錄數' },
-    { key: 'maintenance_rate', label: '一級維護率' },
-    { key: 'm_info', label: '一級維護補充說明' }
+    { key: 'm_accident', label: '鈭?頠??? },
+    { key: 'm_records', label: '銝蝝雁霅瑁??' },
+    { key: 'maintenance_rate', label: '銝蝝雁霅瑞?' },
+    { key: 'm_info', label: '銝蝝雁霅瑁??牧?? }
 ];
 
-// 模擬體驗數據
+// 璅⊥擃??豢?
 const simulationMetrics = [
-    { key: 'sim_a', label: 'A級' },
-    { key: 'sim_b', label: 'B級' },
-    { key: 'sim_c', label: 'C級' }
+    { key: 'sim_a', label: 'A蝝? },
+    { key: 'sim_b', label: 'B蝝? },
+    { key: 'sim_c', label: 'C蝝? }
 ];
 
 // =====================================================================
-// ETL 自動注入全域變數腳本：負責傳遞最新年份與月份給 app.js
+// ETL ?芸?瘜典?典?霈?單嚗?鞎砍???啣僑隞質??遢蝯?app.js
 // =====================================================================
 window.GLOBAL_YEAR = 2026;
 window.GLOBAL_MONTH = 7;
 
-// 相容性：將月份寫入 rawData 以防萬一
+// ?詨捆?改?撠?隞賢神??rawData 隞仿?砌?
 if (typeof rawData !== 'undefined' && rawData.length > 0) {
     rawData[0].month = "2026/07";
 }
+
