@@ -10,7 +10,7 @@
 <body class="light-mode">
 
     <div class="header">
-        <h1>維修維護提升改善會議 <span id="dyn-header-month">2026/07</span> 資訊</h1>
+        <h1>維修維護提升改善會議 <span id="dyn-header-month">2026/04</span> 資訊</h1>
         <div class="header-tools">
             <button class="header-btn" id="layoutToggleBtn" title="點擊循環切換版面配置 (快捷鍵: V)">🔀 雙拼視圖</button>
             <button class="header-btn" id="dataZoomBtn" style="color: var(--warning-color); border-color: var(--warning-color);" title="單獨放大所有數據數字 (快捷鍵: Z)">🔎 數字放大</button>
@@ -45,7 +45,7 @@
             <div id="data-view-container" class="data-view-container hidden zoom-target"></div>
             <div class="legend-box zoom-target" id="legend-box-content"></div>
             <div class="floating-base-metrics zoom-target" id="floating-stats-area">
-                <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px; color: var(--text-primary); text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">全國總計基礎施測數據 (<span id="dyn-base-month">2026/07</span>)</div>
+                <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px; color: var(--text-primary); text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">全國總計基礎施測數據 (<span id="dyn-base-month">2026/04</span>)</div>
                 <div class="base-metrics-grid grid-cols-2">
                     <div class="metric-card"><div class="metric-title">施測站數</div><div class="metric-value">287 站</div></div>
                     <div class="metric-card"><div class="metric-title">施測車輛總數</div><div class="metric-value">2019 輛</div></div>
@@ -68,8 +68,8 @@
             <div class="base-metrics-wrapper hidden zoom-target" id="maintenance-metrics-area">
                 <div style="font-size: 15px; font-weight: bold; margin-bottom: 5px; color: var(--text-secondary);">全國營運車輛數對比 <span id="fleet-title-hint" onclick="toggleFleetDetails()" style="font-size: 12px; color: var(--accent-color); cursor: pointer;">(點擊展開各縣市明細)</span></div>
                 <div id="fleet-summary" class="base-metrics-grid grid-cols-2 cursor-pointer" onclick="toggleFleetDetails()">
-                    <div class="metric-card hover-glow"><div class="metric-title"><span id="dyn-prev-fleet-month">2026/06</span> 總營運車輛數</div><div class="metric-value" style="color: var(--text-secondary);">107,772 輛</div></div>
-                    <div class="metric-card hover-glow"><div class="metric-title"><span id="dyn-curr-fleet-month">2026/07</span> 總營運車輛數</div><div class="metric-value">108,672 輛</div></div>
+                    <div class="metric-card hover-glow"><div class="metric-title"><span id="dyn-prev-fleet-month">2026/03</span> 總營運車輛數</div><div class="metric-value" style="color: var(--text-secondary);">107,772 輛</div></div>
+                    <div class="metric-card hover-glow"><div class="metric-title"><span id="dyn-curr-fleet-month">2026/04</span> 總營運車輛數</div><div class="metric-value">108,672 輛</div></div>
                 </div>
                 <div id="fleet-details" class="hidden cursor-pointer" onclick="toggleFleetDetails()"><div class="base-metrics-grid grid-cols-5" id="fleet-detail-grid"></div></div>
             </div>
@@ -77,7 +77,7 @@
             <div class="base-metrics-wrapper hidden zoom-target" id="simulation-metrics-area">
                 <div style="font-size: 15px; font-weight: bold; margin-bottom: 5px; color: var(--text-secondary);">全國施測車輛總計 <span id="sim-title-hint" onclick="toggleSimDetails()" style="font-size: 12px; color: var(--accent-color); cursor: pointer;">(點擊展開各縣市數量)</span></div>
                 <div id="sim-summary" class="base-metrics-grid cursor-pointer" style="grid-template-columns: 1fr;" onclick="toggleSimDetails()">
-                    <div class="metric-card hover-glow"><div class="metric-title"><span id="dyn-curr-sim-month">2026/07</span> 本月施測總數量</div><div class="metric-value">2,039 輛</div></div>
+                    <div class="metric-card hover-glow"><div class="metric-title"><span id="dyn-curr-sim-month">2026/04</span> 本月施測總數量</div><div class="metric-value">2,039 輛</div></div>
                 </div>
                 <div id="sim-details" class="hidden cursor-pointer" onclick="toggleSimDetails()"><div class="base-metrics-grid grid-cols-5" id="sim-detail-grid"></div></div>
             </div>
@@ -135,8 +135,8 @@
     <div id="zenRestoreBtn" class="zen-pull-tab" title="(快捷鍵: H)">🔽 顯示選單</div>
     
     <div id="laser-dot" class="laser-dot"></div>
-    <script src="js/data.js?v=1.8"></script>
-    <script src="js/sim_data.js?v=1.2"></script> 
-    <script src="js/app.js?v=4.3"></script>
+    <script src="js/data.js?v=1.7"></script>
+    <script src="js/sim_data.js?v=1.1"></script> 
+    <script src="js/app.js?v=4.2"></script>
 </body>
 </html>
