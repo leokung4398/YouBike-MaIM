@@ -1024,6 +1024,21 @@ document.addEventListener('keydown', (e) => {
         // case 'f': 扊罤 —— 舊版投影功能已由 Report Mode 全面取代
         case 'd': document.getElementById('themeToggleBtn')?.click(); break;
         
+        // 切換實證頁面 (E = Evidence)
+        case 'e':
+            if (forceToggleEvidence === null) {
+                forceToggleEvidence = !(evidenceMedia && evidenceMedia.length > 0);
+            } else {
+                forceToggleEvidence = !forceToggleEvidence;
+            }
+            if (isReportMode) {
+                exitReportMode();
+                enterReportMode();
+            } else {
+                alert(forceToggleEvidence ? '已強制啟用第八頁(補充資料)' : '已強制隱藏第八頁(補充資料)');
+            }
+            break;
+
         // 劇院模式收合 (H = Hide)
         case 'h': 
             if (document.body.classList.contains('zen-mode')) {
@@ -1090,7 +1105,7 @@ try {
 }
 
 // 8 頁的數據設定：每頁對應 nav 模式、子指標、標題
-const REPORT_PAGES = [
+const BASE_REPORT_PAGES = [
     { nav: 'stats',        subKey: 'overall',          navId: 'nav-stats',        title: '① 施測數據統計' },
     { nav: 'tire',         subKey: null,               navId: 'nav-tire',         title: '② 前後胎壓未達標準' },
     { nav: 'operability',  subKey: null,               navId: 'nav-operability',  title: '③ 各縣市場站可動率' },
@@ -1100,6 +1115,20 @@ const REPORT_PAGES = [
     { nav: 'simulation',   subKey: 'sim_c',            navId: 'nav-simulation',   title: '⑦ 本月模擬體驗數據 C 級' },
     { nav: 'evidence',     subKey: null,               navId: null,               title: '⑧ 現場問題實證紀錄 (照片/影片)' }
 ];
+
+let REPORT_PAGES = [...BASE_REPORT_PAGES];
+let forceToggleEvidence = null; // null: auto, true: force show, false: force hide
+
+function updateReportPages() {
+    let hasEvidence = evidenceMedia && evidenceMedia.length > 0;
+    let shouldShow = forceToggleEvidence !== null ? forceToggleEvidence : hasEvidence;
+    
+    if (shouldShow) {
+        REPORT_PAGES = [...BASE_REPORT_PAGES];
+    } else {
+        REPORT_PAGES = BASE_REPORT_PAGES.filter(p => p.nav !== 'evidence');
+    }
+}
 
 // --- 報告模式的 DOM 容器 ---
 let reportContainer = null;
@@ -1127,10 +1156,14 @@ function enterReportMode() {
         document.getElementById('laserToggleBtn')?.click();
     }
 
-    // 建立全畫面容器（若尚未存在）
-    if (!document.getElementById('report-mode-container')) {
-        buildReportContainer();
+    updateReportPages();
+
+    // 建立全畫面容器（若已存在則先移除，確保頁數正確）
+    if (document.getElementById('report-mode-container')) {
+        document.getElementById('report-mode-container').remove();
+        reportSlides = [];
     }
+    buildReportContainer();
     document.getElementById('report-mode-container').style.display = 'block';
 
     // 渲染所有 7 頁的數據
