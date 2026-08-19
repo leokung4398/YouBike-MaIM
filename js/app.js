@@ -1302,9 +1302,15 @@ function buildReportSlideHTML(page) {
     const getRegionColReport = (r) => {
         let hoverText = '';
         let dashColor = 'var(--accent-color)';
-        if (['桃園', '新竹', '苗栗'].includes(r.region)) { hoverText = '桃竹苗區 · 綜合平均: 94.57分'; dashColor = '#3b82f6'; }
-        else if (['台中', '嘉義'].includes(r.region)) { hoverText = '中嘉區 · 綜合平均: 92.26分'; dashColor = '#10b981'; }
-        else if (['台南', '高雄', '屏東', '台東'].includes(r.region)) { hoverText = '南高屏東區 · 綜合平均: 93.92分'; dashColor = '#f59e0b'; }
+        const calcAvg = (cities) => {
+            let filtered = rawData.filter(d => cities.includes(d.region));
+            if (filtered.length === 0) return 0;
+            return (filtered.reduce((sum, d) => sum + d.overall, 0) / filtered.length).toFixed(2);
+        };
+
+        if (['桃園', '新竹', '苗栗'].includes(r.region)) { hoverText = `桃竹苗區 · 綜合平均: ${calcAvg(['桃園', '新竹', '苗栗'])}分`; dashColor = '#3b82f6'; }
+        else if (['台中', '嘉義'].includes(r.region)) { hoverText = `中嘉區 · 綜合平均: ${calcAvg(['台中', '嘉義'])}分`; dashColor = '#10b981'; }
+        else if (['台南', '高雄', '屏東', '台東'].includes(r.region)) { hoverText = `南高屏東區 · 綜合平均: ${calcAvg(['台南', '高雄', '屏東', '台東'])}分`; dashColor = '#f59e0b'; }
 
         if (hoverText && mode === 'stats') {
             return `<td style="font-weight:bold;color:var(--text-primary);white-space:nowrap;cursor:help;"
