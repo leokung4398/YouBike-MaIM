@@ -4,6 +4,12 @@ upload files/
 *.bak
 *.bak2
 
+# 本地測試與自動化腳本 (不上傳 GitHub)
+index_magic*.html
+js/magic*.js
+auto_push.ps1
+一鍵自動上傳更新到GitHub.bat
+
 # 臨時生成腳本
 check_cols.py
 columns_utf8.txt
