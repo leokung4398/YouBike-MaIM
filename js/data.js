@@ -694,12 +694,11 @@ const simulationMetrics = [
 ];
 
 // =====================================================================
-// ETL 自動注入全域變數腳本：負責傳遞最新年份與月份給 app.js
+// ETL 自動注入全域變數腳本
 // =====================================================================
 window.GLOBAL_YEAR = 2026;
 window.GLOBAL_MONTH = 8;
 
-// 相容性：將月份寫入 rawData 以防萬一
 if (typeof rawData !== 'undefined' && rawData.length > 0) {
     rawData[0].month = "2026/08";
 }
