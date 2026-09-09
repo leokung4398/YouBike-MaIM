@@ -85,7 +85,7 @@
                 <div style="font-weight: bold; font-size: 15px; margin-bottom: 4px;">⚠️ 檢測到目前尚未達到最佳報告配置</div>
                 <div style="font-size: 13px; line-height: 1.5;">
                     當前狀況：${reason.join('、')}<br>
-                    這會導致下方縣市（如屏東、台東）被擠出畫面，需要手動滑動捲軸。建議依照下方步驟一鍵調校！
+                    這會導致下方縣市（如屏東、台東）被擠出畫面，需要手動滑動捲軸。建議點擊下方按鈕開啟 Windows 設定檢查「比例」！
                 </div>
             `;
         }
