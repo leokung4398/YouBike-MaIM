@@ -1535,38 +1535,60 @@ function buildReportSlideHTML(page) {
                 </td></tr>`;
         });
     } else if (mode === 'evidence') {
-        evidenceMedia = [
-            {
-                type: 'image',
-                src: 'assets/images/前岔油漆塗抹問題.jpg',
-                caption: '現場照片：前岔油漆塗抹問題'
-            },
-            {
-                type: 'image',
-                src: 'assets/images/前岔油漆塗抹問題2.jpg',
-                caption: '現場照片：前岔油漆塗抹問題'
-            }
-        ];
-
         html = `
-        <h3 style="margin-bottom: 10px; color: var(--text-primary); text-align: center;">最佳樣品參考</h3>
-        <div style="display: flex; justify-content: center; margin-bottom: 30px;">
-            <div class="evidence-card" onclick="openCompareLightbox(null)" style="position:relative; cursor:zoom-in; width: 100%; max-width: 350px;">
-                <img src="assets/images/完美對比圖.jpg" class="evidence-card-media" loading="lazy" />
-                <div class="media-caption">完美對比圖</div>
+        <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 22px;">
+            <button id="evidence-tab-btn-fork" onclick="window.switchReportEvidenceTab('fork')" 
+                    style="padding: 10px 24px; font-size: 16px; font-weight: bold; border-radius: 30px; border: 2px solid var(--accent-color); background: var(--accent-color); color: #ffffff; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 14px rgba(37,99,235,0.3);">
+                🎨 問題一：前岔油漆塗抹問題
+            </button>
+            <button id="evidence-tab-btn-screen" onclick="window.switchReportEvidenceTab('screen')" 
+                    style="padding: 10px 24px; font-size: 16px; font-weight: bold; border-radius: 30px; border: 2px solid var(--border-color); background: rgba(30,41,59,0.5); color: var(--text-secondary); cursor: pointer; transition: all 0.25s ease;">
+                🖥️ 問題二：車機顯示無畫面異常 (影音實證)
+            </button>
+        </div>
+
+        <!-- 區塊一：前岔油漆塗抹問題 -->
+        <div id="evidence-panel-fork" style="display: block;">
+            <h3 style="margin-bottom: 10px; color: var(--text-primary); text-align: center;">最佳樣品參考</h3>
+            <div style="display: flex; justify-content: center; margin-bottom: 30px;">
+                <div class="evidence-card" onclick="openCompareLightbox(null)" style="position:relative; cursor:zoom-in; width: 100%; max-width: 350px;">
+                    <img src="assets/images/完美對比圖.jpg" class="evidence-card-media" loading="lazy" />
+                    <div class="media-caption">完美對比圖</div>
+                </div>
+            </div>
+            <div class="evidence-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 450px)); justify-content: center;">
+                <div class="evidence-card" onclick="openCompareLightbox(0)" style="position:relative; cursor:zoom-in;">
+                    <img src="assets/images/前岔油漆塗抹問題.jpg" class="evidence-card-media" loading="lazy" />
+                    <div class="media-caption">現場照片：前岔油漆塗抹問題</div>
+                </div>
+                <div class="evidence-card" onclick="openCompareLightbox(1)" style="position:relative; cursor:zoom-in;">
+                    <img src="assets/images/前岔油漆塗抹問題2.jpg" class="evidence-card-media" loading="lazy" />
+                    <div class="media-caption">現場照片：前岔油漆塗抹問題</div>
+                </div>
             </div>
         </div>
-        <div class="evidence-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 450px)); justify-content: center;">`;
-        
-        evidenceMedia.forEach((media, idx) => {
-            html += `
-            <div class="evidence-card" onclick="openCompareLightbox(${idx})" style="position:relative; cursor:zoom-in;">
-                <img src="${media.src}" class="evidence-card-media" loading="lazy" />
-                <div class="media-caption">${media.caption}</div>
-            </div>`;
-        });
-        html += `</div>`;
-        return html; // 直接回傳 grid，不包在 table 裡
+
+        <!-- 區塊二：車機顯示異常問題 (影片 + 照片) -->
+        <div id="evidence-panel-screen" style="display: none;">
+            <div class="evidence-grid" style="grid-template-columns: repeat(auto-fit, minmax(420px, 520px)); justify-content: center; gap: 30px;">
+                <div class="evidence-card" style="position:relative;">
+                    <video class="evidence-card-media" controls preload="metadata" style="height: 320px; object-fit: cover; background: #000; border-radius: 8px 8px 0 0;">
+                        <source src="assets/videos/車機顯示無畫面.mp4" type="video/mp4">
+                        您的瀏覽器不支援影片播放
+                    </video>
+                    <div class="media-caption">現場影片實證：車機顯示無畫面 (案例一)</div>
+                </div>
+                <div class="evidence-card" style="position:relative;">
+                    <video class="evidence-card-media" controls preload="metadata" style="height: 320px; object-fit: cover; background: #000; border-radius: 8px 8px 0 0;">
+                        <source src="assets/videos/車機顯示無畫面2.mp4" type="video/mp4">
+                        您的瀏覽器不支援影片播放
+                    </video>
+                    <div class="media-caption">現場影片實證：車機顯示無畫面 (案例二)</div>
+                </div>
+            </div>
+        </div>
+        `;
+        return html; // 直接回傳，不包在 table 裡
     }
 
     html += '</tbody></table></div>';
@@ -1999,6 +2021,44 @@ window.openLightboxEvidence = function(index) {
     }
 };
 
+window.switchReportEvidenceTab = function(tabName) {
+    const forkPanel = document.getElementById('evidence-panel-fork');
+    const screenPanel = document.getElementById('evidence-panel-screen');
+    const btnFork = document.getElementById('evidence-tab-btn-fork');
+    const btnScreen = document.getElementById('evidence-tab-btn-screen');
+
+    if (!forkPanel || !screenPanel || !btnFork || !btnScreen) return;
+
+    if (tabName === 'fork') {
+        forkPanel.style.display = 'block';
+        screenPanel.style.display = 'none';
+        btnFork.style.background = 'var(--accent-color)';
+        btnFork.style.borderColor = 'var(--accent-color)';
+        btnFork.style.color = '#ffffff';
+        btnFork.style.boxShadow = '0 4px 14px rgba(37,99,235,0.3)';
+
+        btnScreen.style.background = 'rgba(30,41,59,0.5)';
+        btnScreen.style.borderColor = 'var(--border-color)';
+        btnScreen.style.color = 'var(--text-secondary)';
+        btnScreen.style.boxShadow = 'none';
+
+        // 停止影片播放（若有在播的話）
+        screenPanel.querySelectorAll('video').forEach(v => v.pause());
+    } else {
+        forkPanel.style.display = 'none';
+        screenPanel.style.display = 'block';
+        btnScreen.style.background = 'var(--accent-color)';
+        btnScreen.style.borderColor = 'var(--accent-color)';
+        btnScreen.style.color = '#ffffff';
+        btnScreen.style.boxShadow = '0 4px 14px rgba(37,99,235,0.3)';
+
+        btnFork.style.background = 'rgba(30,41,59,0.5)';
+        btnFork.style.borderColor = 'var(--border-color)';
+        btnFork.style.color = 'var(--text-secondary)';
+        btnFork.style.boxShadow = 'none';
+    }
+};
+
 window.openCompareLightbox = function(index) {
     let modal = document.getElementById('report-lightbox-modal');
     if (!modal) {
@@ -2040,12 +2100,17 @@ window.openCompareLightbox = function(index) {
         </div>
     `;
 
-    if (index !== null) {
-        let media = evidenceMedia[index];
+    const forkImages = [
+        'assets/images/前岔油漆塗抹問題.jpg',
+        'assets/images/前岔油漆塗抹問題2.jpg'
+    ];
+
+    if (index !== null && forkImages[index]) {
+        let imgSrc = forkImages[index];
         let targetHTML = `
             <div style="flex:1; display:flex; flex-direction:column; align-items:center; padding: 20px;">
-                <div style="color:#ef4444; font-size: 24px; font-weight:bold; margin-bottom: 15px;">現場照片</div>
-                <img src="${media.src}" style="max-width:100%; max-height:80vh; object-fit:contain; border-radius:12px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); cursor: default;" />
+                <div style="color:#ef4444; font-size: 24px; font-weight:bold; margin-bottom: 15px;">現場照片：前岔油漆塗抹問題</div>
+                <img src="${imgSrc}" style="max-width:100%; max-height:80vh; object-fit:contain; border-radius:12px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); cursor: default;" />
             </div>
         `;
         modal.innerHTML = `<div id="compare-container" style="display:flex; width:90vw; max-width: 1400px; justify-content: center; align-items: center;">${bestSampleHTML}${targetHTML}</div>`;
