@@ -1568,23 +1568,46 @@ function buildReportSlideHTML(page) {
             </div>
         </div>
 
-        <!-- 區塊二：車機顯示異常問題 (影片 + 照片) -->
-        <div id="evidence-panel-screen" style="display: none;">
-            <div class="evidence-grid" style="grid-template-columns: repeat(auto-fit, minmax(420px, 520px)); justify-content: center; gap: 30px;">
-                <div class="evidence-card" style="position:relative;">
-                    <video class="evidence-card-media" controls preload="metadata" style="height: 320px; object-fit: cover; background: #000; border-radius: 8px 8px 0 0;">
-                        <source src="assets/videos/車機顯示無畫面.mp4" type="video/mp4">
-                        您的瀏覽器不支援影片播放
-                    </video>
-                    <div class="media-caption">現場影片實證：車機顯示無畫面 (案例一)</div>
+        <!-- 區塊二：車機顯示異常問題 (左排影片 + 右排照片) -->
+        <div id="evidence-panel-screen" style="display: none; padding-bottom: 40px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 1400px; margin: 0 auto; align-items: start;">
+                
+                <!-- 左排：現場影片實證 (2部) -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div style="font-size: 17px; font-weight: bold; color: var(--accent-color); text-align: center; border-bottom: 2px solid rgba(56,189,248,0.3); padding-bottom: 6px;">
+                        🎥 現場錄影實證 (2部)
+                    </div>
+                    <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+                        <video controls preload="metadata" style="width: 100%; height: 230px; object-fit: contain; background: #000; display: block;">
+                            <source src="assets/videos/車機顯示無畫面.mp4" type="video/mp4">
+                            您的瀏覽器不支援影片播放
+                        </video>
+                        <div class="media-caption" style="padding: 10px; font-size: 15px;">車機顯示無畫面 (案例一)</div>
+                    </div>
+                    <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+                        <video controls preload="metadata" style="width: 100%; height: 230px; object-fit: contain; background: #000; display: block;">
+                            <source src="assets/videos/車機顯示無畫面2.mp4" type="video/mp4">
+                            您的瀏覽器不支援影片播放
+                        </video>
+                        <div class="media-caption" style="padding: 10px; font-size: 15px;">車機顯示無畫面 (案例二)</div>
+                    </div>
                 </div>
-                <div class="evidence-card" style="position:relative;">
-                    <video class="evidence-card-media" controls preload="metadata" style="height: 320px; object-fit: cover; background: #000; border-radius: 8px 8px 0 0;">
-                        <source src="assets/videos/車機顯示無畫面2.mp4" type="video/mp4">
-                        您的瀏覽器不支援影片播放
-                    </video>
-                    <div class="media-caption">現場影片實證：車機顯示無畫面 (案例二)</div>
+
+                <!-- 右排：現場照片實證 (2張) -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div style="font-size: 17px; font-weight: bold; color: var(--accent-color); text-align: center; border-bottom: 2px solid rgba(56,189,248,0.3); padding-bottom: 6px;">
+                        📸 現場照片實證 (2張，點擊放大)
+                    </div>
+                    <div class="evidence-card" onclick="openLightbox('assets/videos/車機顯示異常1.jpg', 'image')" style="position:relative; cursor:zoom-in; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+                        <img src="assets/videos/車機顯示異常1.jpg" style="width: 100%; height: 230px; object-fit: contain; background: #000; display: block;" loading="lazy" />
+                        <div class="media-caption" style="padding: 10px; font-size: 15px;">現場照片：車機顯示異常 (1)</div>
+                    </div>
+                    <div class="evidence-card" onclick="openLightbox('assets/videos/車機顯示異常2.jpg', 'image')" style="position:relative; cursor:zoom-in; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+                        <img src="assets/videos/車機顯示異常2.jpg" style="width: 100%; height: 230px; object-fit: contain; background: #000; display: block;" loading="lazy" />
+                        <div class="media-caption" style="padding: 10px; font-size: 15px;">現場照片：車機顯示異常 (2)</div>
+                    </div>
                 </div>
+
             </div>
         </div>
         `;
