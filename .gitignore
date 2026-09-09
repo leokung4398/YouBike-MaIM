@@ -1,0 +1,13 @@
+# 備份與歷史暫存資料夾
+backup_*/
+upload files/
+*.bak
+*.bak2
+
+# 臨時生成腳本
+check_cols.py
+columns_utf8.txt
+update_rules.py
+merge.py
+SetRes.cs
+SetRes1080.cs

@@ -3,9 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>維修維護提升改善會議 資訊</title>
+    <title>【測試 B：黑魔法二】維修維護提升改善會議 資訊</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* 🧙‍♂️ 黑魔法二專屬測試樣式 */
+        #magic-test-banner {
+            background: linear-gradient(90deg, #0f172a, #1e293b);
+            border-bottom: 2px solid #f59e0b;
+            padding: 10px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        #magic2-status-widget {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(10px);
+            border: 1px solid #f59e0b;
+            border-radius: 10px;
+            padding: 12px 18px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            z-index: 999999;
+            pointer-events: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* 🧙‍♂️ 黑魔法二關鍵 CSS 覆蓋：
+           1. 取消強制固定高度與捲軸截斷
+           2. 套用由 JS 根據視窗高度計算出來的動態 padding 與間距
+        */
+        body.report-mode .report-slide {
+            padding: var(--magic2-slide-padding, 2vh 3%) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+        }
+        body.report-mode .report-slide-inner {
+            width: 100% !important;
+            max-width: 1240px !important;
+            padding: 0 28px 12px 28px !important;
+            max-height: 98vh !important;
+            box-sizing: border-box !important;
+        }
+        body.report-mode .report-slide-content {
+            max-height: none !important;
+            overflow: visible !important;
+            padding: 6px 0 4px 0 !important;
+        }
+        body.report-mode .report-table-wrapper {
+            max-height: none !important;
+            overflow: visible !important;
+            padding-bottom: 0 !important;
+        }
+        body.report-mode .report-slide:nth-child(1) .report-table-wrapper {
+            max-height: none !important;
+            padding-bottom: 0 !important;
+        }
+
+        /* 動態響應式表格與卡片 */
+        #report-mode-container .clean-data-table td,
+        #report-mode-container .clean-data-table th {
+            padding: var(--magic2-row-padding, 6px 10px) !important;
+            line-height: 1.15 !important;
+        }
+        #report-mode-container .base-metrics-grid .metric-card {
+            padding: var(--magic2-card-padding, 8px 12px) !important;
+        }
+        #report-mode-container .metric-card .metric-value {
+            font-size: var(--magic2-card-val-size, 24px) !important;
+            margin-top: 2px !important;
+        }
+        #report-mode-container .report-slide-title {
+            padding: 8px 0 6px 0 !important;
+            margin-bottom: 4px !important;
+        }
+    </style>
 </head>
 <body class="light-mode">
 
@@ -22,7 +100,6 @@
             </div>
 
             <button class="header-btn" id="zenToggleBtn" title="隱藏上方選單，最大化圖表空間 (快捷鍵: H)">🔽 收合選單</button>
-            <button class="header-btn hidden-res-btn" id="resHelperBtn" title="全縣市顯示規格調校 (快捷鍵: F10)">🖥️ 顯示調校</button>
             <button class="laser-toggle" id="laserToggleBtn" title="開啟雷射筆效果 (快捷鍵: L)">🔴 雷射筆</button>
             <button id="themeToggleBtn" title="切換日夜高對比色彩 (快捷鍵: D)">🌙 深色模式</button>
         </div>
@@ -129,67 +206,8 @@
                 <li><span class="help-icon">📋</span><strong>專屬報告模式：</strong>按 <kbd>P</kbd> 鍵進入/退出「長官會議投影模式」，隱藏所有干擾元素，僅保留 7 大核心數據區塊置中呈現。</li>
                 <li><span class="help-icon">🖱️</span><strong>深度互動：</strong>點擊地圖區塊可顯示快覽；<strong>「雙擊」</strong>數據表格內的縣市，可彈出解析視窗 (<kbd>Esc</kbd> 關閉)。</li>
                 <li><span class="help-icon">📷</span><strong>實證頁面切換：</strong>按 <kbd>E</kbd> 鍵可強制隱藏或顯示報告模式的第八頁 (補充資料)。若無照片也會自動隱藏。</li>
-                <li><span class="help-icon">🖥️</span><strong>螢幕最佳化：</strong>按 <kbd>F10</kbd> 鍵可開啟顯示規格診斷，一鍵調校 1920×1200 與 100% 縮放以完整看見全縣市。</li>
             </ul>
             <button class="modal-close-btn glass-btn" onclick="document.getElementById('helpModal').classList.add('hidden')">我已了解</button>
-        </div>
-    </div>
-
-    <!-- 🖥️ 螢幕顯示規格調校小幫手彈窗 -->
-    <div id="resHelperModal" class="modal-overlay hidden">
-        <div class="modal-content res-modal-content zoom-target">
-            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
-                <h3 style="margin: 0; color: var(--accent-color); font-size: 18px; display: flex; align-items: center; gap: 8px;">
-                    <span>🖥️</span> 螢幕顯示規格調校與全縣市最佳化
-                </h3>
-                <button class="modal-close-btn" style="position: static; padding: 4px 10px; font-size: 14px;" onclick="closeResHelperModal()">關閉 (Esc / F10)</button>
-            </div>
-
-            <!-- 即時硬體規格檢測卡 -->
-            <div id="res-current-info"></div>
-
-            <!-- 狀態診斷提示 -->
-            <div id="res-status-alert"></div>
-
-            <!-- 最佳標準指引 -->
-            <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;">
-                <div style="font-size: 13px; font-weight: bold; color: var(--accent-color); margin-bottom: 6px;">🎯 會議室報告黃金標準規格：</div>
-                <div class="res-guide-step">
-                    <span class="res-step-badge">1</span>
-                    <span><strong>顯示器解析度：</strong>務必設為 <strong style="color: #38bdf8;">1920 × 1200 (建議選項)</strong></span>
-                </div>
-                <div class="res-guide-step">
-                    <span class="res-step-badge">2</span>
-                    <span><strong>Windows 縮放比例：</strong>務必設為 <strong style="color: #38bdf8;">100% (建議選項)</strong>（若設為 125% 或 150% 會大幅壓縮垂直空間）</span>
-                </div>
-            </div>
-
-            <!-- 快捷動作區 -->
-            <div class="res-action-grid">
-                <a href="一鍵切換螢幕_1920x1200.bat" download="一鍵切換螢幕_1920x1200.bat" class="res-action-btn res-action-btn-primary" title="下載批次檔，雙擊即可切換">
-                    <span>🚀 1. 下載【一鍵切換 1920x1200】批次檔 (雙擊執行)</span>
-                    <span style="font-size: 12px; opacity: 0.85;">.bat 檔 ⬇️</span>
-                </a>
-
-                <a href="一鍵切換螢幕_1920x1200.exe" download="一鍵切換螢幕_1920x1200.exe" class="res-action-btn res-action-btn-secondary" style="font-size: 13px; padding: 8px 16px;" title="備用：免安裝 exe 執行檔">
-                    <span>📦 備用：下載【一鍵切換 1920x1200】執行檔 (.exe)</span>
-                    <span style="font-size: 11px; opacity: 0.7;">.exe 檔 ⬇️</span>
-                </a>
-
-                <button class="res-action-btn res-action-btn-secondary" onclick="openWindowsDisplaySettings()">
-                    <span>⚙️ 2. 開啟 Windows 顯示設定 (檢查「比例」是否為 100%)</span>
-                    <span style="font-size: 12px; opacity: 0.85;">直接開啟 ↗</span>
-                </button>
-
-                <a href="一鍵還原螢幕_1920x1080.bat" download="一鍵還原螢幕_1920x1080.bat" class="res-action-btn res-action-btn-secondary" style="color: var(--text-secondary); font-size: 13px;">
-                    <span>↩️ 3. 報告完畢：下載【一鍵還原 1920x1080】批次檔</span>
-                    <span style="font-size: 11px;">還原 ⬇️</span>
-                </a>
-            </div>
-
-            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; border-top: 1px dashed var(--border-color); padding-top: 10px; text-align: center;">
-                💡 <strong>操作流程：</strong>點擊 1 下載並執行切換 ➔ 點擊 2 確認比例為 100% ➔ 回網頁按 <kbd>P</kbd> 鍵即可全螢幕一眼全覽 10 縣市！
-            </div>
         </div>
     </div>
 
@@ -199,6 +217,6 @@
     <script src="js/data.js?v=1.7"></script>
     <script src="js/sim_data.js?v=1.1"></script> 
     <script src="js/app.js?v=4.2"></script>
-    <script src="js/res_helper.js?v=1.0"></script>
+    <script src="js/magic2.js?v=1.0"></script>
 </body>
 </html>

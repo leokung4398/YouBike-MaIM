@@ -1305,7 +1305,13 @@ function buildReportSlideHTML(page) {
         const calcAvg = (cities) => {
             let filtered = rawData.filter(d => cities.includes(d.region));
             if (filtered.length === 0) return 0;
-            return (filtered.reduce((sum, d) => sum + d.overall, 0) / filtered.length).toFixed(2);
+            
+            // 依照「施測車輛總數 (base.v)」進行加權平均計算
+            let totalVehicles = filtered.reduce((sum, d) => sum + (d.base && d.base.v ? d.base.v : 0), 0);
+            if (totalVehicles === 0) return 0;
+            
+            let weightedSum = filtered.reduce((sum, d) => sum + d.overall * (d.base && d.base.v ? d.base.v : 0), 0);
+            return (weightedSum / totalVehicles).toFixed(2);
         };
 
         if (['桃園', '新竹', '苗栗'].includes(r.region)) { hoverText = `桃竹苗區 · 綜合平均: ${calcAvg(['桃園', '新竹', '苗栗'])}分`; dashColor = '#3b82f6'; }
