@@ -138,11 +138,11 @@
     <!-- 🖥️ 螢幕顯示規格調校小幫手彈窗 -->
     <div id="resHelperModal" class="modal-overlay hidden">
         <div class="modal-content res-modal-content zoom-target">
-            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
-                <h3 style="margin: 0; color: var(--accent-color); font-size: 18px; display: flex; align-items: center; gap: 8px;">
+            <div class="res-modal-header">
+                <h3 class="res-modal-title">
                     <span>🖥️</span> 螢幕顯示規格調校與全縣市最佳化
                 </h3>
-                <button class="modal-close-btn" style="position: static; padding: 4px 10px; font-size: 14px;" onclick="closeResHelperModal()">關閉 (Esc / F10)</button>
+                <button class="modal-close-btn res-close-btn" onclick="closeResHelperModal()">關閉 (Esc / F10)</button>
             </div>
 
             <!-- 即時硬體規格檢測卡 -->
@@ -152,15 +152,15 @@
             <div id="res-status-alert"></div>
 
             <!-- 最佳標準指引 -->
-            <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;">
-                <div style="font-size: 13px; font-weight: bold; color: var(--accent-color); margin-bottom: 6px;">🎯 會議室報告黃金標準規格：</div>
+            <div class="res-guide-box">
+                <div class="res-guide-title">🎯 會議室報告黃金標準規格：</div>
                 <div class="res-guide-step">
                     <span class="res-step-badge">1</span>
-                    <span><strong>顯示器解析度：</strong>務必設為 <strong style="color: #38bdf8;">1920 × 1200 (建議選項)</strong></span>
+                    <span><strong>顯示器解析度：</strong>務必設為 <strong class="res-highlight-text">1920 × 1200 (建議選項)</strong></span>
                 </div>
                 <div class="res-guide-step">
                     <span class="res-step-badge">2</span>
-                    <span><strong>Windows 縮放比例：</strong>務必設為 <strong style="color: #38bdf8;">100% (建議選項)</strong>（若設為 125% 或 150% 會大幅壓縮垂直空間）</span>
+                    <span><strong>Windows 縮放比例：</strong>務必設為 <strong class="res-highlight-text">100% (建議選項)</strong>（若設為 125% 或 150% 會大幅壓縮垂直空間）</span>
                 </div>
             </div>
 
@@ -168,26 +168,26 @@
             <div class="res-action-grid">
                 <a href="一鍵切換螢幕_1920x1200.bat" download="一鍵切換螢幕_1920x1200.bat" class="res-action-btn res-action-btn-primary" title="下載批次檔，雙擊即可切換">
                     <span>🚀 1. 下載【一鍵切換 1920x1200】批次檔 (雙擊執行)</span>
-                    <span style="font-size: 12px; opacity: 0.85;">.bat 檔 ⬇️</span>
+                    <span class="res-btn-badge">.bat 檔 ⬇️</span>
                 </a>
 
-                <a href="一鍵切換螢幕_1920x1200.exe" download="一鍵切換螢幕_1920x1200.exe" class="res-action-btn res-action-btn-secondary" style="font-size: 13px; padding: 8px 16px;" title="備用：免安裝 exe 執行檔">
+                <a href="一鍵切換螢幕_1920x1200.exe" download="一鍵切換螢幕_1920x1200.exe" class="res-action-btn res-action-btn-secondary" title="備用：免安裝 exe 執行檔">
                     <span>📦 備用：下載【一鍵切換 1920x1200】執行檔 (.exe)</span>
-                    <span style="font-size: 11px; opacity: 0.7;">.exe 檔 ⬇️</span>
+                    <span class="res-btn-badge">.exe 檔 ⬇️</span>
                 </a>
 
                 <button class="res-action-btn res-action-btn-secondary" onclick="openWindowsDisplaySettings()">
                     <span>⚙️ 2. 開啟 Windows 顯示設定 (檢查「比例」是否為 100%)</span>
-                    <span style="font-size: 12px; opacity: 0.85;">直接開啟 ↗</span>
+                    <span class="res-btn-badge">直接開啟 ↗</span>
                 </button>
 
-                <a href="一鍵還原螢幕_1920x1080.bat" download="一鍵還原螢幕_1920x1080.bat" class="res-action-btn res-action-btn-secondary" style="color: var(--text-secondary); font-size: 13px;">
+                <a href="一鍵還原螢幕_1920x1080.bat" download="一鍵還原螢幕_1920x1080.bat" class="res-action-btn res-action-btn-neutral">
                     <span>↩️ 3. 報告完畢：下載【一鍵還原 1920x1080】批次檔</span>
-                    <span style="font-size: 11px;">還原 ⬇️</span>
+                    <span class="res-btn-badge">還原 ⬇️</span>
                 </a>
             </div>
 
-            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; border-top: 1px dashed var(--border-color); padding-top: 10px; text-align: center;">
+            <div class="res-footer-tip">
                 💡 <strong>操作流程：</strong>點擊 1 下載並執行切換 ➔ 點擊 2 確認比例為 100% ➔ 回網頁按 <kbd>P</kbd> 鍵即可全螢幕一眼全覽 10 縣市！
             </div>
         </div>

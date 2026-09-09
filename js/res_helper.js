@@ -44,23 +44,27 @@
         const alertEl = document.getElementById('res-status-alert');
         if (!infoEl || !alertEl) return;
 
+        const isLight = document.body.classList.contains('light-mode');
+        const warnColor = isLight ? '#d97706' : '#f59e0b';
+        const okColor = isLight ? '#059669' : '#10b981';
+
         infoEl.innerHTML = `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
                 <div class="res-info-box">
-                    <div style="font-size: 12px; color: var(--text-secondary);">當前螢幕解析度</div>
-                    <div style="font-size: 18px; font-weight: bold; margin-top: 4px; color: ${m.isIdealRes ? 'var(--success-color)' : '#f59e0b'};">
+                    <div class="res-info-label">當前螢幕解析度</div>
+                    <div class="res-info-value" style="color: ${m.isIdealRes ? okColor : warnColor};">
                         ${m.logicalW} × ${m.logicalH}
                         ${m.isIdealRes ? '✅' : '⚠️'}
                     </div>
-                    <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">目標：1920 × 1200</div>
+                    <div class="res-info-target">目標：1920 × 1200</div>
                 </div>
                 <div class="res-info-box">
-                    <div style="font-size: 12px; color: var(--text-secondary);">Windows 縮放比例</div>
-                    <div style="font-size: 18px; font-weight: bold; margin-top: 4px; color: ${m.isIdealScale ? 'var(--success-color)' : '#f59e0b'};">
+                    <div class="res-info-label">Windows 縮放比例</div>
+                    <div class="res-info-value" style="color: ${m.isIdealScale ? okColor : warnColor};">
                         ${m.scalePct}%
                         ${m.isIdealScale ? '✅' : '⚠️'}
                     </div>
-                    <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">目標：100%</div>
+                    <div class="res-info-target">目標：100%</div>
                 </div>
             </div>
         `;
