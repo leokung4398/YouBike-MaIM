@@ -1535,37 +1535,28 @@ function buildReportSlideHTML(page) {
                 </td></tr>`;
         });
     } else if (mode === 'evidence') {
-        const AVAILABLE_EVIDENCE_IMAGES = [
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_12.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_13.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_14.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_15.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_16.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_5.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_6.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_7.jpg",
-            "LINE_ALBUM_2.0E 電輔車 置物籃鎖頭固定器褪色照片集中區_260721_8.jpg"
+        evidenceMedia = [
+            {
+                type: 'image',
+                src: 'assets/images/前岔油漆塗抹問題.jpg',
+                caption: '現場照片：前岔油漆塗抹問題'
+            },
+            {
+                type: 'image',
+                src: 'assets/images/前岔油漆塗抹問題2.jpg',
+                caption: '現場照片：前岔油漆塗抹問題'
+            }
         ];
-        
-        let shuffled = [...AVAILABLE_EVIDENCE_IMAGES].sort(() => 0.5 - Math.random());
-        let selected = shuffled.slice(0, 3);
-        
-        // 覆寫 evidenceMedia，讓點擊放大(openCompareLightbox)的功能能繼續運作
-        evidenceMedia = selected.map(filename => ({
-            type: 'image',
-            src: `assets/images/${filename}`,
-            caption: '現場照片：置物籃鎖頭固定器褪色'
-        }));
 
         html = `
         <h3 style="margin-bottom: 10px; color: var(--text-primary); text-align: center;">最佳樣品參考</h3>
         <div style="display: flex; justify-content: center; margin-bottom: 30px;">
             <div class="evidence-card" onclick="openCompareLightbox(null)" style="position:relative; cursor:zoom-in; width: 100%; max-width: 350px;">
-                <img src="assets/images/最佳樣品.jpg" class="evidence-card-media" loading="lazy" />
-                <div class="media-caption">最佳樣品</div>
+                <img src="assets/images/完美對比圖.jpg" class="evidence-card-media" loading="lazy" />
+                <div class="media-caption">完美對比圖</div>
             </div>
         </div>
-        <div class="evidence-grid">`;
+        <div class="evidence-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 450px)); justify-content: center;">`;
         
         evidenceMedia.forEach((media, idx) => {
             html += `
@@ -2044,8 +2035,8 @@ window.openCompareLightbox = function(index) {
     
     let bestSampleHTML = `
         <div style="flex:1; display:flex; flex-direction:column; align-items:center; padding: 20px;">
-            <div style="color:white; font-size: 24px; font-weight:bold; margin-bottom: 15px;">最佳樣品</div>
-            <img src="assets/images/最佳樣品.jpg" style="max-width:100%; max-height:80vh; object-fit:contain; border-radius:12px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); cursor: default;" />
+            <div style="color:white; font-size: 24px; font-weight:bold; margin-bottom: 15px;">完美對比圖 (最佳樣品)</div>
+            <img src="assets/images/完美對比圖.jpg" style="max-width:100%; max-height:80vh; object-fit:contain; border-radius:12px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); cursor: default;" />
         </div>
     `;
 
