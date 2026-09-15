@@ -1320,16 +1320,16 @@ function buildReportSlideHTML(page) {
 
         // 📋 報告模式專用縣市完整名稱對照表
         const REPORT_REGION_NAMES = {
-            '雙北': '雙北市',
+            '雙北': '雙　北',
             '桃園': '桃園市',
             '新竹': '大新竹',
             '苗栗': '苗栗縣',
             '台中': '台中市',
-            '嘉義': '嘉義縣',
+            '嘉義': '嘉義<span style="display:inline-flex; flex-direction:column; vertical-align:middle; line-height:0.85; font-size:0.55em; margin-left:1px; font-weight:normal; letter-spacing:0;"><span>縣</span><span>市</span></span>',
             '台南': '台南市',
             '高雄': '高雄市',
             '屏東': '屏東縣',
-            '台東': '台東市'
+            '台東': '台東縣'
         };
         const displayName = REPORT_REGION_NAMES[r.region] || r.region;
 
@@ -1782,9 +1782,9 @@ function showReportSimTooltip(region, grade, x, y) {
     }
 
     const REPORT_REGION_NAMES = {
-        '雙北': '雙北市', '桃園': '桃園市', '新竹': '大新竹', '苗栗': '苗栗縣',
-        '台中': '台中市', '嘉義': '嘉義縣', '台南': '台南市', '高雄': '高雄市',
-        '屏東': '屏東縣', '台東': '台東市'
+        '雙北': '雙　北', '桃園': '桃園市', '新竹': '大新竹', '苗栗': '苗栗縣',
+        '台中': '台中市', '嘉義': '嘉義縣市', '台南': '台南市', '高雄': '高雄市',
+        '屏東': '屏東縣', '台東': '台東縣'
     };
     const displayName = REPORT_REGION_NAMES[region] || region;
 
