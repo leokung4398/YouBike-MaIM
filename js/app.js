@@ -1325,7 +1325,7 @@ function buildReportSlideHTML(page) {
             '新竹': '大新竹',
             '苗栗': '苗栗縣',
             '台中': '台中市',
-            '嘉義': '<span style="display:inline-flex; align-items:stretch; vertical-align:baseline;"><span style="line-height:1;">嘉義</span><span style="display:inline-flex; flex-direction:column; justify-content:space-between; font-size:0.46em; font-weight:bold; margin-left:2px; padding:1px 0; letter-spacing:0; transform:translateY(-1px);"><span style="line-height:1;">縣</span><span style="line-height:1;">市</span></span></span>',
+            '嘉義': '<span style="display:inline-flex; align-items:center; vertical-align:baseline;"><span style="line-height:1;">嘉義</span><span style="display:inline-flex; flex-direction:column; justify-content:center; font-size:0.54em; font-weight:bold; margin-left:2px; letter-spacing:0; line-height:0.95; transform:translateY(-1px);"><span style="display:block;">縣</span><span style="display:block;">市</span></span></span>',
             '台南': '台南市',
             '高雄': '高雄市',
             '屏東': '屏東縣',
