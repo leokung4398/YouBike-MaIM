@@ -1318,14 +1318,29 @@ function buildReportSlideHTML(page) {
         else if (['台中', '嘉義'].includes(r.region)) { hoverText = `中嘉區 · 綜合平均: ${calcAvg(['台中', '嘉義'])}分`; dashColor = '#10b981'; }
         else if (['台南', '高雄', '屏東', '台東'].includes(r.region)) { hoverText = `南高屏東區 · 綜合平均: ${calcAvg(['台南', '高雄', '屏東', '台東'])}分`; dashColor = '#f59e0b'; }
 
+        // 📋 報告模式專用縣市完整名稱對照表
+        const REPORT_REGION_NAMES = {
+            '雙北': '雙北市',
+            '桃園': '桃園市',
+            '新竹': '大新竹',
+            '苗栗': '苗栗縣',
+            '台中': '台中市',
+            '嘉義': '嘉義縣',
+            '台南': '台南市',
+            '高雄': '高雄市',
+            '屏東': '屏東縣',
+            '台東': '台東市'
+        };
+        const displayName = REPORT_REGION_NAMES[r.region] || r.region;
+
         if (hoverText && mode === 'stats') {
-            return `<td style="font-weight:bold;color:var(--text-primary);white-space:nowrap;cursor:help;"
+            return `<td style="font-weight:bold;color:var(--text-primary);white-space:nowrap;letter-spacing:-0.2px;padding-left:6px;padding-right:6px;cursor:help;"
                         onmouseover="window.showReportStatsTooltip('${hoverText}', event); window.highlightGroup(event.target.closest('tr').dataset.group)"
                         onmouseout="hideReportSimTooltip(); window.removeGroupHighlight()">
-                        <span style="border-bottom: 2px dashed ${dashColor}; padding-bottom: 2px;">${r.region}</span>
+                        <span style="border-bottom: 2px dashed ${dashColor}; padding-bottom: 2px;">${displayName}</span>
                     </td>`;
         }
-        return `<td style="font-weight:bold;color:var(--text-primary);white-space:nowrap;">${r.region}</td>`;
+        return `<td style="font-weight:bold;color:var(--text-primary);white-space:nowrap;letter-spacing:-0.2px;padding-left:6px;padding-right:6px;">${displayName}</td>`;
     };
 
     if (mode === 'stats') {
@@ -1766,8 +1781,15 @@ function showReportSimTooltip(region, grade, x, y) {
         bodyHtml = `<p style="color:var(--text-secondary);margin:0;font-size:13px;">此縣市目前無具體問題紀錄。</p>`;
     }
 
+    const REPORT_REGION_NAMES = {
+        '雙北': '雙北市', '桃園': '桃園市', '新竹': '大新竹', '苗栗': '苗栗縣',
+        '台中': '台中市', '嘉義': '嘉義縣', '台南': '台南市', '高雄': '高雄市',
+        '屏東': '屏東縣', '台東': '台東市'
+    };
+    const displayName = REPORT_REGION_NAMES[region] || region;
+
     tip.innerHTML = `
-        <div class="tooltip-title">${region} · <span style="color:${gColor};">${gDesc}</span></div>
+        <div class="tooltip-title">${displayName} · <span style="color:${gColor};">${gDesc}</span></div>
         ${bodyHtml}
         <div style="font-size:12px; color:var(--text-secondary); margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color);">* 註：一台車可能同時發生多項異常，故「異常項目件數」與外層「異常車輛數」不同。</div>
     `;
