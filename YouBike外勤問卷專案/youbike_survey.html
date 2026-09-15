@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouBike 外勤調度與維護人員身心靈與留才展望調研 (第一階段) | 微笑單車</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <style>
+    * { 
+      font-family: 'Noto Sans TC', 'Fredoka', -apple-system, BlinkMacSystemFont, sans-serif; 
+    }
+
+    /* 黏土風圓潤背景底色 */
+    body {
+      background: radial-gradient(circle at 15% 15%, #fff7ed 0%, #fef3c7 40%, #f1f5f9 100%);
+      min-height: 100vh;
+    }
+
+    /* 3D 黏土柔和厚實卡片效果 (Soft Clay Card) */
+    .clay-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      border: 2px solid #fed7aa;
+      border-radius: 2rem;
+      padding: 2rem;
+      box-shadow: 
+        0 14px 28px -6px rgba(251, 146, 60, 0.12),
+        0 8px 16px -4px rgba(0, 0, 0, 0.04),
+        inset 0 -4px 6px rgba(253, 186, 116, 0.2);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+    }
+    .clay-card:hover {
+      transform: translateY(-2px);
+      border-color: #fb923c;
+      box-shadow: 
+        0 20px 36px -8px rgba(251, 146, 60, 0.18),
+        0 10px 20px -4px rgba(0, 0, 0, 0.06),
+        inset 0 -4px 8px rgba(253, 186, 116, 0.3);
+    }
+
+    /* 黏土膠囊徽章 (Clay Capsule Badge) */
+    .clay-badge {
+      background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+      color: white;
+      font-weight: 800;
+      border-radius: 9999px;
+      padding: 0.35rem 1.1rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      box-shadow: 
+        0 4px 10px rgba(234, 88, 12, 0.3),
+        inset 0 -2px 4px rgba(194, 65, 12, 0.35),
+        inset 0 2px 4px rgba(255, 255, 255, 0.35);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    /* 黏土風 1~5 評分膠囊按鈕 */
+    .clay-score-group {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.65rem;
+    }
+    .clay-score-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.95rem 0.5rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 1.25rem;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      user-select: none;
+      box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.03),
+        inset 0 -3px 0 #e2e8f0;
+    }
+    .clay-score-btn:hover {
+      background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+      border-color: #fdba74;
+      transform: translateY(-2px);
+      box-shadow: 
+        0 6px 12px rgba(251, 146, 60, 0.15),
+        inset 0 -3px 0 #fed7aa;
+    }
+    .clay-score-btn.active {
+      background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+      border-color: #c2410c;
+      color: #ffffff;
+      font-weight: 800;
+      box-shadow: 
+        0 8px 18px rgba(234, 88, 12, 0.35),
+        inset 0 -3px 0 #9a3412,
+        inset 0 2px 4px rgba(255, 255, 255, 0.3);
+      transform: translateY(-3px) scale(1.03);
+    }
+    .clay-score-btn.active span {
+      color: #ffffff !important;
+    }
+
+    /* 黏土馬卡龍漸層選項卡片 (Clay Option Card) */
+    .clay-option-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding: 1rem 1.25rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 1.35rem;
+      cursor: pointer;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-size: 0.95rem;
+      color: #334155;
+      font-weight: 500;
+      box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.02),
+        inset 0 -3px 0 #e2e8f0;
+    }
+    .clay-option-card:hover {
+      background: linear-gradient(180deg, #fffaf5 0%, #ffedd5 100%);
+      border-color: #fdba74;
+      transform: translateY(-2px);
+      box-shadow: 
+        0 8px 16px rgba(251, 146, 60, 0.12),
+        inset 0 -3px 0 #fed7aa;
+    }
+    .clay-option-card.active {
+      border-color: #ea580c;
+      background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+      color: #9a3412;
+      font-weight: 700;
+      box-shadow: 
+        0 6px 14px rgba(234, 88, 12, 0.16),
+        inset 0 -3px 0 #fdba74,
+        inset 0 1px 3px rgba(255, 255, 255, 0.7);
+      transform: translateY(-1px);
+    }
+    .clay-option-card input[type="radio"],
+    .clay-option-card input[type="checkbox"] {
+      margin-top: 0.2rem;
+      accent-color: #ea580c;
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+
+    /* 黏土微縮圖片相框 (Clay Photo Frame) */
+    .clay-photo-frame {
+      width: 100%;
+      height: 235px;
+      object-fit: cover;
+      border-radius: 1.5rem;
+      margin-bottom: 1.35rem;
+      border: 3px solid #ffedd5;
+      box-shadow: 
+        0 8px 20px rgba(234, 88, 12, 0.1),
+        inset 0 0 12px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+    }
+    .clay-photo-frame:hover {
+      transform: scale(1.015);
+      border-color: #fdba74;
+    }
+
+    /* 柔和輸入框 (Clay Input) */
+    .clay-input {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 1.15rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      color: #1e293b;
+      transition: all 0.2s ease;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+    }
+    .clay-input:focus {
+      outline: none;
+      background: #ffffff;
+      border-color: #fb923c;
+      box-shadow: 0 0 0 4px rgba(251, 146, 60, 0.15);
+    }
+  </style>
+</head>
+<body class="py-8 sm:py-12 px-3 sm:px-6 text-slate-800">
+  <div class="max-w-3xl mx-auto space-y-8">
+
+    <!-- Header 黏土雲朵頂部橫幅 -->
+    <div class="bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 text-white rounded-[2.5rem] p-8 sm:p-11 shadow-2xl relative overflow-hidden border-4 border-amber-200/50">
+      <div class="absolute -right-12 -bottom-12 w-56 h-56 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute right-8 top-8 opacity-20 text-9xl select-none pointer-events-none animate-pulse">
+        🧸
+      </div>
+      
+      <div class="flex items-center gap-4 mb-4 relative z-10">
+        <div class="w-14 h-14 rounded-2xl bg-white/25 backdrop-blur-md flex items-center justify-center text-3xl shadow-inner border border-white/30">
+          🚲
+        </div>
+        <div>
+          <p class="text-xs font-black text-amber-100 uppercase tracking-widest flex items-center gap-1.5">
+            <span>✨</span> 微笑單車 YouBike 營運優化專案組
+          </p>
+          <h1 class="text-2xl sm:text-3xl font-black tracking-tight drop-shadow-sm">外勤人員身心靈與留才展望調研</h1>
+        </div>
+      </div>
+      
+      <div class="bg-white/20 backdrop-blur-md rounded-2xl p-5 text-sm leading-relaxed border border-white/25 space-y-2 relative z-10 shadow-inner">
+        <div class="flex items-center gap-2 font-black text-amber-100">
+          <span class="text-base">🎯</span>
+          <span>【第一階段：營運數據與管理幹部深層診斷】</span>
+        </div>
+        <p class="text-amber-50 leading-relaxed font-medium">
+          本調研旨在探討外勤人員（車輛調度專員、現場維護技師）在<strong>生理負擔、極端天候、心理安全感、排班生活與薪資福利</strong>之真實痛點。為營造<strong>輕鬆、溫柔、無壓力且兼具專業</strong>的作答氛圍，全卷以<strong>可愛 3D 黏土微縮公仔 (Claymorphism)</strong> 呈現。您的寶貴數據與直言，將直接作為向高層推動實質制度改革的依據！
+        </p>
+        <div class="flex items-center gap-2 text-amber-200 text-xs font-bold pt-1">
+          <span>🔒</span> 全程採機密調研，資料存入獨立資料庫集合（youbike_mgmt_surveys），請安心客觀填答。
+        </div>
+      </div>
+    </div>
+
+    <!-- 表單本體 -->
+    <form id="survey-form" onsubmit="handleSurveySubmit(event)" class="space-y-8">
+
+      <!-- 基本受訪身分 -->
+      <div class="clay-card">
+        <div class="flex items-center gap-2.5 mb-5 pb-3.5 border-b border-orange-100">
+          <span class="clay-badge"><span>👤</span> 基本資訊</span>
+          <h2 class="text-lg font-black text-slate-800">受訪主管 / 幹部填寫身分</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-2">
+              所屬營運處 / 單位 <span class="text-rose-500">*</span>
+            </label>
+            <select id="f-unit" required class="clay-input w-full">
+              <option value="">▼ 請選擇營運處</option>
+              <option value="台北營運處">台北營運處</option>
+              <option value="新北營運處">新北營運處</option>
+              <option value="桃園營運處">桃園營運處</option>
+              <option value="新竹營運處">新竹營運處</option>
+              <option value="苗栗營運處">苗栗營運處</option>
+              <option value="台中營運處">台中營運處</option>
+              <option value="彰化營運處">彰化營運處</option>
+              <option value="雲林營運處">雲林營運處</option>
+              <option value="嘉義營運處">嘉義營運處</option>
+              <option value="台南營運處">台南營運處</option>
+              <option value="高雄營運處">高雄營運處</option>
+              <option value="屏東營運處">屏東營運處</option>
+              <option value="宜蘭/花蓮營運處">宜蘭/花蓮營運處</option>
+              <option value="總部營運管理/其他">總部營運管理/其他</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-2">
+              您的職務類型 <span class="text-rose-500">*</span>
+            </label>
+            <select id="f-role" required class="clay-input w-full">
+              <option value="">▼ 請選擇職務</option>
+              <option value="現場調度組長/站長">現場調度組長 / 站長</option>
+              <option value="維修/技術主管">維修 / 技術主管</option>
+              <option value="區域督導/調度主管">區域督導 / 調度主管</option>
+              <option value="人資/排班管理主管">人資 / 排班管理人員</option>
+              <option value="營運部高層/處長/經理">營運處高層 (處長/經理等)</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 模組一：生理負荷與作業環境 ================= -->
+      <div class="clay-card space-y-8">
+        <div class="flex items-center gap-2.5 pb-4 border-b border-orange-100">
+          <span class="clay-badge"><span>💪</span> 模組一</span>
+          <div>
+            <h2 class="text-lg font-black text-slate-800">生理負荷、職傷與作業環境現況</h2>
+            <p class="text-xs font-medium text-slate-500 mt-0.5">評估外勤調度與維護同仁在體能極限、極端天候與安全配備上的真實瓶頸</p>
+          </div>
+        </div>
+
+        <!-- Q1 -->
+        <div class="space-y-3.5">
+          <img src="images/style2_3d_clay/q1.jpg" alt="搬運體力與職傷" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q1. 【外勤生理負荷與職災統計】過去一年中，調度與維護同仁最普遍通報的身體不適或職傷為何？（可複選） <span class="text-rose-500">*</span>
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="clay-option-card"><input type="checkbox" name="q1" value="腰椎/背部扭傷及筋骨拉傷(搬移車柱、推拉調度車)"><span>腰椎/背部扭傷及筋骨拉傷 (搬移車柱、推拉車)</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q1" value="熱傷害/熱衰竭/中暑(夏日戶外高溫長時間作業)"><span>熱傷害 / 熱衰竭 / 中暑 (夏日長時間高溫)</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q1" value="雨天滑倒、跌傷或搬運滑脫意外"><span>雨天滑倒、跌傷或搬運滑脫意外</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q1" value="膝蓋關節過度磨損或發炎"><span>膝蓋關節過度磨損或慢性發炎</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q1" value="道路交通事故(隨車調度或穿梭擦撞)"><span>道路交通事故 (隨車穿梭擦撞意外)</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q1" value="幾乎無正式通報紀錄(多自行隱忍未上報)"><span>幾乎無正式通報 (基層習慣自行隱忍)</span></label>
+          </div>
+          <div class="mt-3 flex flex-col sm:flex-row gap-2 sm:items-center bg-orange-50/60 p-3 rounded-2xl border border-orange-100">
+            <span class="text-xs text-orange-950 font-bold whitespace-nowrap">📊【客觀數據填寫】估算本區平均每月因身體不堪負荷或受傷請假人次：</span>
+            <input type="text" id="f-q1-num" placeholder="例如：約 3~5 人次 / 暫無精確數據" class="clay-input flex-1 py-1.5 text-xs">
+          </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q2.jpg" alt="極端氣候風雨與酷暑" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q2. 【極端氣候防護到位率】針對夏季酷暑（35°C+）、暴雨及冬季寒流，現行配發之防護裝備實質效益評分： <span class="text-rose-500">*</span>
+          </label>
+          <div class="clay-score-group" id="q2-score-group">
+            <button type="button" class="clay-score-btn" onclick="setScore('q2', 1)">
+              <span class="text-xl font-black">1</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">嚴重不足</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q2', 2)">
+              <span class="text-xl font-black">2</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">稍嫌缺乏</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q2', 3)">
+              <span class="text-xl font-black">3</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">普通可接受</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q2', 4)">
+              <span class="text-xl font-black">4</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">良好有感</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q2', 5)">
+              <span class="text-xl font-black">5</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">極佳充分</span>
+            </button>
+          </div>
+          <input type="hidden" id="f-q2-score" required>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <label class="clay-option-card"><input type="checkbox" name="q2_pain" value="雨衣不透氣易滲水"><span>雨衣不透氣、悶熱或易滲水</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q2_pain" value="缺乏便攜降溫裝備(風扇/冷感)"><span>缺乏便攜降溫裝備 (如水冷/風扇裝備)</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q2_pain" value="路途無固定飲水/電解質補給點"><span>外勤路途缺乏固定飲水/補給據點</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q2_pain" value="裝備耗損汰換程序過於繁瑣"><span>裝備耗損後申請汰換流程太繁瑣</span></label>
+          </div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q3.jpg" alt="省力機械輔助機具" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q3. 【人體工學與機具輔助】目前調度車輛上下貨車、搬移調度台等流程中，省力自動化機具之健全程度： <span class="text-rose-500">*</span>
+          </label>
+          <div class="clay-score-group" id="q3-score-group">
+            <button type="button" class="clay-score-btn" onclick="setScore('q3', 1)">
+              <span class="text-xl font-black">1</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">全靠人力蠻幹</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q3', 2)">
+              <span class="text-xl font-black">2</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">少數輔助</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q3', 3)">
+              <span class="text-xl font-black">3</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">部分具備</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q3', 4)">
+              <span class="text-xl font-black">4</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">多數有輔助</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q3', 5)">
+              <span class="text-xl font-black">5</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">全自動省力完善</span>
+            </button>
+          </div>
+          <input type="hidden" id="f-q3-score" required>
+          <input type="text" id="f-q3-note" placeholder="補充說明：現場最迫切希望引進機械/升降輔助的工序是？" class="clay-input w-full mt-2">
+        </div>
+
+        <!-- Q4 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q4.jpg" alt="夜間作業與安全防護" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q4. 【夜間與道路作業安全防護】大夜班或深夜調度/檢修時，照明與警示設備是否足以保障人員安全？ <span class="text-rose-500">*</span>
+          </label>
+          <div class="space-y-2.5">
+            <label class="clay-option-card"><input type="radio" name="q4" value="防護非常完備，嚴格落實警示擺放與高規照明" required><span>防護非常完備，嚴格落實警示擺放與高規格照明</span></label>
+            <label class="clay-option-card"><input type="radio" name="q4" value="基本配備有，但昏暗路段或路口仍具高度被撞風險"><span>基本配備有，但昏暗路段或視線死角仍具高度被撞隱憂</span></label>
+            <label class="clay-option-card"><input type="radio" name="q4" value="警示燈具常損壞未即時補齊，全憑同仁自身機警度"><span>警示燈具常損壞未即時補齊，多靠同仁自身機警度</span></label>
+            <label class="clay-option-card"><input type="radio" name="q4" value="趕時間調度時，常無法完整擺設安全防護錐"><span>趕時間調度時，同仁常無法完整擺設安全防護錐</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 模組二：心理安全與組織氛圍 ================= -->
+      <div class="clay-card space-y-8">
+        <div class="flex items-center gap-2.5 pb-4 border-b border-orange-100">
+          <span class="clay-badge"><span>🧠</span> 模組二</span>
+          <div>
+            <h2 class="text-lg font-black text-slate-800">心理安全感、壓力源與組織溝通氛圍</h2>
+            <p class="text-xs font-medium text-slate-500 mt-0.5">深入了解外勤同仁面臨之精神緊繃、內外勤隔閡與求助管道效用</p>
+          </div>
+        </div>
+
+        <!-- Q5 -->
+        <div class="space-y-3.5">
+          <img src="images/style2_3d_clay/q5.jpg" alt="尖峰調度與心理壓力" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q5. 【心理壓力最大來源】依您觀察，造成調度與維護同仁「心力交瘁」的主因為何？（最多可選 3 項） <span class="text-rose-500">*</span>
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="clay-option-card"><input type="checkbox" name="q5" value="尖峰時段「空柱/滿柱」即時調度派工緊迫壓力"><span>尖峰時段「空柱/滿柱」即時追車派工緊迫壓力</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q5" value="民眾現場情緒抱怨、不理性謾罵或催趕口氣"><span>民眾現場情緒抱怨、不理性謾罵或催趕口氣</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q5" value="一人獨自調度/檢修，缺乏支援的孤立感與時限逼迫"><span>一人作業缺乏支援的孤立感與時限逼迫</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q5" value="主管/派遣台對調度KPI或檢修台數的追逐催促"><span>主管/派遣台對調度KPI或檢修台數的電話催促</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q5" value="道路違停夾殺、尋無合適卸車點被開單/檢舉之焦慮"><span>道路違停、尋無合適卸車點被開單/檢舉之焦慮</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q5" value="擔心車輛檢修疏漏發生意外的心理責任重擔"><span>擔心車輛檢修疏漏引發事故的心理連帶責任重擔</span></label>
+          </div>
+        </div>
+
+        <!-- Q6 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q6.jpg" alt="內外勤溝通與協同" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q6. 【內外勤溝通氛圍】外勤人員與調度派遣中心、客服及後勤辦公室的溝通互信程度： <span class="text-rose-500">*</span>
+          </label>
+          <div class="clay-score-group" id="q6-score-group">
+            <button type="button" class="clay-score-btn" onclick="setScore('q6', 1)">
+              <span class="text-xl font-black">1</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">嚴重對立隔閡</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q6', 2)">
+              <span class="text-xl font-black">2</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">常有摩擦</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q6', 3)">
+              <span class="text-xl font-black">3</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">普通公事公辦</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q6', 4)">
+              <span class="text-xl font-black">4</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">能互相體諒</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q6', 5)">
+              <span class="text-xl font-black">5</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">高度互信融洽</span>
+            </button>
+          </div>
+          <input type="hidden" id="f-q6-score" required>
+          <input type="text" id="f-q6-note" placeholder="目前最容易產生內外勤摩擦或矛盾的作業情境為？" class="clay-input w-full mt-2">
+        </div>
+
+        <!-- Q7 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q7.jpg" alt="心理關懷與支持" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q7. 【心理健康支持與求助機制】當同仁面臨重大心理低潮、家庭變故或急性壓力時，目前機制支援性： <span class="text-rose-500">*</span>
+          </label>
+          <div class="space-y-2.5">
+            <label class="clay-option-card"><input type="radio" name="q7" value="具備完善諮商與關懷機制，同仁知曉且願意使用" required><span>具備完善外部諮商或關懷專線，同仁知曉且願意使用</span></label>
+            <label class="clay-option-card"><input type="radio" name="q7" value="僅靠基層幹部口頭慰問，缺乏系統性專業心理資源"><span>僅靠基層幹部口頭慰問，缺乏系統性專業心理資源</span></label>
+            <label class="clay-option-card"><input type="radio" name="q7" value="同仁普遍擔心求助會被貼標籤或影響考核考績"><span>同仁普遍顧慮「表達脆弱或求助會被貼標籤、影響考核」</span></label>
+            <label class="clay-option-card"><input type="radio" name="q7" value="完全缺乏求助管道，同仁多半選擇隱忍或直接離職"><span>完全缺乏求助管道，同仁多半選擇隱忍或直接離職</span></label>
+          </div>
+        </div>
+
+        <!-- Q8 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q8.jpg" alt="第一線意見採納與反饋" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q8. 【基層建言落實度】當第一線針對「調度動線不佳、站點規劃不良、工具零件瑕疵」提出建言時的回應速度： <span class="text-rose-500">*</span>
+          </label>
+          <div class="clay-score-group" id="q8-score-group">
+            <button type="button" class="clay-score-btn" onclick="setScore('q8', 1)">
+              <span class="text-xl font-black">1</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">石沉大海</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q8', 2)">
+              <span class="text-xl font-black">2</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">消極推託</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q8', 3)">
+              <span class="text-xl font-black">3</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">處理緩慢</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q8', 4)">
+              <span class="text-xl font-black">4</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">積極研議</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q8', 5)">
+              <span class="text-xl font-black">5</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">迅速優化落實</span>
+            </button>
+          </div>
+          <input type="hidden" id="f-q8-score" required>
+        </div>
+      </div>
+
+      <!-- ================= 模組三：排班制度、工作節奏與生活平衡 ================= -->
+      <div class="clay-card space-y-8">
+        <div class="flex items-center gap-2.5 pb-4 border-b border-orange-100">
+          <span class="clay-badge"><span>⏰</span> 模組三</span>
+          <div>
+            <h2 class="text-lg font-black text-slate-800">排班制度、離職週期與休假落實</h2>
+            <p class="text-xs font-medium text-slate-500 mt-0.5">掌握新進人員陣亡關鍵期、輪班健康衝擊與缺工惡性循環情況</p>
+          </div>
+        </div>
+
+        <!-- Q9 -->
+        <div class="space-y-3.5">
+          <img src="images/style2_3d_clay/q9.jpg" alt="離職週期與流動" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q9. 【離職週期與在職天數】新進調度與維護人員在職多久通常為「陣亡離職高峰期」？ <span class="text-rose-500">*</span>
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="clay-option-card"><input type="radio" name="q9" value="報到1週以內(第1~3天震撼教育即失聯/放棄)" required><span>報到 1 週內 (第 1~3 天體會後即離職)</span></label>
+            <label class="clay-option-card"><input type="radio" name="q9" value="1個月以內(試用期體力或環境無法調適)"><span>1 個月以內 (試用期體力無法負荷)</span></label>
+            <label class="clay-option-card"><input type="radio" name="q9" value="1~3個月(上手後發現薪資與付出不成比例)"><span>1 ~ 3 個月 (發現薪酬與付出不成比例)</span></label>
+            <label class="clay-option-card"><input type="radio" name="q9" value="6個月~1年(職業疲倦累積、身體機能拉警報)"><span>6 個月 ~ 1 年 (慢性職業倦怠或受傷)</span></label>
+            <label class="clay-option-card"><input type="radio" name="q9" value="1年以上(多因生涯轉職或家庭因素)"><span>1 年以上 (生涯轉換或家庭因素)</span></label>
+          </div>
+          <div class="mt-3 flex flex-col sm:flex-row gap-2 sm:items-center bg-orange-50/60 p-3 rounded-2xl border border-orange-100">
+            <span class="text-xs text-orange-950 font-bold whitespace-nowrap">📊【客觀數據填寫】估計本區新進外勤「前 3 個月離職率」約為：</span>
+            <input type="text" id="f-q9-rate" placeholder="例如：約 40% ~ 50%" class="clay-input flex-1 py-1.5 text-xs">
+          </div>
+        </div>
+
+        <!-- Q10 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q10.jpg" alt="輪班與作息失調" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q10. 【輪班機制衝擊】目前的輪班週期（早/中/夜班輪調）對同仁生理時鐘與作息的影響： <span class="text-rose-500">*</span>
+          </label>
+          <div class="space-y-2.5">
+            <label class="clay-option-card"><input type="radio" name="q10" value="班別固定，同仁作息相當穩定規律" required><span>班別相當固定，作息規律維持良好</span></label>
+            <label class="clay-option-card"><input type="radio" name="q10" value="輪替頻率過高(花花班)，同仁普遍反映嚴重失眠與身心障礙"><span>輪替頻率高（花花班），同仁反映嚴重失眠與作息紊亂</span></label>
+            <label class="clay-option-card"><input type="radio" name="q10" value="大夜班期程過長，生理體能長期不堪負荷"><span>大夜班期程過長，生理時鐘難以適應轉換</span></label>
+            <label class="clay-option-card"><input type="radio" name="q10" value="突發臨時調班/替班頻率偏高，嚴重干擾家庭與生活"><span>突發調班/替班頻繁，嚴重干擾家庭生活與休閒</span></label>
+          </div>
+        </div>
+
+        <!-- Q11 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q11.jpg" alt="加班超時與假難休" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q11. 【休假落實度與加班現狀】因外勤缺工，是否已引發現有人員「常態加班、假休不完」的惡性循環？ <span class="text-rose-500">*</span>
+          </label>
+          <div class="space-y-2.5">
+            <label class="clay-option-card"><input type="radio" name="q11" value="甚少加班，例休與特休皆可順利依個人意願排定" required><span>甚少加班，例休與特休皆可順利依同仁意願排定</span></label>
+            <label class="clay-option-card"><input type="radio" name="q11" value="偶爾因應天候或大型專案活動加班，在合理可控範圍"><span>偶爾因天候或大型活動專案加班，屬合理範圍</span></label>
+            <label class="clay-option-card"><input type="radio" name="q11" value="缺工導致常態性加班，同仁累積疲勞沉重、請假困難"><span>缺工導致常態性超時加班，同仁普遍身心疲憊、請假困難</span></label>
+            <label class="clay-option-card"><input type="radio" name="q11" value="休假日常被公務電話聯繫或臨時召回救火"><span>休假日經常被公務電話打擾或臨時被召回救火支援</span></label>
+          </div>
+        </div>
+
+        <!-- Q12 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q12.jpg" alt="正職與兼職配置" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q12. 【兼職與正職人力結構】目前現場兼職（PT）與正職人力配置是否平衡？兼職流動對正職之影響： <span class="text-rose-500">*</span>
+          </label>
+          <div class="space-y-2.5">
+            <label class="clay-option-card"><input type="radio" name="q12" value="正職為主，兼職適度輔助，人力結構非常穩健" required><span>正職為主、兼職適度輔助，團隊默契與人力結構穩健</span></label>
+            <label class="clay-option-card"><input type="radio" name="q12" value="兼職比例偏高且流動極快，正職疲於奔命重複帶新人"><span>兼職比例偏高且流動極快，正職疲於奔命重複訓練新人</span></label>
+            <label class="clay-option-card"><input type="radio" name="q12" value="兼職招聘嚴重不足，導致正職同仁必須扛下所有尖峰硬仗"><span>兼職根本招不到人，導致正職同仁必須硬扛所有尖峰負荷</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 模組四：薪酬待遇、激勵制度與實質福利 ================= -->
+      <div class="clay-card space-y-8">
+        <div class="flex items-center gap-2.5 pb-4 border-b border-orange-100">
+          <span class="clay-badge"><span>💰</span> 模組四</span>
+          <div>
+            <h2 class="text-lg font-black text-slate-800">薪酬市場競爭力、津貼與身心靈福利</h2>
+            <p class="text-xs font-medium text-slate-500 mt-0.5">直面薪酬性價比、激勵落差，以及外勤最渴望之實質身心修復資源</p>
+          </div>
+        </div>
+
+        <!-- Q13 -->
+        <div class="space-y-3.5">
+          <img src="images/style2_3d_clay/q13.jpg" alt="薪資與勞動付出平衡" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q13. 【市場薪酬競爭力】對比物流外送、倉儲理貨、保全等藍領勞動市場，現行外勤底薪/起薪吸引力評分： <span class="text-rose-500">*</span>
+          </label>
+          <div class="clay-score-group" id="q13-score-group">
+            <button type="button" class="clay-score-btn" onclick="setScore('q13', 1)">
+              <span class="text-xl font-black">1</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">嚴重偏低</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q13', 2)">
+              <span class="text-xl font-black">2</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">略低於同業</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q13', 3)">
+              <span class="text-xl font-black">3</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">持平相近</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q13', 4)">
+              <span class="text-xl font-black">4</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">略具優勢</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q13', 5)">
+              <span class="text-xl font-black">5</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">極具吸引力</span>
+            </button>
+          </div>
+          <input type="hidden" id="f-q13-score" required>
+          <input type="text" id="f-q13-note" placeholder="面試或招募時，求職者最常提及拿來比較的競業/行業是？" class="clay-input w-full mt-2">
+        </div>
+
+        <!-- Q14 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q14.jpg" alt="高溫、夜班與油資津貼" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q14. 【津貼缺口與調整迫切性】以下現行津貼制度，您認為最應優先「新增或調升」的項目為何？（可複選） <span class="text-rose-500">*</span>
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="clay-option-card"><input type="checkbox" name="q14" value="高溫炎熱氣候專屬出勤津貼(夏季特別補助)"><span>高溫炎熱氣候出勤津貼 (夏季專屬加給)</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q14" value="大夜班/深宵時段值勤加給提高"><span>大夜班 / 深宵時段執勤加給提高</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q14" value="尖峰時段高強度調度負重加給"><span>尖峰高強度「調度負重加給」</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q14" value="維護技師專業證照/技術能力津貼"><span>維護技師「專業證照 / 技能加給」</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q14" value="車輛油資、道路通訊及裝備損耗折舊補助"><span>油資、通訊及裝備損耗折舊補助調升</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q14" value="現有各項津貼已足夠合理"><span>現有各項津貼已足夠合理</span></label>
+          </div>
+        </div>
+
+        <!-- Q15 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q15.jpg" alt="多勞多得與即時獎金" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q15. 【即時績效激勵機制】現場調度台數或維修台數，目前是否存在「多勞多得」的階梯式即時獎金？ <span class="text-rose-500">*</span>
+          </label>
+          <div class="space-y-2.5">
+            <label class="clay-option-card"><input type="radio" name="q15" value="機制透明且獎勵及時，同仁衝勁高且重視品質" required><span>機制透明且獎勵及時，同仁衝勁高且重視作業品質</span></label>
+            <label class="clay-option-card"><input type="radio" name="q15" value="有設定獎金，但達標門檻過於嚴苛，同仁覺得看的到吃不到"><span>有設定獎金，但門檻過於嚴苛，同仁多覺得看的到吃不到</span></label>
+            <label class="clay-option-card"><input type="radio" name="q15" value="缺乏差異化激勵，做多做少薪水一樣，容易產生消極怠惰與不平"><span>缺乏差異化激勵，做多做少薪水一樣，容易產生心態不平衡</span></label>
+            <label class="clay-option-card"><input type="radio" name="q15" value="單純衝量獎勵容易引發同仁只求台數、犧牲安全與維護品質之副作用"><span>單純衝量容易導致犧牲安全與維護品質，制度尚待重構</span></label>
+          </div>
+        </div>
+
+        <!-- Q16 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q16.jpg" alt="身心修復與健康福利" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q16. 【身心靈修復型福利需求】若能提撥專案預算，哪些「身心靈修復」福利最能打動外勤並降低離職？（可選 1~3 項） <span class="text-rose-500">*</span>
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="clay-option-card"><input type="checkbox" name="q16" value="骨科/物理治療/專業運動按摩合作特約與定期定額補助"><span>專業骨科/物理治療/運動按摩特約與補助</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q16" value="高階外勤專屬健檢(強化骨骼肌肉超音波、心血管專案)"><span>高階外勤專屬健檢 (骨骼超音波/心血管)</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q16" value="人體工學專業護腰/護膝/減壓鞋墊配發與定期免費換新"><span>人體工學護腰/護膝/減壓鞋墊免費配發換新</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q16" value="全額補助心理減壓諮商服務(個人或家庭支持)"><span>全額補助心理減壓諮商服務 (個人/家庭)</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q16" value="夏季無限暢飲運動飲料/電解質補給冷飲機站點"><span>夏季無限暢飲運動飲料 / 電解質冷飲補給</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q16" value="每年額外有薪「身心修復/充電假」1~2 天"><span>每年額外有薪「身心修復 / 充電假」1~2天</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 模組五：企業願景、職涯展望與制度變革 ================= -->
+      <div class="clay-card space-y-8">
+        <div class="flex items-center gap-2.5 pb-4 border-b border-orange-100">
+          <span class="clay-badge"><span>🌟</span> 模組五</span>
+          <div>
+            <h2 class="text-lg font-black text-slate-800">職涯發展展望、榮譽感與變革建言</h2>
+            <p class="text-xs font-medium text-slate-500 mt-0.5">探討外勤升遷階梯透明度、職業尊榮感，以及高層最關鍵應推動之作為</p>
+          </div>
+        </div>
+
+        <!-- Q17 -->
+        <div class="space-y-3.5">
+          <img src="images/style2_3d_clay/q17.jpg" alt="技術與管理晉升階梯" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q17. 【外勤晉升階梯透明度】外勤人員是否清楚知道自己未來的職涯發展路徑（資深技師、督導或轉調內勤管理）？ <span class="text-rose-500">*</span>
+          </label>
+          <div class="clay-score-group" id="q17-score-group">
+            <button type="button" class="clay-score-btn" onclick="setScore('q17', 1)">
+              <span class="text-xl font-black">1</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">無升遷死胡同</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q17', 2)">
+              <span class="text-xl font-black">2</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">極度模糊</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q17', 3)">
+              <span class="text-xl font-black">3</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">有機會看人情</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q17', 4)">
+              <span class="text-xl font-black">4</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">大致清楚</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q17', 5)">
+              <span class="text-xl font-black">5</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">管道極透明</span>
+            </button>
+          </div>
+          <input type="hidden" id="f-q17-score" required>
+        </div>
+
+        <!-- Q18 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q18.jpg" alt="守護城市綠色動脈之榮耀" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q18. 【職業尊榮感與被看見】外勤同仁對「守護城市綠色動脈」的榮譽感，以及公司/大眾賦予之肯定程度： <span class="text-rose-500">*</span>
+          </label>
+          <div class="clay-score-group" id="q18-score-group">
+            <button type="button" class="clay-score-btn" onclick="setScore('q18', 1)">
+              <span class="text-xl font-black">1</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">底層搬運工</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q18', 2)">
+              <span class="text-xl font-black">2</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">常感到忽視</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q18', 3)">
+              <span class="text-xl font-black">3</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">普通份內事</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q18', 4)">
+              <span class="text-xl font-black">4</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">具一定榮譽感</span>
+            </button>
+            <button type="button" class="clay-score-btn" onclick="setScore('q18', 5)">
+              <span class="text-xl font-black">5</span>
+              <span class="text-xs text-slate-500 mt-1 font-semibold">高度自豪驕傲</span>
+            </button>
+          </div>
+          <input type="hidden" id="f-q18-score" required>
+        </div>
+
+        <!-- Q19 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q19.jpg" alt="高層改革與決策" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q19. 【管理變革優先級】若要真正解決外勤人員留任與招募困難，您認為高層最應優先改革/鬆綁的方向？（可複選） <span class="text-rose-500">*</span>
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="clay-option-card"><input type="checkbox" name="q19" value="薪資底薪與關鍵津貼實質調升"><span>薪資底薪與實質津貼大幅調升</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q19" value="投入預算購置自動化/省力搬運升降設備"><span>投入預算購置省力搬運/升降設備</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q19" value="檢討尖峰空滿柱KPI，不再緊迫逼人"><span>檢討尖峰空滿柱KPI，不再緊迫逼人</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q19" value="擴編現場正職人力，落實正常輪休不超時"><span>擴編現場正職編制，確保輪休正常</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q19" value="建立第一線直通高層的常態意見申訴座談"><span>建立直通高層的常態性溝通座談會</span></label>
+            <label class="clay-option-card"><input type="checkbox" name="q19" value="規劃清楚透明的技術/管理職級晉升制度"><span>建立透明的技術與管理晉升體系</span></label>
+          </div>
+        </div>
+
+        <!-- Q20 -->
+        <div class="space-y-3.5 pt-6 border-t border-orange-100">
+          <img src="images/style2_3d_clay/q20.jpg" alt="高層傾聽與留才突破" class="clay-photo-frame">
+          <label class="block text-base font-extrabold text-slate-800 leading-snug">
+            Q20. 【開放建言】如果公司今年「只做一件事」來有效留住優秀的調度與維修同仁，您認為最關鍵的那件事是什麼？ <span class="text-rose-500">*</span>
+          </label>
+          <textarea id="f-q20-comment" required rows="4" placeholder="請寫下您身為現場幹部最深刻、最真實的想法與建言（例如：實質加薪、添購某項自動化設備、修改特定排班或考核規定...）" class="clay-input w-full p-4 text-sm leading-relaxed"></textarea>
+        </div>
+      </div>
+
+      <!-- 提交按鈕 -->
+      <div class="text-center pt-4 pb-14">
+        <button type="submit" id="btn-submit" class="w-full sm:w-88 py-4 px-9 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-black text-lg rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-200 border-2 border-orange-300">
+          ✨ 確認提交調研問卷
+        </button>
+        <p class="text-xs text-orange-950/60 font-medium mt-3.5">填寫完成後將直接加密同步至 Firebase 獨立庫，非常感謝您的寶貴回饋！</p>
+      </div>
+    </form>
+
+    <!-- 成功提交畫面 -->
+    <div id="success-card" class="hidden clay-card text-center py-14 px-6 space-y-4">
+      <div class="w-22 h-22 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto shadow-inner border-2 border-emerald-200">
+        🎉
+      </div>
+      <h2 class="text-2xl font-black text-slate-800">問卷已成功提交！</h2>
+      <p class="text-sm text-slate-600 max-w-md mx-auto leading-relaxed font-medium">
+        非常感謝您為第一線 YouBike 調度與維修同仁發聲。您的每一項數據與真切建言，都已安全記錄於獨立分析資料庫中，專案小組將彙整報告並向管理高層積極推動實質制度改革！
+      </p>
+      <div class="pt-4">
+        <button onclick="location.reload()" class="px-7 py-2.5 bg-orange-100 hover:bg-orange-200 text-orange-800 font-bold text-xs rounded-xl transition-all shadow-sm">
+          再填寫一份 / 重新整理
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // 1. 初始化 Firebase
+    let db = null;
+    try {
+      if (typeof firebase !== 'undefined' && typeof firebaseConfig !== 'undefined') {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.firestore();
+        console.log("Firebase initialized successfully for YouBike Clay Survey.");
+      }
+    } catch(err) {
+      console.error("Firebase init error:", err);
+    }
+
+    // 2. 評分量表點擊邏輯
+    function setScore(questionId, score) {
+      document.getElementById('f-' + questionId + '-score').value = score;
+      const group = document.getElementById(questionId + '-score-group');
+      const buttons = group.querySelectorAll('.clay-score-btn');
+      buttons.forEach((btn, idx) => {
+        if (idx + 1 === score) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+    }
+
+    // 3. 處理選項卡片選中樣式
+    document.addEventListener('change', (e) => {
+      if (e.target.matches('input[type="radio"]')) {
+        const name = e.target.name;
+        document.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+          const card = input.closest('.clay-option-card');
+          if (card) {
+            if (input.checked) card.classList.add('active');
+            else card.classList.remove('active');
+          }
+        });
+      } else if (e.target.matches('input[type="checkbox"]')) {
+        const card = e.target.closest('.clay-option-card');
+        if (card) {
+          if (e.target.checked) card.classList.add('active');
+          else card.classList.remove('active');
+        }
+      }
+    });
+
+    // 4. 表單提交處理
+    async function handleSurveySubmit(e) {
+      e.preventDefault();
+
+      const scoreFields = ['q2', 'q3', 'q6', 'q8', 'q13', 'q17', 'q18'];
+      for (const q of scoreFields) {
+        const val = document.getElementById('f-' + q + '-score').value;
+        if (!val) {
+          alert('請針對所有評分題完成評分後再送出！');
+          document.getElementById(q + '-score-group').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+      }
+
+      const getCheckboxes = (name) => {
+        const checked = [];
+        document.querySelectorAll(`input[name="${name}"]:checked`).forEach(c => checked.push(c.value));
+        return checked;
+      };
+
+      const q1 = getCheckboxes('q1');
+      if (q1.length === 0) { alert('Q1 請至少勾選一項常見職傷類型！'); return; }
+
+      const q5 = getCheckboxes('q5');
+      if (q5.length === 0) { alert('Q5 請至少勾選一項心理壓力主要來源！'); return; }
+      if (q5.length > 3) { alert('Q5 心理壓力來源最多只能勾選 3 項！'); return; }
+
+      const q14 = getCheckboxes('q14');
+      if (q14.length === 0) { alert('Q14 請勾選至少一項急迫津貼項目！'); return; }
+
+      const q16 = getCheckboxes('q16');
+      if (q16.length === 0) { alert('Q16 請勾選至少一項身心靈福利項目！'); return; }
+      if (q16.length > 3) { alert('Q16 身心靈福利項目最多只能勾選 3 項！'); return; }
+
+      const q19 = getCheckboxes('q19');
+      if (q19.length === 0) { alert('Q19 請勾選至少一項管理變革優先級方向！'); return; }
+
+      const getRadio = (name) => {
+        const el = document.querySelector(`input[name="${name}"]:checked`);
+        return el ? el.value : '';
+      };
+
+      const surveyData = {
+        unit: document.getElementById('f-unit').value,
+        role: document.getElementById('f-role').value,
+        themeStyle: 'clay_3d',
+        
+        q1_injuries: q1,
+        q1_monthly_injured_estimate: document.getElementById('f-q1-num').value.trim(),
+        q2_score_weather_gear: parseInt(document.getElementById('f-q2-score').value),
+        q2_gear_pains: getCheckboxes('q2_pain'),
+        q3_score_ergonomics: parseInt(document.getElementById('f-q3-score').value),
+        q3_urgent_step_note: document.getElementById('f-q3-note').value.trim(),
+        q4_night_safety: getRadio('q4'),
+
+        q5_stress_sources: q5,
+        q6_score_communication: parseInt(document.getElementById('f-q6-score').value),
+        q6_friction_context: document.getElementById('f-q6-note').value.trim(),
+        q7_mental_health_support: getRadio('q7'),
+        q8_score_feedback_action: parseInt(document.getElementById('f-q8-score').value),
+
+        q9_turnover_peak_period: getRadio('q9'),
+        q9_3month_turnover_rate: document.getElementById('f-q9-rate').value.trim(),
+        q10_shift_impact: getRadio('q10'),
+        q11_overtime_and_leave: getRadio('q11'),
+        q12_pt_ratio_impact: getRadio('q12'),
+
+        q13_score_salary_competitiveness: parseInt(document.getElementById('f-q13-score').value),
+        q13_benchmark_competitor: document.getElementById('f-q13-note').value.trim(),
+        q14_priority_allowances: q14,
+        q15_incentive_mechanism: getRadio('q15'),
+        q16_wellness_benefits: q16,
+
+        q17_score_career_path: parseInt(document.getElementById('f-q17-score').value),
+        q18_score_pride_and_recognition: parseInt(document.getElementById('f-q18-score').value),
+        q19_reform_priorities: q19,
+        q20_one_key_action: document.getElementById('f-q20-comment').value.trim(),
+
+        submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        source: 'youbike_mgmt_stage1'
+      };
+
+      const submitBtn = document.getElementById('btn-submit');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>✨ 資料安全上傳中...</span>';
+
+      try {
+        if (db) {
+          await db.collection('youbike_mgmt_surveys').add(surveyData);
+        } else {
+          console.log("展示模式，提交資料：", surveyData);
+        }
+
+        document.getElementById('survey-form').classList.add('hidden');
+        document.getElementById('success-card').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        console.error("提交失敗:", err);
+        alert('問卷送出時發生問題：' + err.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>✨ 確認提交調研問卷</span>';
+      }
+    }
+  </script>
+</body>
+</html>
