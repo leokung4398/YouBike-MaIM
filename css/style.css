@@ -1184,37 +1184,29 @@ body.report-mode #report-mode-container::after {
 }
 
 
-/* 報告模式：嘉義縣市無縫雙層排版（嘉義靠左對齊台，縣市11.5px並向上平移上浮） */
-#report-mode-container .report-chiayi-wrap {
-    display: inline-flex;
-    align-items: center;
-    vertical-align: middle;
-    line-height: 1;
-    width: 3em;
-    justify-content: flex-start;
-}
-#report-mode-container .chiayi-main {
-    font-size: calc(18px * var(--data-scale, 1)) !important;
+/* 嘉義縣市無縫雙層排版（報告模式與非報告模式統一共用） */
+.chiayi-main {
     line-height: 1;
     letter-spacing: 0;
     text-align: left;
 }
-#report-mode-container .chiayi-sub {
+.chiayi-sub {
     display: inline-flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 1.25em;
-    font-size: 11.5px !important;
+    height: 1.35em;
+    font-size: 0.8em !important;
     font-weight: 800;
     line-height: 1;
     margin-left: 1px;
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    text-align: right;
 }
-#report-mode-container .chiayi-sub span {
-    font-size: 11.5px !important;
+.chiayi-sub span {
+    font-size: 1em !important;
     font-weight: 800;
     display: block;
-    line-height: 0.95;
+    line-height: 0.92;
 }
 
 /* 報告模式第一頁：可收合/滑鼠懸停展開之頂端五大指標總覽卡片 */

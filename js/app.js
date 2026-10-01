@@ -730,6 +730,24 @@ function getRedStyle(key, val) {
     return '';
 }
 
+// 📋 全域縣市完整名稱對照表（非報告與報告模式統一共用）
+const REPORT_REGION_NAMES = {
+    '雙北': '雙　北',
+    '桃園': '桃園市',
+    '新竹': '大新竹',
+    '苗栗': '苗栗縣',
+    '台中': '台中市',
+    '嘉義': '<span style="display:inline-flex; align-items:center; vertical-align:middle; line-height:1; width:3.0em; justify-content:space-between;"><span style="line-height:1; letter-spacing:0; text-align:left;">嘉義</span><span class="chiayi-sub" style="display:inline-flex; flex-direction:column; justify-content:space-between; height:1.35em; font-size:0.8em !important; font-weight:800; line-height:1; margin-left:1px; transform:translateY(-4px); text-align:right;"><span style="font-size:1em !important; font-weight:800; display:block; line-height:0.92;">縣</span><span style="font-size:1em !important; font-weight:800; display:block; line-height:0.92;">市</span></span></span>',
+    '台南': '台南市',
+    '高雄': '高雄市',
+    '屏東': '屏東縣',
+    '台東': '台東縣'
+};
+
+function getRegionDisplayName(region) {
+    return REPORT_REGION_NAMES[region] || region;
+}
+
 // 🌟 核心：透過 HTML 標籤點擊呼叫對應按鈕，並加入高級雙層微排版
 function renderDataView() {
     const container = document.getElementById('data-view-container');
@@ -746,9 +764,10 @@ function renderDataView() {
         let bs = r.base ? r.base.s : 0;
         let bv = r.base ? r.base.v : 0;
         let be = r.base ? r.base.e : 0;
+        let regionName = getRegionDisplayName(r.region);
         return `<td style="font-weight:bold;color:var(--text-primary);">
             <div class="region-swap-container">
-                <span class="swap-default">${r.region}</span>
+                <span class="swap-default">${regionName}</span>
                 <span class="swap-hover">場站：${bs}<br>2.0：${bv}<br>2.0E：${be}</span>
             </div>
         </td>`;
@@ -1323,20 +1342,7 @@ function buildReportSlideHTML(page) {
         else if (['台中', '嘉義'].includes(r.region)) { hoverText = `中嘉區 · 綜合平均: ${calcAvg(['台中', '嘉義'])}分`; dashColor = '#10b981'; }
         else if (['台南', '高雄', '屏東', '台東'].includes(r.region)) { hoverText = `南高屏東區 · 綜合平均: ${calcAvg(['台南', '高雄', '屏東', '台東'])}分`; dashColor = '#f59e0b'; }
 
-        // 📋 報告模式專用縣市完整名稱對照表
-        const REPORT_REGION_NAMES = {
-            '雙北': '雙　北',
-            '桃園': '桃園市',
-            '新竹': '大新竹',
-            '苗栗': '苗栗縣',
-            '台中': '台中市',
-            '嘉義': '<span style="display:inline-flex; align-items:center; vertical-align:middle; line-height:1; width:3.0em; justify-content:space-between;"><span style="line-height:1; letter-spacing:0; text-align:left;">嘉義</span><span class="chiayi-sub" style="display:inline-flex; flex-direction:column; justify-content:space-between; height:1.35em; font-size:0.8em !important; font-weight:800; line-height:1; margin-left:1px; transform:translateY(-4px); text-align:right;"><span style="font-size:1em !important; font-weight:800; display:block; line-height:0.92;">縣</span><span style="font-size:1em !important; font-weight:800; display:block; line-height:0.92;">市</span></span></span>',
-            '台南': '台南市',
-            '高雄': '高雄市',
-            '屏東': '屏東縣',
-            '台東': '台東縣'
-        };
-        const displayName = REPORT_REGION_NAMES[r.region] || r.region;
+        const displayName = getRegionDisplayName(r.region);
 
         if (hoverText && mode === 'stats') {
             return `<td style="font-weight:bold;color:var(--text-primary);white-space:nowrap;letter-spacing:-0.2px;padding-left:6px;padding-right:6px;cursor:help;"
