@@ -1330,7 +1330,7 @@ function buildReportSlideHTML(page) {
             '新竹': '大新竹',
             '苗栗': '苗栗縣',
             '台中': '台中市',
-            '嘉義': '<span style="display:inline-flex; align-items:center; vertical-align:baseline;"><span style="line-height:1;">嘉義</span><span style="display:inline-flex; flex-direction:column; justify-content:center; font-size:0.54em; font-weight:bold; margin-left:2px; letter-spacing:0; line-height:0.95; transform:translateY(-1px);"><span style="display:block;">縣</span><span style="display:block;">市</span></span></span>',
+            '嘉義': '<span style="display:inline-flex; align-items:center; vertical-align:middle; line-height:1; width:3.0em; justify-content:space-between;"><span style="line-height:1; letter-spacing:0; text-align:left;">嘉義</span><span class="chiayi-sub" style="display:inline-flex; flex-direction:column; justify-content:space-between; height:1.35em; font-size:0.8em !important; font-weight:800; line-height:1; margin-left:1px; transform:translateY(-4px); text-align:right;"><span style="font-size:1em !important; font-weight:800; display:block; line-height:0.92;">縣</span><span style="font-size:1em !important; font-weight:800; display:block; line-height:0.92;">市</span></span></span>',
             '台南': '台南市',
             '高雄': '高雄市',
             '屏東': '屏東縣',
@@ -1368,31 +1368,53 @@ function buildReportSlideHTML(page) {
         let titleStyle = "font-size: 0.85em; color: var(--text-secondary); margin-bottom: 4px; display: block;";
         
         let summaryCardsHTML = `
-        <div class="report-summary-cards" style="display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; width: 100%; flex-wrap: nowrap;">
-            <div class="report-summary-card hero-card-hover" style="${cardStyle}">
-                <span class="report-summary-card-title" style="${titleStyle}">全台綜合平均分數</span>
-                <span class="report-summary-card-value" style="${valStyle}">
-                    <div style="display: flex; flex-direction: column; align-items: center; line-height: 1;">
-                        <span>${globalAverages.overall} 分</span>
-                        <span style="font-size: 0.55em; font-weight: normal; color: ${overallDiffColor}; margin-top: 4px;">(上月: ${globalAverages.overall_feb} ${overallDiffIcon})</span>
+        <div class="report-summary-collapsible" id="reportSummaryCollapsible" title="將滑鼠移至此處展開卡片，移開即自動收合">
+            <div class="report-summary-collapsible-bar">
+                <div class="collapsible-bar-left">
+                    <span class="collapsible-icon">📊</span>
+                    <span class="collapsible-title">全國施測指標總覽</span>
+                    <span class="collapsible-hint">▾ 滑鼠移入展開</span>
+                </div>
+                <div class="collapsible-bar-preview">
+                    <span class="preview-item"><b>綜合平均</b> ${globalAverages.overall}分</span>
+                    <span class="preview-divider">|</span>
+                    <span class="preview-item"><b>施測站數</b> ${globalAverages.total_s}站</span>
+                    <span class="preview-divider">|</span>
+                    <span class="preview-item"><b>施測車數</b> ${(globalAverages.total_v || 0).toLocaleString()}輛</span>
+                    <span class="preview-divider">|</span>
+                    <span class="preview-item"><b>2.0E</b> ${(globalAverages.total_e || 0).toLocaleString()}輛</span>
+                    <span class="preview-divider">|</span>
+                    <span class="preview-item"><b>胎壓未達標</b> ${totalTire.toLocaleString()}輛 (${tireRatio}%)</span>
+                </div>
+            </div>
+            <div class="report-summary-collapsible-body">
+                <div class="report-summary-cards">
+                    <div class="report-summary-card hero-card-hover" style="${cardStyle}">
+                        <span class="report-summary-card-title" style="${titleStyle}">全台綜合平均分數</span>
+                        <span class="report-summary-card-value" style="${valStyle}">
+                            <div style="display: flex; flex-direction: column; align-items: center; line-height: 1;">
+                                <span>${globalAverages.overall} 分</span>
+                                <span style="font-size: 0.55em; font-weight: normal; color: ${overallDiffColor}; margin-top: 4px;">(上月: ${globalAverages.overall_feb} ${overallDiffIcon})</span>
+                            </div>
+                        </span>
                     </div>
-                </span>
-            </div>
-            <div class="report-summary-card hero-card-hover" style="${cardStyle}">
-                <span class="report-summary-card-title" style="${titleStyle}">施測站數</span>
-                <span class="report-summary-card-value" style="${valStyle}">${globalAverages.total_s} 站</span>
-            </div>
-            <div class="report-summary-card hero-card-hover" style="${cardStyle}">
-                <span class="report-summary-card-title" style="${titleStyle}">施測車輛總數</span>
-                <span class="report-summary-card-value" style="${valStyle}">${(globalAverages.total_v || 0).toLocaleString()} 輛</span>
-            </div>
-            <div class="report-summary-card hero-card-hover" style="${cardStyle}">
-                <span class="report-summary-card-title" style="${titleStyle}">2.0E 施測車數</span>
-                <span class="report-summary-card-value" style="${valStyle}">${(globalAverages.total_e || 0).toLocaleString()} 輛</span>
-            </div>
-            <div class="report-summary-card hero-card-hover" style="${cardStyle}">
-                <span class="report-summary-card-title" style="${titleStyle}">前後胎壓未達標</span>
-                <span class="report-summary-card-value" style="${valStyle}">${totalTire.toLocaleString()} 輛 <span style="font-size: 0.55em; font-weight: normal; color: var(--text-secondary);">(${tireRatio}%)</span></span>
+                    <div class="report-summary-card hero-card-hover" style="${cardStyle}">
+                        <span class="report-summary-card-title" style="${titleStyle}">施測站數</span>
+                        <span class="report-summary-card-value" style="${valStyle}">${globalAverages.total_s} 站</span>
+                    </div>
+                    <div class="report-summary-card hero-card-hover" style="${cardStyle}">
+                        <span class="report-summary-card-title" style="${titleStyle}">施測車輛總數</span>
+                        <span class="report-summary-card-value" style="${valStyle}">${(globalAverages.total_v || 0).toLocaleString()} 輛</span>
+                    </div>
+                    <div class="report-summary-card hero-card-hover" style="${cardStyle}">
+                        <span class="report-summary-card-title" style="${titleStyle}">2.0E 施測車數</span>
+                        <span class="report-summary-card-value" style="${valStyle}">${(globalAverages.total_e || 0).toLocaleString()} 輛</span>
+                    </div>
+                    <div class="report-summary-card hero-card-hover" style="${cardStyle}">
+                        <span class="report-summary-card-title" style="${titleStyle}">前後胎壓未達標</span>
+                        <span class="report-summary-card-value" style="${valStyle}">${totalTire.toLocaleString()} 輛 <span style="font-size: 0.55em; font-weight: normal; color: var(--text-secondary);">(${tireRatio}%)</span></span>
+                    </div>
+                </div>
             </div>
         </div>`;
         

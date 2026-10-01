@@ -15,5 +15,10 @@ check_cols.py
 columns_utf8.txt
 update_rules.py
 merge.py
+# 本地提案專用檔案 (僅本地檢閱，不上傳 GitHub)
+presentation_guide.html
+proposal_*.html
+YouBike_MaIM_*.html
 SetRes.cs
 SetRes1080.cs
+

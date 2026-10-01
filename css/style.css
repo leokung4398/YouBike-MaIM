@@ -1123,8 +1123,8 @@ body.report-mode #report-mode-container::after {
     padding: 10px 0 8px 0; /* 蝮格?璅?銝蝛粹? */
     margin-bottom: 5px; /* 蝮桃璅??”?潮?頝?*/
 }
-.report-slide-content span,
-.report-slide-content td span {
+.report-slide-content span:not(.chiayi-sub):not(.chiayi-sub *),
+.report-slide-content td span:not(.chiayi-sub):not(.chiayi-sub *) {
     font-size: inherit;
 }
 /* ?舀??銝?撠?嚗?勗?璅∪?銋?皜?航? */
@@ -1184,13 +1184,149 @@ body.report-mode #report-mode-container::after {
 }
 
 
+/* 報告模式：嘉義縣市無縫雙層排版（嘉義靠左對齊台，縣市11.5px並向上平移上浮） */
+#report-mode-container .report-chiayi-wrap {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    line-height: 1;
+    width: 3em;
+    justify-content: flex-start;
+}
+#report-mode-container .chiayi-main {
+    font-size: calc(18px * var(--data-scale, 1)) !important;
+    line-height: 1;
+    letter-spacing: 0;
+    text-align: left;
+}
+#report-mode-container .chiayi-sub {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 1.25em;
+    font-size: 11.5px !important;
+    font-weight: 800;
+    line-height: 1;
+    margin-left: 1px;
+    transform: translateY(-2px);
+}
+#report-mode-container .chiayi-sub span {
+    font-size: 11.5px !important;
+    font-weight: 800;
+    display: block;
+    line-height: 0.95;
+}
+
+/* 報告模式第一頁：可收合/滑鼠懸停展開之頂端五大指標總覽卡片 */
+.report-summary-collapsible {
+    width: 100%;
+    margin-bottom: 12px;
+    border-radius: var(--radius-md);
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+body.light-mode .report-summary-collapsible {
+    background: rgba(255, 255, 255, 0.7);
+    border-color: rgba(37, 99, 235, 0.2);
+    box-shadow: 0 4px 14px rgba(31, 38, 135, 0.08);
+}
+
+.report-summary-collapsible-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 16px;
+    background: rgba(37, 99, 235, 0.12);
+    border-bottom: 1px solid transparent;
+    transition: background 0.25s ease, border-color 0.25s ease;
+}
+.report-summary-collapsible:hover .report-summary-collapsible-bar {
+    background: rgba(37, 99, 235, 0.22);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+body.light-mode .report-summary-collapsible-bar {
+    background: rgba(37, 99, 235, 0.08);
+}
+body.light-mode .report-summary-collapsible:hover .report-summary-collapsible-bar {
+    background: rgba(37, 99, 235, 0.15);
+    border-bottom-color: rgba(37, 99, 235, 0.2);
+}
+
+.collapsible-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.collapsible-icon {
+    font-size: 16px;
+}
+.collapsible-title {
+    font-size: 15px;
+    font-weight: bold;
+    color: var(--accent-color);
+    letter-spacing: 0.5px;
+}
+.collapsible-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+body.light-mode .collapsible-hint {
+    background: rgba(0, 0, 0, 0.05);
+}
+.report-summary-collapsible:hover .collapsible-hint {
+    color: var(--accent-color);
+}
+
+.collapsible-bar-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    transition: opacity 0.25s ease;
+}
+.collapsible-bar-preview b {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.preview-divider {
+    color: rgba(148, 163, 184, 0.4);
+}
+.report-summary-collapsible:hover .collapsible-bar-preview {
+    opacity: 0.35;
+}
+
+/* 收合與展開核心動畫 */
+.report-summary-collapsible-body {
+    max-height: 0;
+    opacity: 0;
+    padding: 0 10px;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, padding 0.35s ease;
+    pointer-events: none;
+}
+.report-summary-collapsible:hover .report-summary-collapsible-body {
+    max-height: 150px;
+    opacity: 1;
+    padding: 10px;
+    pointer-events: auto;
+}
+
 /* 報告模式第一頁：頂端五大指標總覽卡片 */
 .report-summary-cards {
     display: flex;
     justify-content: space-between;
-    gap: 15px;
+    gap: 12px;
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 0;
     flex-wrap: nowrap;
 }
 .report-summary-card {
@@ -1200,7 +1336,7 @@ body.report-mode #report-mode-container::after {
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-md);
-    padding: 10px 12px;
+    padding: 8px 10px;
     text-align: center;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease, border-color 0.3s ease;
@@ -1218,11 +1354,11 @@ body.light-mode .report-summary-card {
 .report-summary-card-title {
     font-size: 0.9em;
     color: var(--text-secondary);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     display: block;
 }
 .report-summary-card-value {
-    font-size: 2em;
+    font-size: 1.8em;
     font-weight: bold;
     color: var(--text-primary);
     display: block;
@@ -1258,10 +1394,10 @@ body.report-mode .report-table-wrapper {
     box-sizing: border-box;
 }
 
-/* 針對第 1 頁的表格 wrapper 進行單獨配給最大高度 */
+/* 針對第 1 頁的表格 wrapper 進行單獨配給最大高度（收合條僅佔約 38px，大幅釋出高度讓 10 縣市全覽） */
 body.report-mode .report-slide:nth-child(1) .report-table-wrapper {
-    max-height: calc(100vh - 310px); /* 強制提高扣除額，為頂部卡片騰出空間 */
-    padding-bottom: 60px; /* 追加更厚實的底部安全墊高墊 */
+    max-height: calc(100vh - 205px);
+    padding-bottom: 25px;
 }
 
 body.report-mode .report-table-wrapper table {
