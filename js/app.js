@@ -652,8 +652,8 @@ function updateBarChart() {
         const sortLogic = currentMaintenanceMetric === 'm_accident' ? (a, b) => b[currentMaintenanceMetric] - a[currentMaintenanceMetric] : (a, b) => a[currentMaintenanceMetric] - b[currentMaintenanceMetric];
         const sortedData = [...rawData].sort(sortLogic);
         regions = sortedData.map(item => item.region); 
-        currentValues = sortedData.map(item => item[currentMaintenanceMetric]); 
-        previousValues = sortedData.map(item => item[currentMaintenanceMetric + '_feb']);
+        currentValues = sortedData.map(item => currentMaintenanceMetric === 'maintenance_rate' ? parseFloat(Number(item[currentMaintenanceMetric]).toFixed(2)) : item[currentMaintenanceMetric]); 
+        previousValues = sortedData.map(item => currentMaintenanceMetric === 'maintenance_rate' ? parseFloat(Number(item[currentMaintenanceMetric + '_feb']).toFixed(2)) : item[currentMaintenanceMetric + '_feb']);
         varianceValues = sortedData.map(item => parseFloat((item[currentMaintenanceMetric] - item[currentMaintenanceMetric + '_feb']).toFixed(2)));
         let m = typeof maintenanceMetrics !== 'undefined' ? maintenanceMetrics.find(x => x.key === currentMaintenanceMetric) : null;
         let metricLabel = m ? m.label : (currentMaintenanceMetric === 'maintenance_rate' ? '一級維護率' : '事故車輛數');
@@ -805,7 +805,7 @@ function renderDataView() {
                 <td ${cl('station')}><span style="${stStyle}">${r.station} 分</span></td>
                 <td ${cl('appearance')}><span style="${apStyle}">${r.appearance} 分</span></td>
                 <td ${cl('functionality')}><span style="${fuStyle}">${r.functionality} 分</span></td>
-                <td ${cl('ems')}><span style="${emStyle}">${r.ems}%</span></td>
+                <td ${cl('ems')}><span style="${emStyle}">${Number(r.ems).toFixed(2)}%</span></td>
                 <td ${cl('operability')}><span style="${opStyle}">${r.operability}%</span></td></tr>`;
         });
     } else if (currentMode === 'tire') {
@@ -865,9 +865,9 @@ function renderDataView() {
                 <td ${cl('m_records')}>${r.m_records.toLocaleString()}</td>
                 <td ${cl('maintenance_rate')}>
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.3;">
-                        <span style="${mrStyle} font-size: 14px;">${r.maintenance_rate}%</span>
+                        <span style="${mrStyle} font-size: 14px;">${Number(r.maintenance_rate).toFixed(2)}%</span>
                         <div class="sub-value" style="font-size: 0.85em; color: var(--text-secondary); margin-top: 4px;">
-                            上月: ${r.maintenance_rate_feb}% <span style="color: ${mrDiffColor}; margin-left: 2px; font-size: 10px;">${mrDiffIcon}</span>
+                            上月: ${Number(r.maintenance_rate_feb).toFixed(2)}% <span style="color: ${mrDiffColor}; margin-left: 2px; font-size: 10px;">${mrDiffIcon}</span>
                         </div>
                     </div>
                 </td>
@@ -961,10 +961,10 @@ function setupMapClickEvent() {
         let cr = (p.seriesType === 'map') ? rawData.find(r => r.mapNames.includes(p.name)) : rawData.find(r => r.region === p.name);
         if (cr) {
             const panel = document.getElementById('cityDetailPanel');
-            if (currentMode === 'stats') { panel.querySelector('#detail-title').innerText = `${cr.region} 指標細節 (${currMonthStr})`; panel.querySelector('#detail-content').innerHTML = `<div class="detail-row"><span>綜合分數:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.overall}</span></div><div class="detail-row"><span>場站妥善度:</span><span>${cr.station}</span></div><div class="detail-row"><span>外觀標示:</span><span>${cr.appearance}</span></div><div class="detail-row"><span>重要機能:</span><span>${cr.functionality}</span></div><div class="detail-row"><span>EMS維護率:</span><span>${cr.ems}%</span></div><div class="detail-row"><span>可動率:</span><span>${cr.operability}%</span></div>`; }
+            if (currentMode === 'stats') { panel.querySelector('#detail-title').innerText = `${cr.region} 指標細節 (${currMonthStr})`; panel.querySelector('#detail-content').innerHTML = `<div class="detail-row"><span>綜合分數:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.overall}</span></div><div class="detail-row"><span>場站妥善度:</span><span>${cr.station}</span></div><div class="detail-row"><span>外觀標示:</span><span>${cr.appearance}</span></div><div class="detail-row"><span>重要機能:</span><span>${cr.functionality}</span></div><div class="detail-row"><span>EMS維護率:</span><span>${Number(cr.ems).toFixed(2)}%</span></div><div class="detail-row"><span>可動率:</span><span>${cr.operability}%</span></div>`; }
             else if (currentMode === 'tire') { panel.querySelector('#detail-title').innerText = `${cr.region} 胎壓未達標趨勢`; panel.querySelector('#detail-content').innerHTML = `<div class="detail-row"><span>${currYearMonthStr}:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.tire_history[cr.tire_history.length - 1]}% (${cr.tire_count}輛)</span></div>`; }
             else if (currentMode === 'operability') { let v = (cr.operability - cr.operability_feb).toFixed(2); panel.querySelector('#detail-title').innerText = `${cr.region} 月度分析`; panel.querySelector('#detail-content').innerHTML = `<div class="detail-row"><span>${currMonthStr}可動率:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.operability.toFixed(2)}%</span></div><div class="detail-row"><span>變動:</span><span style="color:${v < 0 ? 'var(--danger-color)' : 'var(--safe-color)'}; font-weight:bold;">${v > 0 ? '+' : ''}${v}%</span></div>`; }
-            else if (currentMode === 'maintenance') { panel.querySelector('#detail-title').innerText = `${cr.region} 維護統計`; panel.querySelector('#detail-content').innerHTML = `<div class="detail-row"><span>事故車:</span><span style="color:var(--danger-color); font-weight:bold;">${cr.m_accident} 輛</span></div><div class="detail-row"><span>維護率:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.maintenance_rate}%</span></div>`; }
+            else if (currentMode === 'maintenance') { panel.querySelector('#detail-title').innerText = `${cr.region} 維護統計`; panel.querySelector('#detail-content').innerHTML = `<div class="detail-row"><span>事故車:</span><span style="color:var(--danger-color); font-weight:bold;">${cr.m_accident} 輛</span></div><div class="detail-row"><span>維護率:</span><span style="color:var(--accent-color); font-weight:bold;">${Number(cr.maintenance_rate).toFixed(2)}%</span></div>`; }
             else if (currentMode === 'simulation') { panel.querySelector('#detail-title').innerText = `${cr.region} 模擬體驗`; panel.querySelector('#detail-content').innerHTML = `<div class="detail-row"><span>A級異常:</span><span style="font-weight:bold;">${cr.sim_a_count} 輛 (${cr.sim_a_ratio}%)</span></div><div class="detail-row"><span>B級異常:</span><span style="font-weight:bold;">${cr.sim_b_count} 輛 (${cr.sim_b_ratio}%)</span></div>`; }
             panel.style.display = 'block';
         }
@@ -1460,7 +1460,7 @@ function buildReportSlideHTML(page) {
                 <td><span style="${stStyle}">${r.station}</span></td>
                 <td><span style="${apStyle}">${r.appearance}</span></td>
                 <td><span style="${fuStyle}">${r.functionality}</span></td>
-                <td><span style="${emStyle}">${r.ems}%</span></td>
+                <td><span style="${emStyle}">${Number(r.ems).toFixed(2)}%</span></td>
                 <td><span style="${opStyle}">${r.operability}%</span></td></tr>`;
         });
 
@@ -1545,7 +1545,7 @@ function buildReportSlideHTML(page) {
                 <td>${r.m_fleet.toLocaleString()}</td>
                 <td style="${accidentStyle}">${r.m_accident}</td>
                 <td>${r.m_records.toLocaleString()}</td>
-                <td><span style="${mrStyle}">${r.maintenance_rate}%</span><br><div style="font-size:16px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.maintenance_rate_feb}% ${mrDiffIcon}</div></td>
+                <td><span style="${mrStyle}">${Number(r.maintenance_rate).toFixed(2)}%</span><br><div style="font-size:16px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${Number(r.maintenance_rate_feb).toFixed(2)}% ${mrDiffIcon}</div></td>
                 <td style="color:${varColor};font-weight:bold;">${actualMVar}</td></tr>`;
         });
 
