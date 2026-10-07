@@ -898,6 +898,91 @@ body.report-mode #helpModal {
     gap: 10px;
     z-index: 99999;
 }
+
+/* 🌟 報告模式左側 8 個快速切換小圓形按鈕導航列 (Quick Nav Dock) */
+#report-quick-nav {
+    position: fixed;
+    left: clamp(12px, 1.8vw, 24px);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 7px;
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    z-index: 99999;
+    user-select: none;
+    transition: all 0.3s ease;
+}
+
+.report-nav-btn {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(100, 116, 139, 0.12);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.report-nav-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background: rgba(14, 165, 233, 0.12);
+    transform: scale(1.15);
+    box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);
+}
+
+.report-nav-btn.active {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: #ffffff;
+    transform: scale(1.22);
+    box-shadow: 0 0 14px rgba(14, 165, 233, 0.6);
+}
+
+.report-nav-btn.locked {
+    opacity: 0.65;
+    border-style: dashed;
+}
+
+.report-nav-btn .nav-btn-tooltip {
+    position: absolute;
+    left: 44px;
+    top: 50%;
+    transform: translateY(-50%) translateX(-6px);
+    background: var(--panel-bg);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--accent-color);
+    color: var(--text-primary);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+    z-index: 100000;
+}
+
+.report-nav-btn:hover .nav-btn-tooltip {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
 .report-dot {
     width: 10px;
     height: 10px;

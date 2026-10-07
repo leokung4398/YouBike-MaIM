@@ -1196,6 +1196,14 @@ document.addEventListener('keydown', (e) => {
     // 若未來有輸入框，打字時不觸發快捷鍵
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
+    // 🌟 報告模式優先攔截 1~8 快捷鍵跳頁
+    if (isReportMode && e.key >= '1' && e.key <= '8') {
+        e.preventDefault();
+        e.stopPropagation();
+        goToReportPageByNum(parseInt(e.key, 10));
+        return;
+    }
+
     const key = e.key.toLowerCase();
     
     switch (key) {
@@ -1397,12 +1405,69 @@ function exitReportMode() {
     unbindReportEvents();
 }
 
+// --- 快速切換至指定報告頁 (1~8 數字) ---
+function goToReportPageByNum(num) {
+    let pageIndex = num - 1;
+    if (pageIndex < 0 || pageIndex > 7) return;
+
+    // 若使用者要求前往第 8 頁，但第 8 頁目前被關閉，則自動啟用並切換
+    if (pageIndex === 7 && !forceToggleEvidence) {
+        forceToggleEvidence = true;
+        updateReportPages();
+        const container = document.getElementById('report-mode-container');
+        if (container) {
+            container.remove();
+            reportSlides = [];
+        }
+        buildReportContainer();
+        document.getElementById('report-mode-container').style.display = 'block';
+        renderAllReportSlides();
+        scrollToReportPage(7);
+        return;
+    }
+
+    if (pageIndex < REPORT_PAGES.length) {
+        scrollToReportPage(pageIndex);
+    }
+}
+
 // --- 建立報告模式的 DOM 骨架 ---
 function buildReportContainer() {
     const container = document.createElement('div');
     container.id = 'report-mode-container';
 
-    // 頁碼指示器
+    // 🌟 左側 8 個快速切換小圓形按鈕導航列 (Quick Nav Dock)
+    const quickNav = document.createElement('div');
+    quickNav.id = 'report-quick-nav';
+    for (let i = 0; i < 8; i++) {
+        const pageInfo = BASE_REPORT_PAGES[i];
+        const btn = document.createElement('div');
+        btn.className = 'report-nav-btn' + (i === reportCurrentPage ? ' active' : '');
+        btn.dataset.pageNum = i + 1;
+        btn.setAttribute('role', 'button');
+        btn.setAttribute('tabindex', '0');
+
+        let tooltipText = pageInfo ? pageInfo.title : `第 ${i + 1} 頁`;
+        if (i === 7 && !forceToggleEvidence) {
+            btn.classList.add('locked');
+            tooltipText += ' (按 8 或 E 啟用)';
+        }
+
+        btn.innerHTML = `
+            <span class="nav-btn-num">${i + 1}</span>
+            <span class="nav-btn-tooltip">${tooltipText}</span>
+        `;
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            goToReportPageByNum(i + 1);
+        });
+
+        quickNav.appendChild(btn);
+    }
+    container.appendChild(quickNav);
+
+    // 頁碼指示器（原右側指示器備用）
     const indicator = document.createElement('div');
     indicator.id = 'report-page-indicator';
     for (let i = 0; i < REPORT_PAGES.length; i++) {
@@ -1865,6 +1930,11 @@ function scrollToReportPage(pageIndex, animate = true) {
         dot.classList.toggle('active', i === pageIndex);
     });
 
+    // 🌟 更新左側 8 個快速切換小圓形按鈕高亮
+    document.querySelectorAll('#report-quick-nav .report-nav-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === pageIndex);
+    });
+
     // 更新頁面標題顯示
     const indicator = document.getElementById('report-page-indicator');
     if (indicator) indicator.title = REPORT_PAGES[pageIndex].title;
@@ -1917,6 +1987,16 @@ function handleReportMouseDown(e) {
 
 // --- 報告模式下的鍵盤方向鍵支援 ---
 function handleReportKeydown(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    // 🌟 快捷鍵 1~8 快速跳頁
+    if (e.key >= '1' && e.key <= '8') {
+        e.preventDefault();
+        e.stopPropagation();
+        goToReportPageByNum(parseInt(e.key, 10));
+        return;
+    }
+
     if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') {
         e.preventDefault();
         if (reportCurrentPage < REPORT_PAGES.length - 1) scrollToReportPage(reportCurrentPage + 1);
