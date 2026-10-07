@@ -1045,16 +1045,21 @@ document.addEventListener('keydown', (e) => {
         
         // 切換實證頁面 (E = Evidence)
         case 'e':
-            if (forceToggleEvidence === null) {
-                forceToggleEvidence = !(evidenceMedia && evidenceMedia.length > 0);
-            } else {
-                forceToggleEvidence = !forceToggleEvidence;
-            }
+            forceToggleEvidence = !forceToggleEvidence;
+            updateReportPages();
             if (isReportMode) {
-                exitReportMode();
-                enterReportMode();
+                const savedPage = reportCurrentPage;
+                if (document.getElementById('report-mode-container')) {
+                    document.getElementById('report-mode-container').remove();
+                    reportSlides = [];
+                }
+                buildReportContainer();
+                document.getElementById('report-mode-container').style.display = 'block';
+                renderAllReportSlides();
+                const targetPage = Math.min(savedPage, REPORT_PAGES.length - 1);
+                scrollToReportPage(targetPage, false);
             } else {
-                alert(forceToggleEvidence ? '已強制啟用第八頁(補充資料)' : '已強制隱藏第八頁(補充資料)');
+                alert(forceToggleEvidence ? '已啟用第八頁 (現場問題實證紀錄)' : '已關閉第八頁 (現場問題實證紀錄)');
             }
             break;
 
@@ -1136,11 +1141,10 @@ const BASE_REPORT_PAGES = [
 ];
 
 let REPORT_PAGES = [...BASE_REPORT_PAGES];
-let forceToggleEvidence = null; // null: auto, true: force show, false: force hide
+let forceToggleEvidence = false; // 默認關閉第八頁，按 E 才開啟
 
 function updateReportPages() {
-    let hasEvidence = evidenceMedia && evidenceMedia.length > 0;
-    let shouldShow = forceToggleEvidence !== null ? forceToggleEvidence : hasEvidence;
+    let shouldShow = !!forceToggleEvidence;
     
     if (shouldShow) {
         REPORT_PAGES = [...BASE_REPORT_PAGES];
