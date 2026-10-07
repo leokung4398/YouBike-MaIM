@@ -49,6 +49,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let elCurrSim = document.getElementById('dyn-curr-sim-month');
     if (elCurrSim) elCurrSim.innerText = currYearMonthStr;
 
+    // 🌟 動態即時計算並更新 全國營運車輛數 (前月/當月) 與 施測總數量
+    if (typeof rawData !== 'undefined' && rawData.length > 0) {
+        let totalFleetFeb = (typeof globalAverages !== 'undefined' && globalAverages.m_fleet_feb) ? globalAverages.m_fleet_feb : rawData.reduce((sum, r) => sum + (r.m_fleet_feb || 0), 0);
+        let totalFleet = (typeof globalAverages !== 'undefined' && globalAverages.m_fleet) ? globalAverages.m_fleet : rawData.reduce((sum, r) => sum + (r.m_fleet || 0), 0);
+        let elPrevFleetVal = document.getElementById('dyn-prev-fleet-val');
+        if (elPrevFleetVal) elPrevFleetVal.innerText = `${totalFleetFeb.toLocaleString()} 輛`;
+        let elCurrFleetVal = document.getElementById('dyn-curr-fleet-val');
+        if (elCurrFleetVal) elCurrFleetVal.innerText = `${totalFleet.toLocaleString()} 輛`;
+
+        let totalSim = rawData.reduce((sum, r) => sum + (r.sim_total || 0), 0);
+        let elCurrSimVal = document.getElementById('dyn-curr-sim-val');
+        if (elCurrSimVal) elCurrSimVal.innerText = `${totalSim.toLocaleString()} 輛`;
+    }
+
     // 🌟 實作「全台動態總計與平均計算器」與「全台綜合分數卡片」
     if (typeof rawData !== 'undefined' && rawData.length > 0) {
         let totalS = typeof globalAverages !== 'undefined' && globalAverages.total_s ? globalAverages.total_s : 0;
@@ -676,6 +690,21 @@ function updateBarChart() {
 
     let displayData = showVariance ? varianceValues : currentValues;
     avgValue = (displayData.reduce((acc, curr) => acc + curr, 0) / displayData.length).toFixed(isPercentage ? 2 : 1);
+    if (!showVariance) {
+        if (currentMode === 'stats' && currentStatsMetric === 'overall' && typeof globalAverages !== 'undefined' && globalAverages.overall != null) {
+            avgValue = Number(globalAverages.overall).toFixed(2);
+        } else if (currentMode === 'stats' && typeof globalAverages !== 'undefined' && globalAverages[currentStatsMetric] != null) {
+            avgValue = Number(globalAverages[currentStatsMetric]).toFixed(isPercentage ? 2 : 1);
+        } else if (currentMode === 'operability' && typeof globalAverages !== 'undefined' && globalAverages.operability != null) {
+            avgValue = Number(globalAverages.operability).toFixed(2);
+        } else if (currentMode === 'maintenance' && currentMaintenanceMetric === 'maintenance_rate' && typeof globalAverages !== 'undefined' && globalAverages.maintenance_rate != null) {
+            avgValue = Number(globalAverages.maintenance_rate).toFixed(2);
+        }
+    } else {
+        if (currentMode === 'stats' && currentStatsMetric === 'overall' && typeof globalAverages !== 'undefined' && globalAverages.overall != null && globalAverages.overall_feb != null) {
+            avgValue = (globalAverages.overall - globalAverages.overall_feb).toFixed(2);
+        }
+    }
 
     let seriesConfig = [];
     if (showVariance) {
@@ -684,7 +713,7 @@ function updateBarChart() {
             // 🌟 將變動條狀圖從黑色(預設/文字色)改為科技灰藍(#64748b)
             data: varianceValues.map(val => ({ value: val, itemStyle: { color: '#64748b' } })),
             label: { show: true, position: 'top', color: '#64748b', fontWeight: 'bold', formatter: val => (val.value > 0 ? '+' : '') + val.value + (isPercentage?'%':''), fontSize: 13 * globalFontScale * dataFontBoost },
-            markLine: { symbol: 'none', data: [{ type: 'average', name: '平均變動' }], label: { formatter: `平均\n${avgValue > 0 ? '+':''}${avgValue}${isPercentage?'%':''}`, position: 'end', color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, fontWeight: 'bold', fontSize: 11 * globalFontScale }, lineStyle: { color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, type: 'dashed', width: 2 } }
+            markLine: { symbol: 'none', data: [{ yAxis: parseFloat(avgValue), name: '平均變動' }], label: { formatter: `平均\n${avgValue > 0 ? '+':''}${avgValue}${isPercentage?'%':''}`, position: 'end', color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, fontWeight: 'bold', fontSize: 11 * globalFontScale }, lineStyle: { color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, type: 'dashed', width: 2 } }
         }];
     } else {
         seriesConfig = [
@@ -693,16 +722,16 @@ function updateBarChart() {
                 name: `${currMonthStr} (當月)`, type: 'bar', barWidth: '30%', itemStyle: { borderRadius: [4, 4, 0, 0] },
                 data: currentValues.map((val, idx) => {
                     let barColor = accentColor;
-                    if (currentMode === 'stats' || currentMode === 'operability') barColor = val < avgValue ? dangerColor : accentColor;
-                    else if (currentMode === 'simulation') barColor = val > avgValue ? dangerColor : accentColor;
+                    if (currentMode === 'stats' || currentMode === 'operability') barColor = val < parseFloat(avgValue) ? dangerColor : accentColor;
+                    else if (currentMode === 'simulation') barColor = val > parseFloat(avgValue) ? dangerColor : accentColor;
                     else if (currentMode === 'maintenance') {
-                        if (currentMaintenanceMetric === 'm_accident') barColor = val > avgValue ? dangerColor : accentColor;
-                        else if (currentMaintenanceMetric === 'maintenance_rate') barColor = val < avgValue ? dangerColor : accentColor;
+                        if (currentMaintenanceMetric === 'm_accident') barColor = val > parseFloat(avgValue) ? dangerColor : accentColor;
+                        else if (currentMaintenanceMetric === 'maintenance_rate') barColor = val < parseFloat(avgValue) ? dangerColor : accentColor;
                     }
                     return { value: val, itemStyle: { color: barColor } };
                 }),
                 label: { show: true, position: 'top', color: textColor, fontWeight: 'bold', formatter: isPercentage ? '{c}%' : '{c}', fontSize: 12 * globalFontScale * dataFontBoost },
-                markLine: { symbol: 'none', data: [{ type: 'average', name: '平均' }], label: { formatter: `${currMonthStr}平均\n${avgValue}${isPercentage?'%':''}`, position: 'end', color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, fontWeight: 'bold', fontSize: 11 * globalFontScale }, lineStyle: { color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, type: 'dashed', width: 2 } }
+                markLine: { symbol: 'none', data: [{ yAxis: parseFloat(avgValue), name: '平均' }], label: { formatter: `${currMonthStr}平均\n${avgValue}${isPercentage?'%':''}`, position: 'end', color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, fontWeight: 'bold', fontSize: 11 * globalFontScale }, lineStyle: { color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, type: 'dashed', width: 2 } }
             }
         ];
     }

@@ -69,8 +69,8 @@
             <div class="base-metrics-wrapper hidden zoom-target" id="maintenance-metrics-area">
                 <div style="font-size: 15px; font-weight: bold; margin-bottom: 5px; color: var(--text-secondary);">全國營運車輛數對比 <span id="fleet-title-hint" onclick="toggleFleetDetails()" style="font-size: 12px; color: var(--accent-color); cursor: pointer;">(點擊展開各縣市明細)</span></div>
                 <div id="fleet-summary" class="base-metrics-grid grid-cols-2 cursor-pointer" onclick="toggleFleetDetails()">
-                    <div class="metric-card hover-glow"><div class="metric-title"><span id="dyn-prev-fleet-month">2026/03</span> 總營運車輛數</div><div class="metric-value" style="color: var(--text-secondary);">107,772 輛</div></div>
-                    <div class="metric-card hover-glow"><div class="metric-title"><span id="dyn-curr-fleet-month">2026/04</span> 總營運車輛數</div><div class="metric-value">108,672 輛</div></div>
+                    <div class="metric-card hover-glow"><div class="metric-title"><span id="dyn-prev-fleet-month">2026/03</span> 總營運車輛數</div><div class="metric-value" id="dyn-prev-fleet-val" style="color: var(--text-secondary);">113,454 輛</div></div>
+                    <div class="metric-card hover-glow"><div class="metric-title"><span id="dyn-curr-fleet-month">2026/04</span> 總營運車輛數</div><div class="metric-value" id="dyn-curr-fleet-val">114,094 輛</div></div>
                 </div>
                 <div id="fleet-details" class="hidden cursor-pointer" onclick="toggleFleetDetails()"><div class="base-metrics-grid grid-cols-5" id="fleet-detail-grid"></div></div>
             </div>
@@ -78,7 +78,7 @@
             <div class="base-metrics-wrapper hidden zoom-target" id="simulation-metrics-area">
                 <div style="font-size: 15px; font-weight: bold; margin-bottom: 5px; color: var(--text-secondary);">全國施測車輛總計 <span id="sim-title-hint" onclick="toggleSimDetails()" style="font-size: 12px; color: var(--accent-color); cursor: pointer;">(點擊展開各縣市數量)</span></div>
                 <div id="sim-summary" class="base-metrics-grid cursor-pointer" style="grid-template-columns: 1fr;" onclick="toggleSimDetails()">
-                    <div class="metric-card hover-glow"><div class="metric-title"><span id="dyn-curr-sim-month">2026/04</span> 本月施測總數量</div><div class="metric-value">2,039 輛</div></div>
+                    <div class="metric-card hover-glow"><div class="metric-title"><span id="dyn-curr-sim-month">2026/04</span> 本月施測總數量</div><div class="metric-value" id="dyn-curr-sim-val">2,039 輛</div></div>
                 </div>
                 <div id="sim-details" class="hidden cursor-pointer" onclick="toggleSimDetails()"><div class="base-metrics-grid grid-cols-5" id="sim-detail-grid"></div></div>
             </div>

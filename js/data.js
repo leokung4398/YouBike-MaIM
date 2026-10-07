@@ -662,6 +662,7 @@ const globalAverages = {
     functionality: 97,
     overall: 91.91,
     m_fleet: 114094,
+    m_fleet_feb: 113454,
     m_accident: 409,
     m_records: 99540,
     maintenance_rate: 89.11,
