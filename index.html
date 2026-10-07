@@ -43,6 +43,12 @@
             <button id="mapDataToggleBtn" class="map-data-toggle hidden hover-expand-btn zoom-target" title="(快捷鍵: T)">
                 <span class="btn-icon">📋</span><span class="btn-text" id="mapDataToggleText">切換數據報表</span>
             </button>
+            <!-- 🌟 模擬體驗地圖左上角 A/B/C 小型切換按鈕組 -->
+            <div id="sim-map-toggle-group" class="map-mini-toggle-group hidden zoom-target">
+                <button type="button" class="mini-toggle-btn active" data-sim="sim_a" title="切換為 A 級異常數據">A級</button>
+                <button type="button" class="mini-toggle-btn" data-sim="sim_b" title="切換為 B 級異常數據">B級</button>
+                <button type="button" class="mini-toggle-btn" data-sim="sim_c" title="切換為 C 級異常數據">C級</button>
+            </div>
             <div id="data-view-container" class="data-view-container hidden zoom-target"></div>
             <div class="legend-box zoom-target" id="legend-box-content"></div>
             <div class="floating-base-metrics zoom-target" id="floating-stats-area">

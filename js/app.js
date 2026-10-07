@@ -202,6 +202,40 @@ function renderSubButtons() {
     }
 }
 
+function switchSimMetric(metricKey) {
+    if (metricKey.includes('sim_') && metricKey.includes('_count')) {
+        metricKey = metricKey.replace('_count', '');
+    }
+    if (metricKey === 'sim_total_count' || metricKey === 'sim_total') {
+        metricKey = 'sim_total';
+    }
+    currentSimulationMetric = metricKey;
+
+    // 1. 更新左上角切換按鈕高亮
+    document.querySelectorAll('#sim-map-toggle-group .mini-toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.sim === currentSimulationMetric);
+    });
+
+    // 2. 更新左下角異常占比圖例 (圖2)
+    updateLegendBox();
+
+    // 3. 更新地圖主題與數據標籤
+    updateMapTheme();
+
+    // 4. 更新右側長條圖
+    updateBarChart();
+
+    // 5. 若右下角縣市詳細面板已開啟，即時更新其數據與高亮 (圖3)
+    if (currentSelectedCity && document.getElementById('cityDetailPanel') && document.getElementById('cityDetailPanel').style.display !== 'none') {
+        renderCityDetail(currentSelectedCity);
+    }
+
+    // 6. 若處於報表模式，更新報表高亮
+    if (isDataView) {
+        renderDataView();
+    }
+}
+
 window.triggerSubMetric = function(key) {
     // 🛑 1. 攔截 region (縣市) 與 mapNames，只處理排序，絕對不更新右側圖表以免崩潰
     if (key === 'region' || key === 'mapNames') {
@@ -217,13 +251,17 @@ window.triggerSubMetric = function(key) {
         key = 'sim_total';
     }
 
+    if (currentMode === 'simulation') {
+        switchSimMetric(key);
+        return;
+    }
+
     if(currentMode === 'stats') {
         currentStatsMetric = key;
         const fs = document.getElementById('floating-stats-area');
         if (fs) fs.classList.add('hidden');
     }
     if(currentMode === 'maintenance') currentMaintenanceMetric = key;
-    if(currentMode === 'simulation') currentSimulationMetric = key;
 
     showVariance = false; 
     updateVarianceBtnUI();
@@ -265,6 +303,7 @@ function switchMode(mode, targetElement) {
     const infoArea = document.getElementById('maintenance-info-area');
     const dashboard = document.getElementById('main-dashboard');
     const floatingStats = document.getElementById('floating-stats-area');
+    const simMapToggle = document.getElementById('sim-map-toggle-group');
 
     maintMetricsArea.classList.add('hidden');
     simMetricsArea.classList.add('hidden');
@@ -276,9 +315,26 @@ function switchMode(mode, targetElement) {
         currentStatsMetric = 'overall'; 
     } else {
         if (mode === 'maintenance') maintMetricsArea.classList.remove('hidden');
-        else if (mode === 'simulation') simMetricsArea.classList.remove('hidden');
+        else if (mode === 'simulation') {
+            simMetricsArea.classList.remove('hidden');
+            if (!currentSimulationMetric || currentSimulationMetric === 'sim_total') {
+                currentSimulationMetric = 'sim_a';
+            }
+        }
+    }
+
+    if (simMapToggle) {
+        if (mode === 'simulation' && !isDataView) {
+            simMapToggle.classList.remove('hidden');
+            simMapToggle.querySelectorAll('.mini-toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.sim === currentSimulationMetric);
+            });
+        } else {
+            simMapToggle.classList.add('hidden');
+        }
     }
     
+    currentSelectedCity = null;
     detailPanel.style.display = 'none';
     renderSubButtons();
     updateLegendBox();
@@ -404,11 +460,24 @@ function toggleDataView() {
         if(legendBox) legendBox.classList.add('hidden');
         if(detailPanel) detailPanel.style.display = 'none'; 
         if(currentMode === 'stats' && floatingStats) floatingStats.classList.add('hidden');
+        const simMapToggle = document.getElementById('sim-map-toggle-group');
+        if(simMapToggle) simMapToggle.classList.add('hidden');
         renderDataView();
     } else {
         if(dataContainer) dataContainer.classList.add('hidden'); 
         if(legendBox) legendBox.classList.remove('hidden');
         if(currentMode === 'stats' && currentStatsMetric === '' && floatingStats) floatingStats.classList.remove('hidden');
+        const simMapToggle = document.getElementById('sim-map-toggle-group');
+        if(simMapToggle) {
+            if (currentMode === 'simulation') {
+                simMapToggle.classList.remove('hidden');
+                simMapToggle.querySelectorAll('.mini-toggle-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.sim === currentSimulationMetric);
+                });
+            } else {
+                simMapToggle.classList.add('hidden');
+            }
+        }
     }
 }
 
@@ -985,20 +1054,84 @@ function updateLegendBox() {
     }
 }
 
+let currentSelectedCity = null;
+
+function renderCityDetail(cr) {
+    if (!cr) return;
+    currentSelectedCity = cr;
+    const panel = document.getElementById('cityDetailPanel');
+    if (!panel) return;
+
+    if (currentMode === 'stats') {
+        panel.querySelector('#detail-title').innerText = `${cr.region} 指標細節 (${currMonthStr})`;
+        panel.querySelector('#detail-content').innerHTML = `
+            <div class="detail-row"><span>綜合分數:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.overall}</span></div>
+            <div class="detail-row"><span>場站妥善度:</span><span>${cr.station}</span></div>
+            <div class="detail-row"><span>外觀標示:</span><span>${cr.appearance}</span></div>
+            <div class="detail-row"><span>重要機能:</span><span>${cr.functionality}</span></div>
+            <div class="detail-row"><span>EMS維護率:</span><span>${Number(cr.ems).toFixed(2)}%</span></div>
+            <div class="detail-row"><span>可動率:</span><span>${cr.operability}%</span></div>`;
+    } else if (currentMode === 'tire') {
+        panel.querySelector('#detail-title').innerText = `${cr.region} 胎壓未達標趨勢`;
+        panel.querySelector('#detail-content').innerHTML = `
+            <div class="detail-row"><span>${currYearMonthStr}:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.tire_history[cr.tire_history.length - 1]}% (${cr.tire_count}輛)</span></div>`;
+    } else if (currentMode === 'operability') {
+        let v = (cr.operability - cr.operability_feb).toFixed(2);
+        panel.querySelector('#detail-title').innerText = `${cr.region} 月度分析`;
+        panel.querySelector('#detail-content').innerHTML = `
+            <div class="detail-row"><span>${currMonthStr}可動率:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.operability.toFixed(2)}%</span></div>
+            <div class="detail-row"><span>變動:</span><span style="color:${v < 0 ? 'var(--danger-color)' : 'var(--safe-color)'}; font-weight:bold;">${v > 0 ? '+' : ''}${v}%</span></div>`;
+    } else if (currentMode === 'maintenance') {
+        panel.querySelector('#detail-title').innerText = `${cr.region} 維護統計`;
+        panel.querySelector('#detail-content').innerHTML = `
+            <div class="detail-row"><span>事故車:</span><span style="color:var(--danger-color); font-weight:bold;">${cr.m_accident} 輛</span></div>
+            <div class="detail-row"><span>維護率:</span><span style="color:var(--accent-color); font-weight:bold;">${Number(cr.maintenance_rate).toFixed(2)}%</span></div>`;
+    } else if (currentMode === 'simulation') {
+        let gradeStr = currentSimulationMetric === 'sim_a' ? 'A級' : (currentSimulationMetric === 'sim_b' ? 'B級' : 'C級');
+        panel.querySelector('#detail-title').innerText = `${cr.region} 模擬體驗 (${gradeStr})`;
+
+        let isA = currentSimulationMetric === 'sim_a';
+        let isB = currentSimulationMetric === 'sim_b';
+        let isC = currentSimulationMetric === 'sim_c';
+
+        let aStyle = isA ? 'background: rgba(14, 165, 233, 0.12); color: var(--accent-color); font-weight: bold; border-radius: 4px; padding: 3px 6px;' : 'padding: 3px 6px;';
+        let bStyle = isB ? 'background: rgba(14, 165, 233, 0.12); color: var(--accent-color); font-weight: bold; border-radius: 4px; padding: 3px 6px;' : 'padding: 3px 6px;';
+        let cStyle = isC ? 'background: rgba(14, 165, 233, 0.12); color: var(--accent-color); font-weight: bold; border-radius: 4px; padding: 3px 6px;' : 'padding: 3px 6px;';
+
+        panel.querySelector('#detail-content').innerHTML = `
+            <div class="detail-row" style="${aStyle}">
+                <span>${isA ? '👉 ' : ''}A級異常:</span>
+                <span style="font-weight:bold;">${cr.sim_a_count} 輛 (${cr.sim_a_ratio}%)</span>
+            </div>
+            <div class="detail-row" style="${bStyle}">
+                <span>${isB ? '👉 ' : ''}B級異常:</span>
+                <span style="font-weight:bold;">${cr.sim_b_count} 輛 (${cr.sim_b_ratio}%)</span>
+            </div>
+            <div class="detail-row" style="${cStyle}">
+                <span>${isC ? '👉 ' : ''}C級異常:</span>
+                <span style="font-weight:bold;">${cr.sim_c_count} 輛 (${cr.sim_c_ratio}%)</span>
+            </div>
+            <div class="detail-row" style="font-size: 12px; color: var(--text-secondary); border-top: 1px dashed var(--border-color); margin-top: 6px; padding: 5px 6px 0 6px;">
+                <span>施測總數:</span>
+                <span style="font-weight:bold; color: var(--text-primary);">${cr.sim_total} 輛</span>
+            </div>`;
+    }
+    panel.style.display = 'block';
+}
+
 function setupMapClickEvent() {
     mapChart.on('click', (p) => {
         let cr = (p.seriesType === 'map') ? rawData.find(r => r.mapNames.includes(p.name)) : rawData.find(r => r.region === p.name);
         if (cr) {
-            const panel = document.getElementById('cityDetailPanel');
-            if (currentMode === 'stats') { panel.querySelector('#detail-title').innerText = `${cr.region} 指標細節 (${currMonthStr})`; panel.querySelector('#detail-content').innerHTML = `<div class="detail-row"><span>綜合分數:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.overall}</span></div><div class="detail-row"><span>場站妥善度:</span><span>${cr.station}</span></div><div class="detail-row"><span>外觀標示:</span><span>${cr.appearance}</span></div><div class="detail-row"><span>重要機能:</span><span>${cr.functionality}</span></div><div class="detail-row"><span>EMS維護率:</span><span>${Number(cr.ems).toFixed(2)}%</span></div><div class="detail-row"><span>可動率:</span><span>${cr.operability}%</span></div>`; }
-            else if (currentMode === 'tire') { panel.querySelector('#detail-title').innerText = `${cr.region} 胎壓未達標趨勢`; panel.querySelector('#detail-content').innerHTML = `<div class="detail-row"><span>${currYearMonthStr}:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.tire_history[cr.tire_history.length - 1]}% (${cr.tire_count}輛)</span></div>`; }
-            else if (currentMode === 'operability') { let v = (cr.operability - cr.operability_feb).toFixed(2); panel.querySelector('#detail-title').innerText = `${cr.region} 月度分析`; panel.querySelector('#detail-content').innerHTML = `<div class="detail-row"><span>${currMonthStr}可動率:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.operability.toFixed(2)}%</span></div><div class="detail-row"><span>變動:</span><span style="color:${v < 0 ? 'var(--danger-color)' : 'var(--safe-color)'}; font-weight:bold;">${v > 0 ? '+' : ''}${v}%</span></div>`; }
-            else if (currentMode === 'maintenance') { panel.querySelector('#detail-title').innerText = `${cr.region} 維護統計`; panel.querySelector('#detail-content').innerHTML = `<div class="detail-row"><span>事故車:</span><span style="color:var(--danger-color); font-weight:bold;">${cr.m_accident} 輛</span></div><div class="detail-row"><span>維護率:</span><span style="color:var(--accent-color); font-weight:bold;">${Number(cr.maintenance_rate).toFixed(2)}%</span></div>`; }
-            else if (currentMode === 'simulation') { panel.querySelector('#detail-title').innerText = `${cr.region} 模擬體驗`; panel.querySelector('#detail-content').innerHTML = `<div class="detail-row"><span>A級異常:</span><span style="font-weight:bold;">${cr.sim_a_count} 輛 (${cr.sim_a_ratio}%)</span></div><div class="detail-row"><span>B級異常:</span><span style="font-weight:bold;">${cr.sim_b_count} 輛 (${cr.sim_b_ratio}%)</span></div>`; }
-            panel.style.display = 'block';
+            renderCityDetail(cr);
         }
     });
-    mapChart.getZr().on('click', (e) => { if (!e.target) document.getElementById('cityDetailPanel').style.display = 'none'; });
+    mapChart.getZr().on('click', (e) => { 
+        if (!e.target) {
+            currentSelectedCity = null;
+            document.getElementById('cityDetailPanel').style.display = 'none'; 
+        }
+    });
 }
 
 // 初始化佈局與圖表
@@ -1019,6 +1152,14 @@ async function initDashboard() {
         renderInitialMap();
         updateBarChart();
         setupMapClickEvent();
+
+        // 🌟 綁定地圖左上角 A/B/C 小型切換按鈕事件
+        document.querySelectorAll('#sim-map-toggle-group .mini-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                switchSimMetric(btn.dataset.sim);
+            });
+        });
         
         setTimeout(() => { mapChart.resize(); }, 350);
 
