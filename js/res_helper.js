@@ -111,34 +111,6 @@
         window.location.href = 'ms-settings:display';
     };
 
-    // 報告模式下，若非 1920x1200 且未提示過，顯示右下角微調提示浮鈕
-    let hasShownReportPrompt = false;
-    function checkReportModePrompt() {
-        if (!window.isReportMode) {
-            const promptBtn = document.getElementById('res-report-pill');
-            if (promptBtn) promptBtn.style.display = 'none';
-            return;
-        }
-
-        const m = getDisplayMetrics();
-        let promptBtn = document.getElementById('res-report-pill');
-
-        if (!promptBtn) {
-            promptBtn = document.createElement('div');
-            promptBtn.id = 'res-report-pill';
-            promptBtn.title = '點擊開啟螢幕最佳化調校';
-            promptBtn.innerHTML = `🖥️ 螢幕調校 (全縣市全覽)`;
-            promptBtn.onclick = window.openResHelperModal;
-            document.body.appendChild(promptBtn);
-        }
-
-        if (!m.isPerfect) {
-            promptBtn.style.display = 'flex';
-        } else {
-            promptBtn.style.display = 'none';
-        }
-    }
-
     // 註冊全域鍵盤監聽 (F10 或點擊)
     window.addEventListener('DOMContentLoaded', () => {
         // 隱藏按鈕點擊
@@ -163,25 +135,7 @@
             }
         });
 
-        // 監聽報告模式連動
-        const origEnter = window.enterReportMode;
-        if (typeof origEnter === 'function') {
-            window.enterReportMode = function() {
-                origEnter.apply(this, arguments);
-                setTimeout(checkReportModePrompt, 200);
-            };
-        }
-
-        const origExit = window.exitReportMode;
-        if (typeof origExit === 'function') {
-            window.exitReportMode = function() {
-                origExit.apply(this, arguments);
-                checkReportModePrompt();
-            };
-        }
-
         window.addEventListener('resize', () => {
-            if (window.isReportMode) checkReportModePrompt();
             const modal = document.getElementById('resHelperModal');
             if (modal && !modal.classList.contains('hidden')) {
                 refreshModalData();

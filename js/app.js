@@ -1347,6 +1347,11 @@ function enterReportMode() {
     reportCurrentPage = 0;
     document.body.classList.add('report-mode');
 
+    // 🖥️ 自動進入瀏覽器全螢幕模式
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+    }
+
     // 🔍 連動：自動開啟「數字放大」（若尚未開啟）
     if (!isDataZoomed) {
         document.getElementById('dataZoomBtn')?.click();
@@ -1383,6 +1388,11 @@ function exitReportMode() {
     document.body.classList.remove('report-mode');
     if (document.getElementById('report-mode-container')) {
         document.getElementById('report-mode-container').style.display = 'none';
+    }
+
+    // 🖥️ 自動退出瀏覽器全螢幕模式
+    if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
     }
 
     // 🛑 退出報告模式時暫停所有影片
