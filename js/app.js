@@ -184,6 +184,10 @@ function injectSimData() {
                 }
             }
         });
+        // 🌟 確保注入 simJsonData 後同步刷新 DOM 中的全國施測車輛總計
+        let totalSim = rawData.reduce((sum, r) => sum + (r.sim_total || 0), 0);
+        let elCurrSimVal = document.getElementById('dyn-curr-sim-val');
+        if (elCurrSimVal) elCurrSimVal.innerText = `${totalSim.toLocaleString()} 輛`;
     }
 }
 injectSimData();
@@ -569,7 +573,7 @@ document.getElementById('fontSizeSlider').addEventListener('input', (e) => {
     updateMapTheme(); updateBarChart();
 });
 
-// 舊版 presentationBtn 已從上線進入退場，保留此註解駅不干擾其他功能
+// 舊版 presentationBtn 已從上線進入退場，保留此註解以免干擾其他功能
 const presentationBtn = null; // presentationToggleBtn 已從 DOM 移除
 
 const laserDot = document.getElementById('laser-dot');
@@ -580,7 +584,7 @@ if (laserToggleBtn && laserDot) {
         if (isLaserMode) { e.target.classList.add('active'); e.target.innerText = '❌ 關閉雷射'; laserDot.classList.add('active'); }
         else { e.target.classList.remove('active'); e.target.innerText = '🔴 雷射筆'; laserDot.classList.remove('active'); }
     });
-    document.addEventListener('mousemove', (e) => { if (isLaserMode) laserDot.style.transform = `translate(${e.clientX - 8}px, ${e.clientY - 8}px)`; });
+    document.addEventListener('mousemove', (e) => { if (isLaserMode) laserDot.style.transform = `translate(${e.clientX - 5}px, ${e.clientY - 5}px)`; });
 }
 
 // 🌟 核心：確保地圖也能動態根據目前選中的子指標改變顏色！
@@ -594,8 +598,8 @@ function getMapValue(item) {
 
 function getVisualMapOption() {
     const style = getComputedStyle(document.body);
-    const dangerColor = style.getPropertyValue('--danger-color').trim(); // 綠色 = 下降/警示
-    const safeColor  = style.getPropertyValue('--safe-color').trim();  // 紅色 = 達標/健康
+    const dangerColor = style.getPropertyValue('--danger-color').trim(); // 紅色 = 警示/未達標
+    const safeColor  = style.getPropertyValue('--safe-color').trim();  // 綠色 = 達標/健康
     
     if (currentMode === 'stats')       return { show: false, min: 86, max: 94, inRange: { color: [dangerColor, '#f97316', '#eab308', safeColor] } };
     else if (currentMode === 'tire')   return { show: false, min: 0,  max: 8,  inRange: { color: [safeColor,  '#eab308', '#f97316', dangerColor] } };
@@ -617,6 +621,7 @@ function updateMapTheme() {
     const textColor = style.getPropertyValue('--text-primary').trim();
     const mapBaseColor = style.getPropertyValue('--map-base').trim();
     const accentColor = style.getPropertyValue('--accent-color').trim();
+    const safeColor = style.getPropertyValue('--safe-color').trim() || '#10b981';
 
     let mapData = [], lineData = [], scatterData = [];
     rawData.forEach(item => {
@@ -644,8 +649,8 @@ function updateMapTheme() {
                     backgroundColor: isLightMode ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.8)', borderColor: isLightMode ? '#94a3b8' : '#334155', borderWidth: 1, padding: [6, 8], borderRadius: 4, 
                     rich: { 
                         region: { color: textColor, fontSize: 13 * globalFontScale, fontWeight: 'bold', align: 'center', padding: [0, 0, 4, 0] }, 
-                        /* 🍏 地圖分數標籤使用 --safe-color（台股紅色=達標） */
-                        score: { color: 'var(--safe-color)', fontSize: 14 * globalFontScale * dataFontBoost, fontWeight: 'bold', align: 'center' } 
+                        /* 🍏 地圖分數標籤使用解析後的 safeColor（避免 ECharts Canvas 無法解析 CSS var() 退化為純黑） */
+                        score: { color: safeColor, fontSize: 14 * globalFontScale * dataFontBoost, fontWeight: 'bold', align: 'center' } 
                     }
                 } 
             }
@@ -705,13 +710,6 @@ function updateBarChart() {
     }
 
     let regions, currentValues, previousValues, varianceValues, chartTitle, avgValue, isPercentage = false;
-
-    const getVarColor = (val) => {
-        if (val === 0) return isLightMode ? APP_CONFIG.colors.inactiveLight : APP_CONFIG.colors.inactiveDark;
-        if (currentMode === 'maintenance' && currentMaintenanceMetric === 'm_accident') return val > 0 ? dangerColor : safeColor;
-        if (currentMode === 'simulation') return val > 0 ? dangerColor : safeColor;
-        return val > 0 ? safeColor : dangerColor;
-    };
 
     if (currentMode === 'stats') {
         const sortedData = [...rawData].sort((a, b) => a[currentStatsMetric] - b[currentStatsMetric]);
@@ -1345,6 +1343,7 @@ function toggleReportMode() {
 
 function enterReportMode() {
     isReportMode = true;
+    window.isReportMode = true;
     reportCurrentPage = 0;
     document.body.classList.add('report-mode');
 
@@ -1367,7 +1366,7 @@ function enterReportMode() {
     buildReportContainer();
     document.getElementById('report-mode-container').style.display = 'block';
 
-    // 渲染所有 7 頁的數據
+    // 渲染所有頁面的數據
     renderAllReportSlides();
 
     // 跳至第 1 頁
@@ -1376,9 +1375,11 @@ function enterReportMode() {
     // 綁定事件
     bindReportEvents();
 }
+window.enterReportMode = enterReportMode;
 
 function exitReportMode() {
     isReportMode = false;
+    window.isReportMode = false;
     document.body.classList.remove('report-mode');
     if (document.getElementById('report-mode-container')) {
         document.getElementById('report-mode-container').style.display = 'none';
@@ -1404,6 +1405,7 @@ function exitReportMode() {
     // 解除事件
     unbindReportEvents();
 }
+window.exitReportMode = exitReportMode;
 
 // --- 快速切換至指定報告頁 (1~8 數字) ---
 function goToReportPageByNum(num) {
@@ -1441,6 +1443,14 @@ function buildReportContainer() {
             goToReportPageByNum(i + 1);
         });
 
+        btn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                goToReportPageByNum(i + 1);
+            }
+        });
+
         quickNav.appendChild(btn);
     }
     container.appendChild(quickNav);
@@ -1470,9 +1480,10 @@ function buildReportContainer() {
     laserBtn.addEventListener('click', () => document.getElementById('laserToggleBtn')?.click());
     container.appendChild(laserBtn);
 
-    // 7 個 slide 容器
+    // Slide 容器 (動態根據 REPORT_PAGES 長度設定高度)
     const slidesWrapper = document.createElement('div');
     slidesWrapper.id = 'report-slides-wrapper';
+    slidesWrapper.style.height = `calc(100vh * ${REPORT_PAGES.length})`;
     for (let i = 0; i < REPORT_PAGES.length; i++) {
         const slide = document.createElement('div');
         slide.className = 'report-slide';
@@ -1502,36 +1513,11 @@ function buildReportContainer() {
 
 // --- 渲染每一頁的純數字數據報表 ---
 function renderAllReportSlides() {
-    // 暫存目前狀態
-    const savedMode = currentMode;
-    const savedStatsMetric = currentStatsMetric;
-    const savedMaintenanceMetric = currentMaintenanceMetric;
-    const savedSimMetric = currentSimulationMetric;
-    const savedDataView = isDataView;
-    const savedVariance = showVariance;
-
     REPORT_PAGES.forEach((page, idx) => {
         const contentEl = document.getElementById(`report-content-${idx}`);
         if (!contentEl) return;
-
-        // 臨時切換到對應模式與指標，使用 renderDataView 邏輯生成 HTML
-        currentMode = page.nav;
-        showVariance = false;
-        if (page.nav === 'stats')       currentStatsMetric = page.subKey || 'overall';
-        if (page.nav === 'maintenance') currentMaintenanceMetric = page.subKey || 'maintenance_rate';
-        if (page.nav === 'simulation')  currentSimulationMetric = page.subKey || 'sim_a';
-
-        // 使用 renderDataView 內部邏輯直接生成 HTML（不依賴 DOM 容器）
         contentEl.innerHTML = buildReportSlideHTML(page);
     });
-
-    // 還原所有狀態
-    currentMode = savedMode;
-    currentStatsMetric = savedStatsMetric;
-    currentMaintenanceMetric = savedMaintenanceMetric;
-    currentSimulationMetric = savedSimMetric;
-    isDataView = savedDataView;
-    showVariance = savedVariance;
 }
 
 // --- 獨立建立報告頁 HTML（不操作 DOM 狀態，純資料輸出）---
@@ -1731,7 +1717,7 @@ function buildReportSlideHTML(page) {
         });
         
         // (移除底部的扣分規則表，改為 tooltip)
-        html += `</tbody></table>`;
+        html += `</tbody></table></div>`;
         return html; // 已封裝 table 直接回傳
 
     } else if (mode === 'maintenance') {
@@ -1908,7 +1894,7 @@ function scrollToReportPage(pageIndex, animate = true) {
         dot.classList.toggle('active', i === pageIndex);
     });
 
-    // 🌟 更新左側 8 個快速切換小圓形按鈕高亮
+    // 🌟 更新左側快速切換小圓形按鈕高亮
     document.querySelectorAll('#report-quick-nav .report-nav-btn').forEach((btn, i) => {
         btn.classList.toggle('active', i === pageIndex);
     });
@@ -2013,7 +1999,7 @@ function unbindReportEvents() {
 // 🔍 報告模式 Simulation 單擊 Tooltip 系統
 // ====================================================
 
-// 建立 Tooltip DOMï¼只建立一次，後續重用）
+// 建立 Tooltip DOM（只建立一次，後續重用）
 window.tooltipHideTimer = null;
 function ensureReportSimTooltip() {
     if (!document.getElementById('report-sim-tooltip')) {
@@ -2025,6 +2011,26 @@ function ensureReportSimTooltip() {
         document.body.appendChild(tip);
     }
     return document.getElementById('report-sim-tooltip');
+}
+
+// 統一計算並定位 Tooltip 於滑鼠座標附近
+function positionReportTooltip(tip, x, y, offset = 20, fallbackW = 280, fallbackH = 150) {
+    tip.classList.remove('hidden');
+    tip.style.left = '0';
+    tip.style.top = '0';
+    const tipW = tip.offsetWidth || fallbackW;
+    const tipH = tip.offsetHeight || fallbackH;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    let left = x + offset;
+    let top = y - tipH / 2;
+    if (left + tipW + 5 > vw) left = x - tipW - offset;
+    if (top < 5) top = 5;
+    if (top + tipH + 5 > vh) top = vh - tipH - 5;
+
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
 }
 
 function showReportSimTooltip(region, grade, x, y) {
@@ -2051,12 +2057,12 @@ function showReportSimTooltip(region, grade, x, y) {
         bodyHtml = `<p style="color:var(--text-secondary);margin:0;font-size:13px;">此縣市目前無具體問題紀錄。</p>`;
     }
 
-    const REPORT_REGION_NAMES = {
+    const TOOLTIP_REGION_NAMES = {
         '雙北': '雙　北', '桃園': '桃園市', '新竹': '大新竹', '苗栗': '苗栗縣',
         '台中': '台中市', '嘉義': '嘉義縣市', '台南': '台南市', '高雄': '高雄市',
         '屏東': '屏東縣', '台東': '台東縣'
     };
-    const displayName = REPORT_REGION_NAMES[region] || region;
+    const displayName = TOOLTIP_REGION_NAMES[region] || region;
 
     tip.innerHTML = `
         <div class="tooltip-title">${displayName} · <span style="color:${gColor};">${gDesc}</span></div>
@@ -2064,50 +2070,14 @@ function showReportSimTooltip(region, grade, x, y) {
         <div style="font-size:12px; color:var(--text-secondary); margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color);">* 註：一台車可能同時發生多項異常，故「異常項目件數」與外層「異常車輛數」不同。</div>
     `;
 
-    // 計算定位：顯示於滑鼠右側
-    tip.classList.remove('hidden');
-    tip.style.left = '0'; tip.style.top = '0'; // 先重置使能取得寬度
-    const tipW = tip.offsetWidth || 280;
-    const tipH = tip.offsetHeight || 150;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    // 預設顯示在滑鼠右側 20px
-    let left = x + 20;
-    let top = y - tipH / 2;
-
-    // 如果往右超出有5px 邊界，就左側顯示
-    if (left + tipW + 5 > vw) left = x - tipW - 20;
-    // 确保不超出上下誤
-    if (top < 5) top = 5;
-    if (top + tipH + 5 > vh) top = vh - tipH - 5;
-
-    tip.style.left = `${left}px`;
-    tip.style.top = `${top}px`;
+    positionReportTooltip(tip, x, y, 20, 280, 150);
 }
 
 window.showReportStatsTooltip = function(text, e) {
     if (window.tooltipHideTimer) clearTimeout(window.tooltipHideTimer);
     const tip = ensureReportSimTooltip();
-    
-    // 與模擬模式 Tooltip 樣式保持一致，但微調邊界與間距
     tip.innerHTML = `<div class="tooltip-title" style="margin:0; padding:5px 0; border-bottom:none; font-size:24px;">${text}</div>`;
-    
-    tip.classList.remove('hidden');
-    tip.style.left = '0'; tip.style.top = '0';
-    const tipW = tip.offsetWidth || 280;
-    const tipH = tip.offsetHeight || 50;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    let left = e.clientX + 20;
-    let top = e.clientY - tipH / 2;
-    if (left + tipW + 5 > vw) left = e.clientX - tipW - 20;
-    if (top < 5) top = 5;
-    if (top + tipH + 5 > vh) top = vh - tipH - 5;
-
-    tip.style.left = `${left}px`;
-    tip.style.top = `${top}px`;
+    positionReportTooltip(tip, e.clientX, e.clientY, 20, 280, 50);
 };
 
 window.highlightGroup = function(groupId) {
@@ -2145,24 +2115,8 @@ const opTooltipHTML = `<div style="font-size: 14px; background: var(--surface-co
 window.showReportOpTooltip = function(e) {
     if (window.tooltipHideTimer) clearTimeout(window.tooltipHideTimer);
     const tip = ensureReportSimTooltip();
-    
     tip.innerHTML = opTooltipHTML;
-    
-    tip.classList.remove('hidden');
-    tip.style.left = '0'; tip.style.top = '0';
-    const tipW = tip.offsetWidth || 450;
-    const tipH = tip.offsetHeight || 250;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    let left = e.clientX + 15;
-    let top = e.clientY - tipH / 2;
-    if (left + tipW + 5 > vw) left = e.clientX - tipW - 15;
-    if (top < 5) top = 5;
-    if (top + tipH + 5 > vh) top = vh - tipH - 5;
-
-    tip.style.left = `${left}px`;
-    tip.style.top = `${top}px`;
+    positionReportTooltip(tip, e.clientX, e.clientY, 15, 450, 250);
 };
 
 function hideReportSimTooltip() {
@@ -2215,40 +2169,30 @@ function handleReportSimMouseLeave(e) {
 // ====================================================
 // 📸 第八頁多媒體實證區：高階燈箱 (Lightbox)
 // ====================================================
-window.openLightbox = function(src, type) {
+function ensureReportLightboxModal() {
     let modal = document.getElementById('report-lightbox-modal');
     if (!modal) {
         modal = document.createElement('div');
         modal.id = 'report-lightbox-modal';
-        modal.style.position = 'fixed';
-        modal.style.top = '0';
-        modal.style.left = '0';
-        modal.style.width = '100vw';
-        modal.style.height = '100vh';
-        modal.style.backgroundColor = 'rgba(0,0,0,0.95)';
-        modal.style.zIndex = '999999';
-        modal.style.display = 'flex';
-        modal.style.justifyContent = 'center';
-        modal.style.alignItems = 'center';
-        modal.style.cursor = 'zoom-out';
-        modal.style.opacity = '0';
-        modal.style.transition = 'opacity 0.2s ease';
-        
-        modal.onclick = function(e) { 
-            if (e.target === modal) {
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:rgba(0,0,0,0.95); z-index:999999; display:flex; justify-content:center; align-items:center; cursor:zoom-out; opacity:0; transition:opacity 0.2s ease;';
+        modal.onclick = function(e) {
+            if (e.target === modal || e.target.id === 'compare-container') {
                 modal.style.opacity = '0';
                 setTimeout(() => {
-                    modal.style.display = 'none'; 
-                    modal.innerHTML = ''; 
+                    modal.style.display = 'none';
+                    modal.innerHTML = '';
                 }, 200);
             }
         };
         document.body.appendChild(modal);
     }
-    
     modal.style.display = 'flex';
     setTimeout(() => modal.style.opacity = '1', 10);
-    
+    return modal;
+}
+
+window.openLightbox = function(src, type) {
+    const modal = ensureReportLightboxModal();
     if (type === 'image') {
         modal.innerHTML = `<img src="${src}" style="max-width:90vw; max-height:90vh; object-fit:contain; border-radius:12px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); cursor: default; transition: transform 0.3s ease;" />`;
     } else {
@@ -2375,38 +2319,7 @@ window.switchReportEvidenceTab = function(tabName) {
 };
 
 window.openCompareLightbox = function(index) {
-    let modal = document.getElementById('report-lightbox-modal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'report-lightbox-modal';
-        modal.style.position = 'fixed';
-        modal.style.top = '0';
-        modal.style.left = '0';
-        modal.style.width = '100vw';
-        modal.style.height = '100vh';
-        modal.style.backgroundColor = 'rgba(0,0,0,0.95)';
-        modal.style.zIndex = '999999';
-        modal.style.display = 'flex';
-        modal.style.justifyContent = 'center';
-        modal.style.alignItems = 'center';
-        modal.style.cursor = 'zoom-out';
-        modal.style.opacity = '0';
-        modal.style.transition = 'opacity 0.2s ease';
-        
-        modal.onclick = function(e) { 
-            if (e.target === modal || e.target.id === 'compare-container') {
-                modal.style.opacity = '0';
-                setTimeout(() => {
-                    modal.style.display = 'none'; 
-                    modal.innerHTML = ''; 
-                }, 200);
-            }
-        };
-        document.body.appendChild(modal);
-    }
-    
-    modal.style.display = 'flex';
-    setTimeout(() => modal.style.opacity = '1', 10);
+    const modal = ensureReportLightboxModal();
     
     let bestSampleHTML = `
         <div style="flex:1; display:flex; flex-direction:column; align-items:center; padding: 20px;">
