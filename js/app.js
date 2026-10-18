@@ -1,4 +1,8 @@
-// js/app.js
+// 🌟 通用小數點後兩位格式化工具（即使為 .00 亦強制顯示）
+function fmt2(val) {
+    const n = Number(val);
+    return Number.isFinite(n) ? n.toFixed(2) : '0.00';
+}
 
 // 🌟 App Configuration (提取魔法數字與硬編碼)
 const APP_CONFIG = {
@@ -85,17 +89,20 @@ document.addEventListener('DOMContentLoaded', () => {
             sumOverallFeb += r.overall_feb || 0;
         });
         
-        let tireRatio = totalV > 0 ? ((totalTire / totalV) * 100).toFixed(1) : 0;
+        let tireRatio = totalV > 0 ? ((totalTire / totalV) * 100).toFixed(2) : '0.00';
         
         // 如果有 globalAverages.overall 優先使用，否則自己算平均
-        let avgOverall = typeof globalAverages !== 'undefined' && globalAverages.overall ? globalAverages.overall : (sumOverall / rawData.length).toFixed(2);
+        let avgOverallNum = typeof globalAverages !== 'undefined' && globalAverages.overall ? Number(globalAverages.overall) : (sumOverall / rawData.length);
+        let avgOverall = fmt2(avgOverallNum);
         
         // 完全移除簡單除法，強制讀取 ETL 降級備份的全台總分 (官方 91.84)
-        let avgOverallFeb = typeof globalAverages !== 'undefined' && globalAverages.overall_feb ? globalAverages.overall_feb : 91.84;
+        let avgOverallFebNum = typeof globalAverages !== 'undefined' && globalAverages.overall_feb ? Number(globalAverages.overall_feb) : 91.84;
+        let avgOverallFeb = fmt2(avgOverallFebNum);
         
-        let diff = (avgOverall - avgOverallFeb).toFixed(2);
-        let diffIcon = diff > 0 ? '▲' : (diff < 0 ? '▼' : '-');
-        let diffColor = diff > 0 ? 'var(--safe-color)' : (diff < 0 ? 'var(--danger-color)' : 'var(--text-secondary)');
+        let diffNum = avgOverallNum - avgOverallFebNum;
+        let diff = diffNum.toFixed(2);
+        let diffIcon = diffNum > 0 ? '▲' : (diffNum < 0 ? '▼' : '-');
+        let diffColor = diffNum > 0 ? 'var(--safe-color)' : (diffNum < 0 ? 'var(--danger-color)' : 'var(--text-secondary)');
 
         let gridContainer = document.querySelector('.floating-base-metrics .base-metrics-grid');
         if (gridContainer) {
@@ -128,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="font-size: 26px; font-weight: bold; color: var(--accent-color); line-height: 1;">${avgOverall} <span style="font-size:14px;">分</span></div>
                     <div style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">
                         ${prevMonthStr}: ${avgOverallFeb} 
-                        <span style="color: ${diffColor}; margin-left: 4px; font-size: 11px;">${diffIcon} ${Math.abs(diff)}</span>
+                        <span style="color: ${diffColor}; margin-left: 4px; font-size: 11px;">${diffIcon} ${Math.abs(diffNum).toFixed(2)}</span>
                     </div>
                 `;
                 gridContainer.insertBefore(avgCard, gridContainer.firstChild);
@@ -170,17 +177,17 @@ function injectSimData() {
                     target.sim_b_count = sim.current_month.b;
                     target.sim_c_count = sim.current_month.c;
 
-                    target.sim_a_ratio = target.sim_total > 0 ? parseFloat((target.sim_a_count / target.sim_total * 100).toFixed(1)) : 0;
-                    target.sim_b_ratio = target.sim_total > 0 ? parseFloat((target.sim_b_count / target.sim_total * 100).toFixed(1)) : 0;
-                    target.sim_c_ratio = target.sim_total > 0 ? parseFloat((target.sim_c_count / target.sim_total * 100).toFixed(1)) : 0;
+                    target.sim_a_ratio = target.sim_total > 0 ? parseFloat((target.sim_a_count / target.sim_total * 100).toFixed(2)) : 0;
+                    target.sim_b_ratio = target.sim_total > 0 ? parseFloat((target.sim_b_count / target.sim_total * 100).toFixed(2)) : 0;
+                    target.sim_c_ratio = target.sim_total > 0 ? parseFloat((target.sim_c_count / target.sim_total * 100).toFixed(2)) : 0;
 
                     target.top_problems = sim.current_month.top_problems;
                 }
                 if (sim.prev_month) {
                     target.sim_total_lm = sim.prev_month.total || 0;
-                    target.sim_a_lm = sim.prev_month.total > 0 ? parseFloat((sim.prev_month.a / sim.prev_month.total * 100).toFixed(1)) : 0;
-                    target.sim_b_lm = sim.prev_month.total > 0 ? parseFloat((sim.prev_month.b / sim.prev_month.total * 100).toFixed(1)) : 0;
-                    target.sim_c_lm = sim.prev_month.total > 0 ? parseFloat((sim.prev_month.c / sim.prev_month.total * 100).toFixed(1)) : 0;
+                    target.sim_a_lm = sim.prev_month.total > 0 ? parseFloat((sim.prev_month.a / sim.prev_month.total * 100).toFixed(2)) : 0;
+                    target.sim_b_lm = sim.prev_month.total > 0 ? parseFloat((sim.prev_month.b / sim.prev_month.total * 100).toFixed(2)) : 0;
+                    target.sim_c_lm = sim.prev_month.total > 0 ? parseFloat((sim.prev_month.c / sim.prev_month.total * 100).toFixed(2)) : 0;
                 }
             }
         });
@@ -644,7 +651,9 @@ function updateMapTheme() {
                     formatter: function(params) { 
                         if (currentMode === 'tire') return `{region|${params.name}}\n{score|${params.value[3]} 輛}`;
                         let unit = '%'; if(currentMode === 'stats') unit = '分';
-                        return `{region|${params.name}}\n{score|${params.value[2]} ${unit}}`; 
+                        let isIntScore = (currentMode === 'stats' && ['station', 'appearance', 'functionality'].includes(currentStatsMetric));
+                        let dispVal = isIntScore ? params.value[2] : fmt2(params.value[2]);
+                        return `{region|${params.name}}\n{score|${dispVal} ${unit}}`; 
                     },
                     backgroundColor: isLightMode ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.8)', borderColor: isLightMode ? '#94a3b8' : '#334155', borderWidth: 1, padding: [6, 8], borderRadius: 4, 
                     rich: { 
@@ -692,15 +701,15 @@ function updateBarChart() {
             seriesData.push({
                 name: item.region, type: 'line', data: hist, smooth: true, symbol: isBad ? 'circle' : 'none', symbolSize: 8,
                 lineStyle: { width: isBad ? 4 : 2, opacity: isBad ? 1 : 0.4 }, itemStyle: { color: lineColor },
-                emphasis: { focus: 'series', lineStyle: { width: 7, shadowBlur: 15, shadowColor: lineColor, opacity: 1 }, label: { show: true, formatter: (p) => p.dataIndex === 0 ? p.seriesName + ' ' + p.value + '%' : '', fontSize: 16 * globalFontScale, fontWeight: 'bold' } },
-                label: { show: true, formatter: (p) => p.dataIndex === 0 ? p.seriesName + ' ' + p.value + '%' : '', position: 'right', color: 'inherit', fontSize: (isBad ? 14 : 11) * globalFontScale * dataFontBoost, fontWeight: isBad ? 'bold' : 'normal' }, endLabel: { show: false },
+                emphasis: { focus: 'series', lineStyle: { width: 7, shadowBlur: 15, shadowColor: lineColor, opacity: 1 }, label: { show: true, formatter: (p) => p.dataIndex === 0 ? p.seriesName + ' ' + fmt2(p.value) + '%' : '', fontSize: 16 * globalFontScale, fontWeight: 'bold' } },
+                label: { show: true, formatter: (p) => p.dataIndex === 0 ? p.seriesName + ' ' + fmt2(p.value) + '%' : '', position: 'right', color: 'inherit', fontSize: (isBad ? 14 : 11) * globalFontScale * dataFontBoost, fontWeight: isBad ? 'bold' : 'normal' }, endLabel: { show: false },
                 labelLayout: { moveOverlap: 'shiftY' }, zlevel: isBad ? 10 : 1
             });
         });
 
         barChart.setOption({
             title: { text: '全國各縣市前後胎壓未達標趨勢 (近 6 個月)', left: 'center', textStyle: { color: textColor, fontSize: 15 * globalFontScale } },
-            tooltip: { trigger: 'axis', backgroundColor: isLightMode ? APP_CONFIG.colors.bgTooltipLight : APP_CONFIG.colors.bgTooltipDark, textStyle: { color: textColor }, valueFormatter: (value) => value + '%' },
+            tooltip: { trigger: 'axis', backgroundColor: isLightMode ? APP_CONFIG.colors.bgTooltipLight : APP_CONFIG.colors.bgTooltipDark, textStyle: { color: textColor }, valueFormatter: (value) => fmt2(value) + '%' },
             legend: { show: false }, grid: { left: '3%', right: '12%', bottom: '10%', top: '15%', containLabel: true }, 
             xAxis: { type: 'category', data: dynamicMonths, axisLabel: { color: textColor, fontSize: 12 * globalFontScale }, axisLine: { lineStyle: { color: gridColor } } },
             yAxis: { type: 'value', axisLabel: { color: textColor, formatter: '{value} %', fontSize: 12 * globalFontScale }, splitLine: { lineStyle: { color: gridColor, type: 'dashed' } } },
@@ -709,9 +718,11 @@ function updateBarChart() {
         return;
     }
 
-    let regions, currentValues, previousValues, varianceValues, chartTitle, avgValue, isPercentage = false;
+    let regions, currentValues, previousValues, varianceValues, chartTitle, avgValue, isPercentage = false, isDecimalMetric = false;
 
     if (currentMode === 'stats') {
+        isPercentage = ['ems', 'operability'].includes(currentStatsMetric);
+        isDecimalMetric = ['overall', 'ems', 'operability'].includes(currentStatsMetric);
         const sortedData = [...rawData].sort((a, b) => a[currentStatsMetric] - b[currentStatsMetric]);
         regions = sortedData.map(item => item.region); 
         currentValues = sortedData.map(item => item[currentStatsMetric]); 
@@ -722,6 +733,7 @@ function updateBarChart() {
         chartTitle = `各區指標對比 - ${metricLabel} (由低至高)`;
     } else if (currentMode === 'operability') {
         isPercentage = true;
+        isDecimalMetric = true;
         const sortedData = [...rawData].sort((a, b) => a.operability - b.operability);
         regions = sortedData.map(item => item.region); 
         currentValues = sortedData.map(item => item.operability); 
@@ -730,6 +742,7 @@ function updateBarChart() {
         chartTitle = `各縣市場站可動率對比 (由低至高)`;
     } else if (currentMode === 'maintenance') {
         isPercentage = currentMaintenanceMetric === 'maintenance_rate';
+        isDecimalMetric = isPercentage;
         const sortLogic = currentMaintenanceMetric === 'm_accident' ? (a, b) => b[currentMaintenanceMetric] - a[currentMaintenanceMetric] : (a, b) => a[currentMaintenanceMetric] - b[currentMaintenanceMetric];
         const sortedData = [...rawData].sort(sortLogic);
         regions = sortedData.map(item => item.region); 
@@ -742,6 +755,7 @@ function updateBarChart() {
     } else if (currentMode === 'simulation') {
         let isTotal = currentSimulationMetric === 'sim_total';
         isPercentage = !isTotal;
+        isDecimalMetric = isPercentage;
         let metricRatio = isTotal ? 'sim_total' : currentSimulationMetric + '_ratio';
         let metricLm = isTotal ? 'sim_total_lm' : currentSimulationMetric + '_lm';
 
@@ -756,12 +770,12 @@ function updateBarChart() {
     }
 
     let displayData = showVariance ? varianceValues : currentValues;
-    avgValue = (displayData.reduce((acc, curr) => acc + curr, 0) / displayData.length).toFixed(isPercentage ? 2 : 1);
+    avgValue = (displayData.reduce((acc, curr) => acc + curr, 0) / displayData.length).toFixed(isDecimalMetric ? 2 : 0);
     if (!showVariance) {
         if (currentMode === 'stats' && currentStatsMetric === 'overall' && typeof globalAverages !== 'undefined' && globalAverages.overall != null) {
             avgValue = Number(globalAverages.overall).toFixed(2);
         } else if (currentMode === 'stats' && typeof globalAverages !== 'undefined' && globalAverages[currentStatsMetric] != null) {
-            avgValue = Number(globalAverages[currentStatsMetric]).toFixed(isPercentage ? 2 : 1);
+            avgValue = Number(globalAverages[currentStatsMetric]).toFixed(isDecimalMetric ? 2 : 0);
         } else if (currentMode === 'operability' && typeof globalAverages !== 'undefined' && globalAverages.operability != null) {
             avgValue = Number(globalAverages.operability).toFixed(2);
         } else if (currentMode === 'maintenance' && currentMaintenanceMetric === 'maintenance_rate' && typeof globalAverages !== 'undefined' && globalAverages.maintenance_rate != null) {
@@ -773,13 +787,15 @@ function updateBarChart() {
         }
     }
 
+    let formatChartVal = (val) => isDecimalMetric ? fmt2(val) : val;
+
     let seriesConfig = [];
     if (showVariance) {
         seriesConfig = [{
             name: '較上月變動', type: 'bar', barWidth: '40%', itemStyle: { borderRadius: [4, 4, 0, 0] },
             // 🌟 將變動條狀圖從黑色(預設/文字色)改為科技灰藍(#64748b)
             data: varianceValues.map(val => ({ value: val, itemStyle: { color: '#64748b' } })),
-            label: { show: true, position: 'top', color: '#64748b', fontWeight: 'bold', formatter: val => (val.value > 0 ? '+' : '') + val.value + (isPercentage?'%':''), fontSize: 13 * globalFontScale * dataFontBoost },
+            label: { show: true, position: 'top', color: '#64748b', fontWeight: 'bold', formatter: val => (val.value > 0 ? '+' : '') + formatChartVal(val.value) + (isPercentage?'%':''), fontSize: 13 * globalFontScale * dataFontBoost },
             markLine: { symbol: 'none', data: [{ yAxis: parseFloat(avgValue), name: '平均變動' }], label: { formatter: `平均\n${avgValue > 0 ? '+':''}${avgValue}${isPercentage?'%':''}`, position: 'end', color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, fontWeight: 'bold', fontSize: 11 * globalFontScale }, lineStyle: { color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, type: 'dashed', width: 2 } }
         }];
     } else {
@@ -797,7 +813,7 @@ function updateBarChart() {
                     }
                     return { value: val, itemStyle: { color: barColor } };
                 }),
-                label: { show: true, position: 'top', color: textColor, fontWeight: 'bold', formatter: isPercentage ? '{c}%' : '{c}', fontSize: 12 * globalFontScale * dataFontBoost },
+                label: { show: true, position: 'top', color: textColor, fontWeight: 'bold', formatter: val => formatChartVal(val.value) + (isPercentage ? '%' : ''), fontSize: 12 * globalFontScale * dataFontBoost },
                 markLine: { symbol: 'none', data: [{ yAxis: parseFloat(avgValue), name: '平均' }], label: { formatter: `${currMonthStr}平均\n${avgValue}${isPercentage?'%':''}`, position: 'end', color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, fontWeight: 'bold', fontSize: 11 * globalFontScale }, lineStyle: { color: isLightMode ? APP_CONFIG.colors.averageLight : APP_CONFIG.colors.averageDark, type: 'dashed', width: 2 } }
             }
         ];
@@ -805,7 +821,7 @@ function updateBarChart() {
 
     barChart.setOption({
         title: { text: chartTitle + (showVariance ? ' - 較上月變動' : ' - 本月數值'), left: 'center', textStyle: { color: textColor, fontSize: 15 * globalFontScale } },
-        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: isLightMode ? APP_CONFIG.colors.bgTooltipLight : APP_CONFIG.colors.bgTooltipDark, textStyle: { color: textColor }, formatter: (p) => { let h = `<div style="font-weight:bold;margin-bottom:5px;">${p[0].axisValue}</div>`; p.forEach(x => { h += `${x.marker} ${x.seriesName}: <b style="color:${x.color}">${(x.value > 0 && showVariance ? '+' : '')}${x.value}${isPercentage ? '%' : ''}</b><br/>`; }); return h; } },
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: isLightMode ? APP_CONFIG.colors.bgTooltipLight : APP_CONFIG.colors.bgTooltipDark, textStyle: { color: textColor }, formatter: (p) => { let h = `<div style="font-weight:bold;margin-bottom:5px;">${p[0].axisValue}</div>`; p.forEach(x => { h += `${x.marker} ${x.seriesName}: <b style="color:${x.color}">${(x.value > 0 && showVariance ? '+' : '')}${formatChartVal(x.value)}${isPercentage ? '%' : ''}</b><br/>`; }); return h; } },
         legend: { show: !showVariance, data: [`${prevMonthStr} (前月)`, `${currMonthStr} (當月)`], bottom: 0, textStyle: { color: textColor, fontSize: 12 * globalFontScale } },
         grid: { left: '3%', right: '8%', bottom: '15%', top: '15%', containLabel: true },
         xAxis: { type: 'category', data: regions, axisLabel: { color: textColor, fontSize: 12 * globalFontScale }, axisLine: { lineStyle: { color: gridColor } } },
@@ -892,17 +908,17 @@ function renderDataView() {
             html += `${trStr(r)}${getRegionCol(r)}
                 <td ${cl('overall')}>
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.3;">
-                        <span style="${overallStyle} font-size: 14px;">${r.overall} 分</span>
+                        <span style="${overallStyle} font-size: 14px;">${fmt2(r.overall)} 分</span>
                         <div class="sub-value" style="font-size: 0.85em; color: var(--text-secondary); margin-top: 4px;">
-                            上月: ${r.overall_feb} <span style="color: ${diffColor}; margin-left: 2px; font-size: 10px;">${diffIcon}</span>
+                            上月: ${fmt2(r.overall_feb)} <span style="color: ${diffColor}; margin-left: 2px; font-size: 10px;">${diffIcon}</span>
                         </div>
                     </div>
                 </td>
                 <td ${cl('station')}><span style="${stStyle}">${r.station} 分</span></td>
                 <td ${cl('appearance')}><span style="${apStyle}">${r.appearance} 分</span></td>
                 <td ${cl('functionality')}><span style="${fuStyle}">${r.functionality} 分</span></td>
-                <td ${cl('ems')}><span style="${emStyle}">${Number(r.ems).toFixed(2)}%</span></td>
-                <td ${cl('operability')}><span style="${opStyle}">${r.operability}%</span></td></tr>`;
+                <td ${cl('ems')}><span style="${emStyle}">${fmt2(r.ems)}%</span></td>
+                <td ${cl('operability')}><span style="${opStyle}">${fmt2(r.operability)}%</span></td></tr>`;
         });
     } else if (currentMode === 'tire') {
         // 🌟 胎壓表格表頭與數據一并反轉：當月在最左，往右逐月遞減
@@ -923,9 +939,9 @@ function renderDataView() {
             let v4m = hist[0]; // 當月是第 0 筆
             let v4mColor = v4m > 4.5 ? 'var(--danger-color)' : (v4m > 4.0 ? 'var(--warning-color)' : 'var(--safe-color)');
             html += `${trStr(r)}${getRegionCol(r)}
-                <td style="color:${v4mColor};font-weight:bold;">${v4m}% (${r.tire_count}輛)</td>
-                <td>${hist[1]}%</td><td>${hist[2]}%</td>
-                <td>${hist[3]}%</td><td>${hist[4]}%</td><td>${hist[5]}%</td></tr>`;
+                <td style="color:${v4mColor};font-weight:bold;">${fmt2(v4m)}% (${r.tire_count}輛)</td>
+                <td>${fmt2(hist[1])}%</td><td>${fmt2(hist[2])}%</td>
+                <td>${fmt2(hist[3])}%</td><td>${fmt2(hist[4])}%</td><td>${fmt2(hist[5])}%</td></tr>`;
         });
     } else if (currentMode === 'operability') {
         // 🌟 2. 動態修復表格表頭 (自動帶入月份變數)
@@ -936,8 +952,8 @@ function renderDataView() {
             let varColor = variance < 0 ? 'var(--danger-color)' : 'var(--safe-color)';
             let opStyle = getRedStyle('operability', r.operability) || 'color:var(--accent-color);font-weight:bold;';
             html += `${trStr(r)}${getRegionCol(r)}
-                <td>${r.operability_feb.toFixed(2)}%</td>
-                <td><span style="${opStyle}">${r.operability.toFixed(2)}%</span></td>
+                <td>${fmt2(r.operability_feb)}%</td>
+                <td><span style="${opStyle}">${fmt2(r.operability)}%</span></td>
                 <td style="color:${varColor};font-weight:bold;">${varianceSign}${variance}%</td></tr>`;
         });
     } else if (currentMode === 'maintenance') {
@@ -961,9 +977,9 @@ function renderDataView() {
                 <td ${cl('m_records')}>${r.m_records.toLocaleString()}</td>
                 <td ${cl('maintenance_rate')}>
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.3;">
-                        <span style="${mrStyle} font-size: 14px;">${Number(r.maintenance_rate).toFixed(2)}%</span>
+                        <span style="${mrStyle} font-size: 14px;">${fmt2(r.maintenance_rate)}%</span>
                         <div class="sub-value" style="font-size: 0.85em; color: var(--text-secondary); margin-top: 4px;">
-                            上月: ${Number(r.maintenance_rate_feb).toFixed(2)}% <span style="color: ${mrDiffColor}; margin-left: 2px; font-size: 10px;">${mrDiffIcon}</span>
+                            上月: ${fmt2(r.maintenance_rate_feb)}% <span style="color: ${mrDiffColor}; margin-left: 2px; font-size: 10px;">${mrDiffIcon}</span>
                         </div>
                     </div>
                 </td>
@@ -978,9 +994,9 @@ function renderDataView() {
             let bColor = r.sim_b_ratio > 20.0 ? 'var(--danger-color)' : 'var(--text-primary)';
             let cColor = r.sim_c_ratio > 50.0 ? 'var(--danger-color)' : 'var(--text-primary)';
             html += `${trStr(r)}${getRegionCol(r)}
-                <td ${cl('sim_a')} style="color:${aColor};font-weight:bold;">${r.sim_a_count} 輛 (${r.sim_a_ratio}%)</td>
-                <td ${cl('sim_b')} style="color:${bColor};font-weight:bold;">${r.sim_b_count} 輛 (${r.sim_b_ratio}%)</td>
-                <td ${cl('sim_c')} style="color:${cColor};font-weight:bold;">${r.sim_c_count} 輛 (${r.sim_c_ratio}%)</td></tr>`;
+                <td ${cl('sim_a')} style="color:${aColor};font-weight:bold;">${r.sim_a_count} 輛 (${fmt2(r.sim_a_ratio)}%)</td>
+                <td ${cl('sim_b')} style="color:${bColor};font-weight:bold;">${r.sim_b_count} 輛 (${fmt2(r.sim_b_ratio)}%)</td>
+                <td ${cl('sim_c')} style="color:${cColor};font-weight:bold;">${r.sim_c_count} 輛 (${fmt2(r.sim_c_ratio)}%)</td></tr>`;
         });
     }
     html += '</tbody></table>';
@@ -1063,27 +1079,27 @@ function renderCityDetail(cr) {
     if (currentMode === 'stats') {
         panel.querySelector('#detail-title').innerText = `${cr.region} 指標細節 (${currMonthStr})`;
         panel.querySelector('#detail-content').innerHTML = `
-            <div class="detail-row"><span>綜合分數:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.overall}</span></div>
+            <div class="detail-row"><span>綜合分數:</span><span style="color:var(--accent-color); font-weight:bold;">${fmt2(cr.overall)}</span></div>
             <div class="detail-row"><span>場站妥善度:</span><span>${cr.station}</span></div>
             <div class="detail-row"><span>外觀標示:</span><span>${cr.appearance}</span></div>
             <div class="detail-row"><span>重要機能:</span><span>${cr.functionality}</span></div>
-            <div class="detail-row"><span>EMS維護率:</span><span>${Number(cr.ems).toFixed(2)}%</span></div>
-            <div class="detail-row"><span>可動率:</span><span>${cr.operability}%</span></div>`;
+            <div class="detail-row"><span>EMS維護率:</span><span>${fmt2(cr.ems)}%</span></div>
+            <div class="detail-row"><span>可動率:</span><span>${fmt2(cr.operability)}%</span></div>`;
     } else if (currentMode === 'tire') {
         panel.querySelector('#detail-title').innerText = `${cr.region} 胎壓未達標趨勢`;
         panel.querySelector('#detail-content').innerHTML = `
-            <div class="detail-row"><span>${currYearMonthStr}:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.tire_history[cr.tire_history.length - 1]}% (${cr.tire_count}輛)</span></div>`;
+            <div class="detail-row"><span>${currYearMonthStr}:</span><span style="color:var(--accent-color); font-weight:bold;">${fmt2(cr.tire_history[cr.tire_history.length - 1])}% (${cr.tire_count}輛)</span></div>`;
     } else if (currentMode === 'operability') {
         let v = (cr.operability - cr.operability_feb).toFixed(2);
         panel.querySelector('#detail-title').innerText = `${cr.region} 月度分析`;
         panel.querySelector('#detail-content').innerHTML = `
-            <div class="detail-row"><span>${currMonthStr}可動率:</span><span style="color:var(--accent-color); font-weight:bold;">${cr.operability.toFixed(2)}%</span></div>
+            <div class="detail-row"><span>${currMonthStr}可動率:</span><span style="color:var(--accent-color); font-weight:bold;">${fmt2(cr.operability)}%</span></div>
             <div class="detail-row"><span>變動:</span><span style="color:${v < 0 ? 'var(--danger-color)' : 'var(--safe-color)'}; font-weight:bold;">${v > 0 ? '+' : ''}${v}%</span></div>`;
     } else if (currentMode === 'maintenance') {
         panel.querySelector('#detail-title').innerText = `${cr.region} 維護統計`;
         panel.querySelector('#detail-content').innerHTML = `
             <div class="detail-row"><span>事故車:</span><span style="color:var(--danger-color); font-weight:bold;">${cr.m_accident} 輛</span></div>
-            <div class="detail-row"><span>維護率:</span><span style="color:var(--accent-color); font-weight:bold;">${Number(cr.maintenance_rate).toFixed(2)}%</span></div>`;
+            <div class="detail-row"><span>維護率:</span><span style="color:var(--accent-color); font-weight:bold;">${fmt2(cr.maintenance_rate)}%</span></div>`;
     } else if (currentMode === 'simulation') {
         let gradeStr = currentSimulationMetric === 'sim_a' ? 'A級' : (currentSimulationMetric === 'sim_b' ? 'B級' : 'C級');
         panel.querySelector('#detail-title').innerText = `${cr.region} 模擬體驗 (${gradeStr})`;
@@ -1099,15 +1115,15 @@ function renderCityDetail(cr) {
         panel.querySelector('#detail-content').innerHTML = `
             <div class="detail-row" style="${aStyle}">
                 <span>${isA ? '👉 ' : ''}A級異常:</span>
-                <span style="font-weight:bold;">${cr.sim_a_count} 輛 (${cr.sim_a_ratio}%)</span>
+                <span style="font-weight:bold;">${cr.sim_a_count} 輛 (${fmt2(cr.sim_a_ratio)}%)</span>
             </div>
             <div class="detail-row" style="${bStyle}">
                 <span>${isB ? '👉 ' : ''}B級異常:</span>
-                <span style="font-weight:bold;">${cr.sim_b_count} 輛 (${cr.sim_b_ratio}%)</span>
+                <span style="font-weight:bold;">${cr.sim_b_count} 輛 (${fmt2(cr.sim_b_ratio)}%)</span>
             </div>
             <div class="detail-row" style="${cStyle}">
                 <span>${isC ? '👉 ' : ''}C級異常:</span>
-                <span style="font-weight:bold;">${cr.sim_c_count} 輛 (${cr.sim_c_ratio}%)</span>
+                <span style="font-weight:bold;">${cr.sim_c_count} 輛 (${fmt2(cr.sim_c_ratio)}%)</span>
             </div>
             <div class="detail-row" style="font-size: 12px; color: var(--text-secondary); border-top: 1px dashed var(--border-color); margin-top: 6px; padding: 5px 6px 0 6px;">
                 <span>施測總數:</span>
@@ -1575,12 +1591,12 @@ function buildReportSlideHTML(page) {
         let totalTire = 0;
         let totalV = globalAverages.total_v || 0;
         rawData.forEach(r => { totalTire += r.tire_count || 0; });
-        let tireRatio = totalV > 0 ? ((totalTire / totalV) * 100).toFixed(1) : 0;
+        let tireRatio = totalV > 0 ? ((totalTire / totalV) * 100).toFixed(2) : '0.00';
         
         let overallDiff = (globalAverages.overall - globalAverages.overall_feb).toFixed(2);
         let overallDiffIcon = overallDiff > 0 ? '▲' : (overallDiff < 0 ? '▼' : '-');
         let overallDiffColor = overallDiff > 0 ? 'var(--text-primary)' : (overallDiff < 0 ? '#10b981' : 'var(--text-primary)');
-        let overallSubHTML = `<div style="font-size:16px;color:${overallDiffColor};font-weight:normal;margin-top:2px;">上月: ${globalAverages.overall_feb} ${overallDiffIcon}</div>`;
+        let overallSubHTML = `<div style="font-size:16px;color:${overallDiffColor};font-weight:normal;margin-top:2px;">上月: ${fmt2(globalAverages.overall_feb)} ${overallDiffIcon}</div>`;
         
         let cardStyle = "flex: 1; background: rgba(30, 41, 59, 0.05); border-radius: 12px; padding: 8px 10px; text-align: center; border-top: 4px solid #2563eb; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s;";
         let valStyle = "font-size: 1.8em; font-weight: bold; display: block; color: var(--text-primary);";
@@ -1595,7 +1611,7 @@ function buildReportSlideHTML(page) {
                     <span class="collapsible-hint">▾ 滑鼠移入展開</span>
                 </div>
                 <div class="collapsible-bar-preview">
-                    <span class="preview-item"><b>綜合平均</b> ${globalAverages.overall}分</span>
+                    <span class="preview-item"><b>綜合平均</b> ${fmt2(globalAverages.overall)}分</span>
                     <span class="preview-divider">|</span>
                     <span class="preview-item"><b>施測站數</b> ${globalAverages.total_s}站</span>
                     <span class="preview-divider">|</span>
@@ -1612,8 +1628,8 @@ function buildReportSlideHTML(page) {
                         <span class="report-summary-card-title" style="${titleStyle}">全台綜合平均分數</span>
                         <span class="report-summary-card-value" style="${valStyle}">
                             <div style="display: flex; flex-direction: column; align-items: center; line-height: 1;">
-                                <span>${globalAverages.overall} 分</span>
-                                <span style="font-size: 0.55em; font-weight: normal; color: ${overallDiffColor}; margin-top: 4px;">(上月: ${globalAverages.overall_feb} ${overallDiffIcon})</span>
+                                <span>${fmt2(globalAverages.overall)} 分</span>
+                                <span style="font-size: 0.55em; font-weight: normal; color: ${overallDiffColor}; margin-top: 4px;">(上月: ${fmt2(globalAverages.overall_feb)} ${overallDiffIcon})</span>
                             </div>
                         </span>
                     </div>
@@ -1662,15 +1678,15 @@ function buildReportSlideHTML(page) {
             html += `<tr${trAttr}>${getRegionColReport(r)}
                 <td>
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; ${overallBg}">
-                        <span style="${overallStyle.replace(overallBg, '')}">${r.overall}</span>
-                        <small style="color:${diffColor};font-size:18px;font-weight:bold;margin-top:1px;">上月: ${r.overall_feb} ${diffIcon}</small>
+                        <span style="${overallStyle.replace(overallBg, '')}">${fmt2(r.overall)}</span>
+                        <small style="color:${diffColor};font-size:18px;font-weight:bold;margin-top:1px;">上月: ${fmt2(r.overall_feb)} ${diffIcon}</small>
                     </div>
                 </td>
                 <td><span style="${stStyle}">${r.station}</span></td>
                 <td><span style="${apStyle}">${r.appearance}</span></td>
                 <td><span style="${fuStyle}">${r.functionality}</span></td>
-                <td><span style="${emStyle}">${Number(r.ems).toFixed(2)}%</span></td>
-                <td><span style="${opStyle}">${r.operability}%</span></td></tr>`;
+                <td><span style="${emStyle}">${fmt2(r.ems)}%</span></td>
+                <td><span style="${opStyle}">${fmt2(r.operability)}%</span></td></tr>`;
         });
 
     } else if (mode === 'tire') {
@@ -1696,12 +1712,12 @@ function buildReportSlideHTML(page) {
             let vStyle = v >= 5 ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary); font-weight:bold;';
             let getHistStyle = (val) => val >= 5 ? 'color:#fca5a5; font-weight:bold;' : 'color:inherit;';
             html += `<tr>${getRegionColReport(r)}
-                <td class="active-col" style="${vStyle}">${v}% (${r.tire_count}輛)</td>
-                <td style="${getHistStyle(hist[1])}">${hist[1]}%</td>
-                <td style="${getHistStyle(hist[2])}">${hist[2]}%</td>
-                <td style="${getHistStyle(hist[3])}">${hist[3]}%</td>
-                <td style="${getHistStyle(hist[4])}">${hist[4]}%</td>
-                <td style="${getHistStyle(hist[5])}">${hist[5]}%</td></tr>`;
+                <td class="active-col" style="${vStyle}">${fmt2(v)}% (${r.tire_count}輛)</td>
+                <td style="${getHistStyle(hist[1])}">${fmt2(hist[1])}%</td>
+                <td style="${getHistStyle(hist[2])}">${fmt2(hist[2])}%</td>
+                <td style="${getHistStyle(hist[3])}">${fmt2(hist[3])}%</td>
+                <td style="${getHistStyle(hist[4])}">${fmt2(hist[4])}%</td>
+                <td style="${getHistStyle(hist[5])}">${fmt2(hist[5])}%</td></tr>`;
         });
 
     } else if (mode === 'operability') {
@@ -1719,10 +1735,10 @@ function buildReportSlideHTML(page) {
             // 最新月份一律黑色並套用 active-col
             let vColor = r.operability < 99 ? '#ef4444' : 'var(--text-primary)';
             html += `<tr>${getRegionColReport(r)}
-                <td>${r.operability_feb.toFixed(2)}%</td>
+                <td>${fmt2(r.operability_feb)}%</td>
                 <td class="active-col" style="color:${vColor};font-weight:bold;cursor:help;"
                     onmouseover="window.showReportOpTooltip(event)"
-                    onmouseout="hideReportSimTooltip()">${r.operability.toFixed(2)}%</td>
+                    onmouseout="hideReportSimTooltip()">${fmt2(r.operability)}%</td>
                 <td style="color:${varColor};font-weight:bold;">${varianceSign}${variance}%</td></tr>`;
         });
         
@@ -1754,7 +1770,7 @@ function buildReportSlideHTML(page) {
                 <td>${r.m_fleet.toLocaleString()}</td>
                 <td style="${accidentStyle}">${r.m_accident}</td>
                 <td>${r.m_records.toLocaleString()}</td>
-                <td><span style="${mrStyle}">${Number(r.maintenance_rate).toFixed(2)}%</span><br><div style="font-size:16px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${Number(r.maintenance_rate_feb).toFixed(2)}% ${mrDiffIcon}</div></td>
+                <td><span style="${mrStyle}">${fmt2(r.maintenance_rate)}%</span><br><div style="font-size:16px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${fmt2(r.maintenance_rate_feb)}% ${mrDiffIcon}</div></td>
                 <td style="color:${varColor};font-weight:bold;">${actualMVar}</td></tr>`;
         });
 
@@ -1783,16 +1799,16 @@ function buildReportSlideHTML(page) {
             // 主數值根據邏輯亮紅燈，副數值全面保持中性色
             html += `<tr class="report-sim-row" data-region="${r.region}" data-grade="${grade}" style="cursor:pointer;">${getRegionColReport(r)}
                 <td ${aAttr}>
-                    <div style="display:inline-block; ${aStyle} font-weight:bold;">${r.sim_a_count} (${r.sim_a_ratio}%)</div>
-                    <br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_a_lm}%</div>
+                    <div style="display:inline-block; ${aStyle} font-weight:bold;">${r.sim_a_count} (${fmt2(r.sim_a_ratio)}%)</div>
+                    <br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${fmt2(r.sim_a_lm)}%</div>
                 </td>
                 <td ${bAttr}>
-                    <div style="display:inline-block; ${bStyle} font-weight:bold;">${r.sim_b_count} (${r.sim_b_ratio}%)</div>
-                    <br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_b_lm}%</div>
+                    <div style="display:inline-block; ${bStyle} font-weight:bold;">${r.sim_b_count} (${fmt2(r.sim_b_ratio)}%)</div>
+                    <br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${fmt2(r.sim_b_lm)}%</div>
                 </td>
                 <td ${cAttr}>
-                    <div style="display:inline-block; ${cStyle} font-weight:bold;">${r.sim_c_count} (${r.sim_c_ratio}%)</div>
-                    <br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${r.sim_c_lm}%</div>
+                    <div style="display:inline-block; ${cStyle} font-weight:bold;">${r.sim_c_count} (${fmt2(r.sim_c_ratio)}%)</div>
+                    <br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${fmt2(r.sim_c_lm)}%</div>
                 </td></tr>`;
         });
     } else if (mode === 'evidence') {
