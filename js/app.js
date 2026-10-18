@@ -1784,11 +1784,11 @@ function buildReportSlideHTML(page) {
         </div>`;
         html = legendHTML + html;
         
-        let thA = (grade === 'a') ? 'class="report-sim-th active-col" style="color:#ffffff; cursor:pointer;"' : 'class="report-sim-th" style="cursor:pointer;"';
-        let thB = (grade === 'b') ? 'class="report-sim-th active-col" style="color:#ffffff; cursor:pointer;"' : 'class="report-sim-th" style="cursor:pointer;"';
-        let thC = (grade === 'c') ? 'class="report-sim-th active-col" style="color:#ffffff; cursor:pointer;"' : 'class="report-sim-th" style="cursor:pointer;"';
+        let thA = (grade === 'a') ? 'class="report-sim-th active-col" data-grade="a" style="color:#ffffff;"' : '';
+        let thB = (grade === 'b') ? 'class="report-sim-th active-col" data-grade="b" style="color:#ffffff;"' : '';
+        let thC = (grade === 'c') ? 'class="report-sim-th active-col" data-grade="c" style="color:#ffffff;"' : '';
 
-        html += `<thead><tr><th>縣市</th><th ${thA} data-grade="a" title="點擊檢視全國 A 級最常發生問題總和">A級異常(輛)</th><th ${thB} data-grade="b" title="點擊檢視全國 B 級最常發生問題總和">B級異常(輛)</th><th ${thC} data-grade="c" title="點擊檢視全國 C 級最常發生問題總和">C級異常(輛)</th></tr></thead><tbody>`;
+        html += `<thead><tr><th>縣市</th><th ${thA}>A級異常(輛)</th><th ${thB}>B級異常(輛)</th><th ${thC}>C級異常(輛)</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             // 主數值根據門檻亮紅燈，否則維持黑色
             let aStyle = r.sim_a_ratio > 5.0 ? 'color:#ef4444; background-color: yellow; padding: 2px 4px; border-radius: 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
@@ -1801,7 +1801,7 @@ function buildReportSlideHTML(page) {
             let cAttr = (grade === 'c') ? 'class="active-col"' : '';
             
             // 主數值根據邏輯亮紅燈，副數值全面保持中性色
-            html += `<tr class="report-sim-row" data-region="${r.region}" data-grade="${grade}" style="cursor:pointer;">${getRegionColReport(r)}
+            html += `<tr class="report-sim-row" data-region="${r.region}" data-grade="${grade}">${getRegionColReport(r)}
                 <td ${aAttr}>
                     <div style="display:inline-block; ${aStyle} font-weight:bold;">${r.sim_a_count} (${fmt2(r.sim_a_ratio)}%)</div>
                     <br><div style="font-size:14px;color:var(--text-secondary);font-weight:normal;margin-top:2px;">上月: ${fmt2(r.sim_a_lm)}%</div>

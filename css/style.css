@@ -754,7 +754,8 @@ body.light-mode kbd {
     transition: none; /* ?瑕?蝑宏???閬?transition */
 }
 .laser-dot.active { display: block; opacity: 1; }
-body.laser-active, body.laser-active * { cursor: none; }
+body.laser-active, body.laser-active * { cursor: none !important; }
+.report-sim-th, .report-sim-row { cursor: pointer; }
 
 
 /* ====================================================
