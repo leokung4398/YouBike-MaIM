@@ -1712,12 +1712,12 @@ function buildReportSlideHTML(page) {
             let vStyle = v >= 5 ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary); font-weight:bold;';
             let getHistStyle = (val) => val >= 5 ? 'color:#fca5a5; font-weight:bold;' : 'color:inherit;';
             html += `<tr>${getRegionColReport(r)}
-                <td class="active-col" style="${vStyle}">${fmt2(v)}% (${r.tire_count}輛)</td>
-                <td style="${getHistStyle(hist[1])}">${fmt2(hist[1])}%</td>
-                <td style="${getHistStyle(hist[2])}">${fmt2(hist[2])}%</td>
-                <td style="${getHistStyle(hist[3])}">${fmt2(hist[3])}%</td>
-                <td style="${getHistStyle(hist[4])}">${fmt2(hist[4])}%</td>
-                <td style="${getHistStyle(hist[5])}">${fmt2(hist[5])}%</td></tr>`;
+                <td class="active-col" style="${vStyle}">${v}% (${r.tire_count}輛)</td>
+                <td style="${getHistStyle(hist[1])}">${hist[1]}%</td>
+                <td style="${getHistStyle(hist[2])}">${hist[2]}%</td>
+                <td style="${getHistStyle(hist[3])}">${hist[3]}%</td>
+                <td style="${getHistStyle(hist[4])}">${hist[4]}%</td>
+                <td style="${getHistStyle(hist[5])}">${hist[5]}%</td></tr>`;
         });
 
     } else if (mode === 'operability') {
@@ -1784,7 +1784,11 @@ function buildReportSlideHTML(page) {
         </div>`;
         html = legendHTML + html;
         
-        html += `<thead><tr><th>縣市</th><th>A級異常(輛)</th><th>B級異常(輛)</th><th>C級異常(輛)</th></tr></thead><tbody>`;
+        let thA = (grade === 'a') ? 'class="report-sim-th active-col" style="color:#ffffff; cursor:pointer;"' : 'class="report-sim-th" style="cursor:pointer;"';
+        let thB = (grade === 'b') ? 'class="report-sim-th active-col" style="color:#ffffff; cursor:pointer;"' : 'class="report-sim-th" style="cursor:pointer;"';
+        let thC = (grade === 'c') ? 'class="report-sim-th active-col" style="color:#ffffff; cursor:pointer;"' : 'class="report-sim-th" style="cursor:pointer;"';
+
+        html += `<thead><tr><th>縣市</th><th ${thA} data-grade="a" title="點擊檢視全國 A 級最常發生問題總和">A級異常(輛)</th><th ${thB} data-grade="b" title="點擊檢視全國 B 級最常發生問題總和">B級異常(輛)</th><th ${thC} data-grade="c" title="點擊檢視全國 C 級最常發生問題總和">C級異常(輛)</th></tr></thead><tbody>`;
         rawData.forEach(r => {
             // 主數值根據門檻亮紅燈，否則維持黑色
             let aStyle = r.sim_a_ratio > 5.0 ? 'color:#ef4444; background-color: yellow; padding: 2px 4px; border-radius: 4px;' : 'color:var(--text-primary); padding: 2px 4px;';
@@ -2099,6 +2103,55 @@ function showReportSimTooltip(region, grade, x, y) {
     positionReportTooltip(tip, x, y, 20, 280, 150);
 }
 
+// 🌟 全國最常發生問題總和 Tooltip（點擊 A級/B級/C級 表頭時觸發）
+function showReportSimTotalTooltip(grade, x, y) {
+    if (window.tooltipHideTimer) clearTimeout(window.tooltipHideTimer);
+    const tip = ensureReportSimTooltip();
+
+    let gDesc = '', gColor = '';
+    if (grade === 'a') { gDesc = 'A級重大問題 (安全)'; gColor = 'var(--danger-color)'; }
+    else if (grade === 'b') { gDesc = 'B級重點問題 (觀感)'; gColor = 'var(--warning-color)'; }
+    else { gDesc = 'C級一般問題 (內部管理)'; gColor = 'var(--text-secondary)'; }
+
+    // 彙整全區各縣市該級別的異常項目與件數
+    const countsMap = {};
+    rawData.forEach(item => {
+        if (item.top_problems && item.top_problems[grade]) {
+            let rawStr = item.top_problems[grade];
+            let parts = rawStr.split(')\u3001').map((p, idx, arr) => idx === arr.length - 1 ? p : p + ')');
+            parts.forEach(p => {
+                let match = p.match(/^(.*)\((\d+)\)$/);
+                if (match) {
+                    let name = match[1].trim();
+                    let count = parseInt(match[2], 10);
+                    countsMap[name] = (countsMap[name] || 0) + count;
+                }
+            });
+        }
+    });
+
+    const sortedProblems = Object.entries(countsMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
+
+    let bodyHtml = '';
+    if (sortedProblems.length > 0) {
+        bodyHtml = '<ul>' + sortedProblems.map(([name, count]) => {
+            return `<li style="border-left:3px solid ${gColor};padding-left:8px;">${name}(${count}件)</li>`;
+        }).join('') + '</ul>';
+    } else {
+        bodyHtml = `<p style="color:var(--text-secondary);margin:0;font-size:13px;">目前無具體問題紀錄。</p>`;
+    }
+
+    tip.innerHTML = `
+        <div class="tooltip-title">全國總和 · <span style="color:${gColor};">${gDesc}</span></div>
+        ${bodyHtml}
+        <div style="font-size:12px; color:var(--text-secondary); margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color);">* 註：統計各縣市最常發生問題之件數總和（Top 3）。</div>
+    `;
+
+    positionReportTooltip(tip, x, y, 20, 300, 150);
+}
+
 window.showReportStatsTooltip = function(text, e) {
     if (window.tooltipHideTimer) clearTimeout(window.tooltipHideTimer);
     const tip = ensureReportSimTooltip();
@@ -2154,6 +2207,17 @@ function hideReportSimTooltip() {
 function handleReportSimClick(e) {
     if (!isReportMode) return;
 
+    // 🌟 如果點擊的是表頭 A級異常(輛) / B級異常(輛) / C級異常(輛)
+    const th = e.target.closest('.report-sim-th');
+    if (th) {
+        const grade = th.dataset.grade;
+        if (grade) {
+            e.stopPropagation();
+            showReportSimTotalTooltip(grade, e.clientX, e.clientY);
+            return;
+        }
+    }
+
     // 如果點擊的是 sim 列
     const row = e.target.closest('.report-sim-row');
     if (row) {
@@ -2173,19 +2237,19 @@ function handleReportSimClick(e) {
     }
 }
 
-// 🏃 滑鼠離開 .report-sim-row 時，延遲隱藏 Tooltip，實現完美防呆簡報交互
-// 使用事件捕獲 (capture) 確保能精準偵測 tr 層級的 mouseleave
+// 🏃 滑鼠離開 .report-sim-row 或 .report-sim-th 時，延遲隱藏 Tooltip，實現完美防呆簡報交互
+// 使用事件捕獲 (capture) 確保能精準偵測 tr / th 層級的 mouseleave
 function handleReportSimMouseLeave(e) {
     if (!isReportMode) return;
 
-    // 確認離開的元素是 .report-sim-row（或其子元素）
-    const leavingRow = e.target.closest('.report-sim-row');
-    if (!leavingRow) return;
+    // 確認離開的元素是 .report-sim-row 或 .report-sim-th（或其子元素）
+    const leavingTarget = e.target.closest('.report-sim-row, .report-sim-th');
+    if (!leavingTarget) return;
 
-    // relatedTarget = 滑鼠移入的新元素，若新元素還在同一列內則不關閉
-    const enteringRow = e.relatedTarget ? e.relatedTarget.closest('.report-sim-row') : null;
-    if (enteringRow !== leavingRow) {
-        // 真正離開了這一列 → 開啟延遲隱藏，若使用者將滑鼠移入 Tooltip 則保留
+    // relatedTarget = 滑鼠移入的新元素，若新元素還在同一元素內則不關閉
+    const enteringTarget = e.relatedTarget ? e.relatedTarget.closest('.report-sim-row, .report-sim-th') : null;
+    if (enteringTarget !== leavingTarget) {
+        // 真正離開了這一列/表頭 → 開啟延遲隱藏，若使用者將滑鼠移入 Tooltip 則保留
         window.tooltipHideTimer = setTimeout(() => {
             hideReportSimTooltip();
         }, 300);
