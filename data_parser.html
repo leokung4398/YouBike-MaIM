@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>數據對齊與趨勢引擎 (異常敘述偵測版)</title>
+    <title>數據對齊與趨勢引擎 (新舊系統相容升級版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- 自動載入現有專案的 sim_data.js 作為預設上月備援 -->
+    <script src="js/sim_data.js"></script>
     <style>
         :root {
             --bg-color: #0b1120;
@@ -40,16 +43,44 @@
             border: 1px solid var(--border-color);
             display: flex;
             gap: 20px;
-            align-items: center;
+            align-items: flex-end;
             flex-wrap: wrap;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-item label {
+            font-weight: bold;
+            font-size: 0.95em;
+            color: var(--text-primary);
+        }
+
+        .control-hint {
+            font-size: 0.8em;
+            color: var(--text-secondary);
         }
 
         input[type="file"], input[type="number"] {
             background-color: #0f172a;
             color: white;
             border: 1px solid var(--border-color);
-            padding: 8px;
+            padding: 8px 10px;
             border-radius: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.82em;
+            font-weight: bold;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-color);
+            border: 1px solid rgba(56, 189, 248, 0.3);
         }
 
         button {
@@ -61,6 +92,7 @@
             font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
+            height: 40px;
         }
 
         button:hover { background-color: #0284c7; color: white;}
@@ -103,7 +135,7 @@
         .trend-flat { color: var(--text-secondary); }
         .data-prev { color: var(--text-secondary); font-size: 0.9em; }
 
-        /* 🌟 新增：字典狀態追蹤面板 */
+        /* 🌟 字典狀態追蹤面板 */
         .dict-container {
             margin-top: 20px;
             padding: 20px;
@@ -125,7 +157,7 @@
         }
         .problems-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 15px;
             margin-top: 15px;
         }
@@ -158,7 +190,7 @@
         .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         textarea {
             width: 100%;
-            height: 200px;
+            height: 240px;
             background-color: #0f172a;
             color: var(--success-color);
             border: 1px solid var(--border-color);
@@ -170,16 +202,23 @@
 </head>
 <body>
 
-    <h1>數據對齊與趨勢引擎 🚀 (含異常敘述擷取)</h1>
+    <h1>數據對齊與趨勢引擎 🚀 (新舊系統相容升級版)</h1>
     
     <div class="control-panel">
-        <div>
-            <label>1. 載入原始報表 (CSV): </label>
-            <input type="file" id="csvFileInput" accept=".csv">
+        <div class="control-item">
+            <label>1. 載入【本月】報表 (.xlsx / .csv): </label>
+            <input type="file" id="csvFileInput" accept=".xlsx,.xls,.csv">
+            <span id="currFileStatus" class="control-hint">支援新系統 Excel (YouBike模擬體驗_YYYY-MM.xlsx) 或舊版 CSV</span>
         </div>
-        <div>
-            <label>2. 目標月份 (本月): </label>
-            <input type="number" id="monthFilter" value="4" min="1" max="12">
+        <div class="control-item">
+            <label>2. 載入【上月】報表 (選填，.xlsx / .csv): </label>
+            <input type="file" id="prevFileInput" accept=".xlsx,.xls,.csv">
+            <span id="prevFileStatus" class="control-hint">若未上傳，將自動從檔案內上月資料或現有 sim_data.js 帶入</span>
+        </div>
+        <div class="control-item">
+            <label>3. 目標月份 (本月): </label>
+            <input type="number" id="monthFilter" value="10" min="1" max="12" style="width: 80px;">
+            <span class="control-hint">載入新系統 Excel 時會自動偵測月份</span>
         </div>
         <button onclick="processData()">▶ 執行趨勢與異常運算</button>
     </div>
@@ -190,7 +229,7 @@
     
     <div id="problemsContainer" class="problems-container" style="display: none;">
         <h3 style="color: var(--accent-color); margin-bottom: 5px;">🔍 本月各區主要異常敘述 (Top 3)</h3>
-        <p style="color: var(--text-secondary); font-size: 0.9em; margin-top: 0;">自動抓取 CSV 欄位，排除基本資料後進行排序</p>
+        <p style="color: var(--text-secondary); font-size: 0.9em; margin-top: 0;">自動依據新系統第一列分級標記或天網字典擷取異常項目並進行排序</p>
         <div id="problemsGrid" class="problems-grid"></div>
     </div>
 
@@ -199,15 +238,16 @@
             <h3 style="margin: 0;">📋 最終轉換 JSON (請複製到 sim_data.js)</h3>
             <div style="display: flex; gap: 10px;">
                 <button class="btn-success" onclick="copyJson()">📋 一鍵複製 JSON</button>
-                <button class="btn-primary" onclick="downloadJson()">⬇️ 下載 JSON 檔案</button>
+                <button class="btn-primary" onclick="downloadJson()">⬇️ 下載 sim_data.js</button>
             </div>
         </div>
         <textarea id="jsonOutput" readonly></textarea>
     </div>
 
     <script>
-        let rawData = [];
-        let problemColumns = []; 
+        // 分別儲存【本月檔案】與【上月檔案】解析後的標準化結構
+        let currParsedDataset = null;
+        let prevParsedDataset = null;
 
         // 🌟 記錄有實際發生的問題分別被判定到哪一級
         let problemDictionary = { a: new Set(), b: new Set(), c: new Set(), unknown: new Set() };
@@ -216,24 +256,63 @@
         const DATA_PARSER_CONFIG = {
             targetRegionOrder: [
                 "雙北", "桃園", "新竹", "苗栗", "台中", 
-                "彰化", "雲林", "嘉義", "台南", "高雄", "屏東"
+                "彰化", "雲林", "嘉義", "台南", "高雄", "屏東", "台東"
             ],
+            // 舊版與新版系統的基本資料欄位（非異常問題欄位）
             metadataCols: [
                 "地區", "月份", "A級", "B級", "C級", "編號", "公號", 
-                "測驗日期", "城市", "車號", "車柱柱號", "一級檢修日期", 
+                "測驗日期", "城市", "車號", "車柱柱號", "一級檢修日期", "一級檢修日",
                 "一級檢修人員", "一級異常", "車輛異常", "一級維修異常", "總計",
-                "前胎壓", "後胎壓", "可用電量"
-            ]
+                "前胎壓", "後胎壓", "可用電量", "胎壓異常",
+                "車種", "縣市", "場站名稱", "照片數量", "照片連結",
+                "其他備註", "車柱備註", "外觀備註", "結構備註", "Id"
+            ],
+            // 🌟 新系統「縣市」對應至專案標準「地區」映射表
+            cityToRegionMap: {
+                "台北市": "雙北", "臺北市": "雙北", "新北市": "雙北", "雙北": "雙北", "台北": "雙北", "新北": "雙北",
+                "桃園市": "桃園", "桃園縣": "桃園", "桃園": "桃園",
+                "新竹市": "新竹", "新竹縣": "新竹", "新竹": "新竹", "竹科": "新竹", "新竹科學園區": "新竹",
+                "苗栗縣": "苗栗", "苗栗市": "苗栗", "苗栗": "苗栗",
+                "台中市": "台中", "臺中市": "台中", "台中": "台中", "臺中": "台中",
+                "彰化縣": "彰化", "彰化市": "彰化", "彰化": "彰化",
+                "雲林縣": "雲林", "雲林": "雲林",
+                "嘉義市": "嘉義", "嘉義縣": "嘉義", "嘉義": "嘉義",
+                "台南市": "台南", "臺南市": "台南", "台南": "台南", "臺南": "台南",
+                "高雄市": "高雄", "高雄縣": "高雄", "高雄": "高雄",
+                "屏東縣": "屏東", "屏東市": "屏東", "屏東": "屏東",
+                "台東縣": "台東", "臺東縣": "台東", "台東": "台東", "臺東": "台東"
+            }
         };
         const targetRegionOrder = DATA_PARSER_CONFIG.targetRegionOrder;
         const metadataCols = DATA_PARSER_CONFIG.metadataCols;
 
-        // 🌟 1. 天網字典：根據最新分級表更新為「絕對文字匹配 (Exact Match)」
+        // 🌟 天網字典：同時收錄【舊版 CSV 欄位】與【新系統 Excel 欄位】作為雙重保障
         const GRADING_RULES = [
             // A級：重大問題 (安全)
             { 
                 grade: 'a', 
                 exactTexts: [
+                    // --- 新系統欄位 ---
+                    '車柱_功能檢查_搖晃',
+                    '車柱_功能檢查_借還不順',
+                    '車體結構_車體結構_腳架變形無法站立',
+                    '車體外觀_車鈴_無車鈴／旋轉無聲響、悶響',
+                    '車機外觀_座墊桿定位異常_未在底部就可反轉',
+                    '車機外觀_座墊桿定位異常_與車體分離',
+                    '車機外觀_座墊桿高度調整_無法固定（滑落）',
+                    '傳動制動_輪胎_輪框變形／缺鋼絲',
+                    '傳動制動_前後燈（行進）_前燈行進不亮/脫落/破損',
+                    '傳動制動_前後燈（行進）_後燈行進不亮脫落/破損',
+                    '傳動制動_煞車功能_無法煞車',
+                    '傳動制動_煞車功能_過鬆(2/3)',
+                    '傳動制動_煞車功能_過緊(1/3)',
+                    '自行車重要機能_輪胎_胎壓過低 (<50)',
+                    '自行車重要機能_輪胎_胎壓過高 (>90)',
+                    '車體結構_隨車鎖_上鎖／解鎖失敗',
+                    '車機_功能測試_刷卡／掃碼後暫停服務／未解鎖／未上鎖',
+                    '車體結構_腳踏_斷裂／遺失',
+                    '作動_作動_停車靜止有動力',
+                    // --- 舊系統欄位 ---
                     '車柱 功能檢查(搖晃)',
                     '車柱 功能檢查(借還車不順)',
                     '車機功能(借不出還不回／車機異常)',
@@ -272,6 +351,48 @@
             { 
                 grade: 'b', 
                 exactTexts: [
+                    // --- 新系統欄位 ---
+                    '車機外觀_費率貼紙_無貼紙',
+                    '車機_機殼外觀_髒污／塗鴉／褪色／非規範貼紙',
+                    '車機_機殼外觀_破損／刮痕',
+                    '車機外觀_把手套_髒汙致無法使用',
+                    '車機外觀_把手套_右變速軟套破損／缺漏',
+                    '車機外觀_座墊_表面破損、龜裂',
+                    '車機外觀_座墊_髒汙致無法騎乘',
+                    '車機外觀_外管完整_煞車外管破損',
+                    '車機外觀_外管完整_變速外管破損',
+                    '電量_電量_電量無顯示',
+                    '電量_電量_借出低於 15%未鎖車',
+                    '車機_功能測試_(2次)喚醒畫面卡住',
+                    '車機_功能測試_螢幕顯示異常/黑化',
+                    '車機_功能測試_無提示音／音量異常',
+                    '車體結構_車體結構_防轉彈簧脫落',
+                    '車體結構_車體結構_腳架脫落／遺失',
+                    '車體外觀_車頭_歪斜',
+                    '車體外觀_車頭_左右轉卡頓／不順暢',
+                    '車機外觀_座墊桿高度調整_拉高後搖晃',
+                    '車機外觀_座墊_裝設歪斜',
+                    '車機外觀_座墊_底部固定斷裂／與座墊桿分離',
+                    '車機外觀_座墊_未鎖固搖晃',
+                    '車機外觀_座墊桿高度調整_無法調整（鎖死）',
+                    '車機外觀_座墊桿高度調整_黃色拉桿斷裂',
+                    '傳動制動_輪胎_胎紋磨損／平滑／龜裂／反光帶脫落',
+                    '傳動制動_輪胎_前後輪偏擺',
+                    '傳動制動_前後燈（靜止）_借出後閃爍/未恆亮',
+                    '傳動制動_煞車功能_異音',
+                    '傳動制動_變速功能_黑蓋脫落/檔位標示模糊',
+                    '傳動制動_變速功能_換檔不順(2轉3卡)',
+                    '傳動制動_變速功能_檔位無法定位(有變速無法固定)',
+                    '傳動制動_變速功能_無變速/變速器脫落',
+                    '其他測試_騎乘行進_行進不順暢',
+                    '其他測試_騎乘行進_其他異音',
+                    '其他測試_騎乘行進_刮鏈蓋異音',
+                    '車體結構_腳踏_變形歪斜／生鏽',
+                    '作動_作動_踩動無動力推進',
+                    '車速_車速_無車速測片或感應片',
+                    '車速_車速_車機無車速顯示／顯示閃爍',
+                    '車速_車速_車機面板靜止 顯示車輛車速非0',
+                    // --- 舊系統欄位 ---
                     '車機機殼(髒污／塗鴉／小廣告／褪色)',
                     '車機機殼(破損／嚴重刮痕)',
                     '車機功能(螢幕文字 無法正常顯示)',
@@ -350,6 +471,63 @@
             { 
                 grade: 'c', 
                 exactTexts: [
+                    // --- 新系統欄位 ---
+                    '車柱_外觀及環境_兩側貼紙',
+                    '車柱_外觀及環境_柱體／基板髒污',
+                    '車柱_外觀及環境_垃圾',
+                    '車柱_外觀及環境_鎖體10%生鏽',
+                    '車柱_車柱資訊_柱號文字',
+                    '車柱_車柱資訊_站名文字',
+                    '車柱_太陽能面板_無裝設',
+                    '車柱_太陽能面板_破裂',
+                    '車柱_太陽能面板_水氣',
+                    '車柱_功能檢查_左下燈光不亮',
+                    '車柱_導引槽_缺漏',
+                    '車柱_導引槽_鬆動',
+                    '一級檢修貼紙_一級檢修貼紙_無貼紙',
+                    '一級檢修貼紙_一級檢修貼紙_無法辨識／資訊不完整',
+                    '一級檢修貼紙_一級檢修貼紙_未撕除舊貼紙',
+                    '車機外觀_費率貼紙_破損',
+                    '車機_機殼外觀_太陽能／文字面板氣泡',
+                    '車機外觀_置物籃標示貼紙_前貼紙(車號/LOGO)異常',
+                    '車機外觀_置物籃標示貼紙_後貼紙(使用說明)異常',
+                    '車機外觀_置物籃外觀及附屬裝置_嚴重髒汙、沾黏、褪色',
+                    '車機外觀_置物籃外觀及附屬裝置_垃圾',
+                    '車機外觀_置物籃外觀及附屬裝置_破損2根以上／缺固定螺絲／歪斜',
+                    '車機外觀_置物籃外觀及附屬裝置_鉸線固定座破損/鉸線破損',
+                    '車機外觀_把手標示貼紙_左側貼紙異常',
+                    '車機外觀_把手標示貼紙_右側貼紙異常',
+                    '車機外觀_把手套_黏潮、紋路磨損、破損',
+                    '車機外觀_車鈴_貼紙文字無法辨識',
+                    '車機外觀_車架_髒汙／塗鴉／非規範貼紙',
+                    '車機外觀_車架_掉漆',
+                    '車體外觀_前後泥除_髒污',
+                    '車體外觀_前後泥除_破損',
+                    '車體外觀_後泥除貼紙_廣告異常',
+                    '車體外觀_後泥除貼紙_YouBike Logo異常',
+                    '車體外觀_後泥除貼紙_車號異常',
+                    '車體外觀_後泥除貼紙_電池貼紙異常',
+                    '車體外觀_後泥除貼紙_透明膜異常',
+                    '車機外觀_座墊_座管貼紙無法辨識',
+                    '傳動制動_輪軸螺絲_前輪嚴重生鏽100%',
+                    '傳動制動_輪軸螺絲_後輪嚴重生鏽100%',
+                    '車機外觀_外管完整_蛇管脫落',
+                    '車體結構_隨車鎖_貼紙無法辨識/無貼紙',
+                    '車體結構_隨車鎖_鎖體生鏽10%',
+                    '車機外觀_圖樣標示_市徽',
+                    '車機外觀_圖樣標示_車號',
+                    '車機外觀_圖樣標示_Logo',
+                    '車體結構_車體結構_防轉彈簧黑色保護管',
+                    '電量_電量_未持續顯示/顯示異常',
+                    '車機外觀_座墊桿定位異常_反轉後無法固定位置',
+                    '車機外觀_座墊桿定位異常_刻度模糊',
+                    '車機外觀_座墊桿定位異常_不順暢（卡頓嚴重）',
+                    '傳動制動_前後燈（靜止）_借出刷卡未亮',
+                    '傳動制動_前後燈（靜止）_歸還靠柱未滅',
+                    '傳動制動_前後燈（靜止）_後燈下反光片破損',
+                    '傳動制動_變速功能_銀蓋脫落',
+                    '自行車重要機能_輪胎_胎壓偏高 (76~90)',
+                    // --- 舊系統欄位 ---
                     '一級檢修貼紙(無法辨識／資訊不完整)',
                     '一級檢修貼紙(未撕除舊貼紙)',
                     '車柱 周遭環境(車柱)',
@@ -457,64 +635,238 @@
             });
         });
 
-        // 🤖 自動分級鑑定器 (升級為：O(1) 極速查表法)
-        function autoGradeIssue(issueString) {
-            let cleanStr = issueString.trim(); 
-            // 🌟 瞬間查表，不需要再用 for 迴圈慢慢找
+        // 🤖 自動分級鑑定器：優先使用新系統 Excel 第一列的 A/B/C 標記，若無則查表
+        function autoGradeIssue(issueString, dynamicColGrades = null) {
+            let cleanStr = issueString.trim();
+            if (dynamicColGrades && dynamicColGrades[cleanStr]) {
+                return dynamicColGrades[cleanStr];
+            }
             if (gradeLookupMap.has(cleanStr)) {
                 return gradeLookupMap.get(cleanStr);
             }
             return 'unknown'; 
         }
-        
+
+        // 🗺️ 將「縣市」或「地區」正規化為專案標準地區名稱
+        function normalizeRegion(rawCityOrRegion) {
+            if (!rawCityOrRegion) return '';
+            let s = String(rawCityOrRegion).trim();
+            if (DATA_PARSER_CONFIG.cityToRegionMap[s]) {
+                return DATA_PARSER_CONFIG.cityToRegionMap[s];
+            }
+            for (const [cityKey, regVal] of Object.entries(DATA_PARSER_CONFIG.cityToRegionMap)) {
+                if (s.includes(cityKey)) return regVal;
+            }
+            return s;
+        }
+
+        // 📅 從「月份」欄位或「測驗日期 (YYYY/MM/DD 或 YYYY-MM-DD 或 Excel 日期序列值)」提取月份數字 (1~12)
+        function extractMonthStr(row) {
+            if (row['月份'] !== undefined && row['月份'] !== null && String(row['月份']).trim() !== '') {
+                let m = parseInt(String(row['月份']).trim(), 10);
+                if (!isNaN(m)) return m.toString();
+            }
+            let dateVal = row['測驗日期'] || row['巡檢時間'] || '';
+            if (typeof dateVal === 'number' && dateVal > 20000) {
+                // Excel 序列日期轉換
+                const utcDays = Math.floor(dateVal - 25569);
+                const d = new Date(utcDays * 86400 * 1000);
+                return (d.getUTCMonth() + 1).toString();
+            }
+            let dateStr = String(dateVal).trim();
+            let match = dateStr.match(/^\d{4}[\/\-](\d{1,2})/);
+            if (match) {
+                return parseInt(match[1], 10).toString();
+            }
+            return '';
+        }
+
+        function isCheckedValue(val) {
+            if (val === undefined || val === null) return false;
+            const s = String(val).trim().toUpperCase();
+            return s.includes('V') || s.includes('O') || s === '1' || s === 'TRUE' || s.includes('✓') || s.includes('✔');
+        }
+
+        // 📦 將二維陣列 (來自 CSV 或 XLSX Bike 工作表) 解析為標準化結構
+        function parseRowsToDataset(allRows, sourceName) {
+            let headerIndex = -1;
+            let headers = [];
+            let isNewSystemFormat = false;
+
+            for (let i = 0; i < Math.min(allRows.length, 15); i++) {
+                const rowStrs = (allRows[i] || []).map(c => c !== undefined && c !== null ? String(c).trim() : '');
+                if (rowStrs.includes('地區') && rowStrs.includes('月份')) {
+                    headerIndex = i;
+                    headers = rowStrs;
+                    isNewSystemFormat = false;
+                    break;
+                }
+                if (rowStrs.includes('測驗日期') && rowStrs.includes('縣市') && rowStrs.includes('車號')) {
+                    headerIndex = i;
+                    headers = rowStrs;
+                    isNewSystemFormat = true;
+                    break;
+                }
+            }
+
+            if (headerIndex === -1) {
+                throw new Error(`在「${sourceName}」中找不到標題列（需包含「地區+月份」或新系統「測驗日期+縣市+車號」），請確認檔案格式！`);
+            }
+
+            // 若為新系統格式，檢查標題列上一列 (headerIndex - 1) 是否有 A / B / C 等級標記
+            const colGrades = {};
+            if (headerIndex > 0) {
+                const gradeRow = allRows[headerIndex - 1] || [];
+                headers.forEach((h, idx) => {
+                    if (!h) return;
+                    const g = gradeRow[idx] !== undefined && gradeRow[idx] !== null ? String(gradeRow[idx]).trim().toLowerCase() : '';
+                    if (g === 'a' || g === 'b' || g === 'c') {
+                        colGrades[h] = g;
+                    }
+                });
+            }
+
+            // 篩選出異常問題欄位
+            const probCols = headers.filter(h => {
+                if (!h || metadataCols.includes(h)) return false;
+                if (Object.keys(colGrades).length > 0) {
+                    return colGrades[h] !== undefined;
+                }
+                return true;
+            });
+
+            const rows = [];
+            const detectedMonths = new Set();
+
+            for (let i = headerIndex + 1; i < allRows.length; i++) {
+                const rawRow = allRows[i];
+                if (!rawRow || rawRow.length === 0) continue;
+
+                let rowObj = {};
+                for (let j = 0; j < headers.length; j++) {
+                    const key = headers[j] || `未命名欄位_${j}`;
+                    rowObj[key] = rawRow[j];
+                }
+
+                const reg = normalizeRegion(rowObj['地區'] || rowObj['縣市']);
+                const mStr = extractMonthStr(rowObj);
+                if (!reg || !mStr) continue;
+
+                rowObj._region = reg;
+                rowObj._month = mStr;
+                detectedMonths.add(parseInt(mStr, 10));
+                rows.push(rowObj);
+            }
+
+            return {
+                sourceName,
+                isNewSystemFormat,
+                problemColumns: probCols,
+                colGrades,
+                rows,
+                detectedMonths: Array.from(detectedMonths).sort((a, b) => a - b)
+            };
+        }
+
+        // 📂 通用檔案讀取器：自動判別 .xlsx / .xls 與 .csv
+        function loadReportFile(file, callback) {
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (ext === 'xlsx' || ext === 'xls') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        // 優先尋找名稱為 Bike 的工作表，否則取包含「測驗日期」或第一個工作表
+                        let targetSheetName = workbook.SheetNames.find(n => n.toLowerCase() === 'bike') || workbook.SheetNames[0];
+                        for (const sName of workbook.SheetNames) {
+                            const preview = XLSX.utils.sheet_to_json(workbook.Sheets[sName], { header: 1, range: 0, defval: '' }).slice(0, 5);
+                            const flat = preview.flat().map(x => String(x).trim());
+                            if ((flat.includes('測驗日期') && flat.includes('縣市')) || (flat.includes('地區') && flat.includes('月份'))) {
+                                targetSheetName = sName;
+                                break;
+                            }
+                        }
+                        const worksheet = workbook.Sheets[targetSheetName];
+                        const allRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: false });
+                        const dataset = parseRowsToDataset(allRows, `${file.name} [${targetSheetName}]`);
+                        callback(null, dataset);
+                    } catch (err) {
+                        callback(err, null);
+                    }
+                };
+                reader.onerror = function(err) {
+                    callback(new Error('Excel 檔案讀取失敗'), null);
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                Papa.parse(file, {
+                    header: false,
+                    skipEmptyLines: true,
+                    error: function(err) {
+                        callback(err, null);
+                    },
+                    complete: function(results) {
+                        try {
+                            const dataset = parseRowsToDataset(results.data, file.name);
+                            callback(null, dataset);
+                        } catch (err) {
+                            callback(err, null);
+                        }
+                    }
+                });
+            }
+        }
+
+        // 1️⃣ 監聽【本月】檔案上傳
         document.getElementById('csvFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            Papa.parse(file, {
-                header: false, 
-                skipEmptyLines: true,
-                error: function(err, file, inputElem, reason) {
-                    alert('CSV 讀取發生嚴重錯誤: ' + err.message);
-                    console.error('PapaParse Error:', err);
-                },
-                complete: function(results) {
-                    if (results.errors && results.errors.length > 0) {
-                        console.warn("CSV 解析警告：", results.errors);
-                        if (results.errors.some(e => e.type === "Delimiter" || e.code === "UndetectableDelimiter")) {
-                            alert("CSV 格式異常，可能欄位錯位！");
-                        }
-                    }
-                    const allRows = results.data;
-                    let headerIndex = -1;
-                    let headers = [];
-
-                    for (let i = 0; i < allRows.length; i++) {
-                        if (allRows[i].includes('地區') && allRows[i].includes('月份')) {
-                            headerIndex = i;
-                            headers = allRows[i].map(h => h ? h.trim() : '');
-                            break;
-                        }
-                    }
-
-                    if (headerIndex === -1) {
-                        alert("❌ 找不到包含 '地區' 與 '月份' 的標題列，請確認 CSV 格式！");
-                        return;
-                    }
-
-                    problemColumns = headers.filter(h => h && !metadataCols.includes(h));
-
-                    rawData = [];
-                    for (let i = headerIndex + 1; i < allRows.length; i++) {
-                        let rowObj = {};
-                        for (let j = 0; j < headers.length; j++) {
-                            const key = headers[j] || `未命名欄位_${j}`;
-                            rowObj[key] = allRows[i][j];
-                        }
-                        rawData.push(rowObj);
-                    }
-                    alert(`✅ CSV 解析成功！共掃描到 ${problemColumns.length} 種異常項目。請點擊「執行趨勢與異常運算」。`);
+            loadReportFile(file, function(err, dataset) {
+                if (err) {
+                    alert('❌ 讀取失敗：' + err.message);
+                    console.error(err);
+                    return;
                 }
+                currParsedDataset = dataset;
+                const sysTag = dataset.isNewSystemFormat ? '新系統 Excel 格式' : '舊系統 CSV 格式';
+                const monthsText = dataset.detectedMonths.map(m => m + '月').join(', ');
+
+                // 若檔案中只有單一月份（如新系統 10 月），自動將目標月份設為該月份
+                if (dataset.detectedMonths.length === 1) {
+                    document.getElementById('monthFilter').value = dataset.detectedMonths[0];
+                } else if (dataset.detectedMonths.length > 1) {
+                    document.getElementById('monthFilter').value = dataset.detectedMonths[dataset.detectedMonths.length - 1];
+                }
+
+                const statusEl = document.getElementById('currFileStatus');
+                statusEl.innerHTML = `<span class="status-badge">✅ ${sysTag}｜共 ${dataset.rows.length} 筆車次｜${dataset.problemColumns.length} 項異常欄位｜包含月份：${monthsText}</span>`;
+
+                alert(`✅ 本月報表解析成功！\n• 系統格式：${sysTag}\n• 掃描車次：${dataset.rows.length} 輛\n• 異常欄位：${dataset.problemColumns.length} 種\n• 偵測月份：${monthsText}\n\n請點擊「▶ 執行趨勢與異常運算」。`);
+            });
+        });
+
+        // 2️⃣ 監聽【上月】檔案上傳 (選填)
+        document.getElementById('prevFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) {
+                prevParsedDataset = null;
+                document.getElementById('prevFileStatus').innerText = '若未上傳，將自動從檔案內上月資料或現有 sim_data.js 帶入';
+                return;
+            }
+
+            loadReportFile(file, function(err, dataset) {
+                if (err) {
+                    alert('❌ 上月報表讀取失敗：' + err.message);
+                    console.error(err);
+                    return;
+                }
+                prevParsedDataset = dataset;
+                const sysTag = dataset.isNewSystemFormat ? '新系統格式' : '舊系統格式';
+                const monthsText = dataset.detectedMonths.map(m => m + '月').join(', ');
+                const statusEl = document.getElementById('prevFileStatus');
+                statusEl.innerHTML = `<span class="status-badge">✅ 上月報表 (${sysTag})｜包含月份：${monthsText}</span>`;
             });
         });
 
@@ -543,88 +895,139 @@
             return top_problems;
         }
 
+        // 🧮 針對單一資料集與指定月份，統計各區車數、A/B/C 異常車數與問題明細
+        function accumulateDatasetForMonth(dataset, targetMonthStr, stats, isCurrentMonth) {
+            if (!dataset || !dataset.rows) return 0;
+            let matchedRowCount = 0;
+
+            dataset.rows.forEach(row => {
+                const region = row._region;
+                const month = row._month;
+                if (!region || month !== targetMonthStr) return;
+
+                matchedRowCount++;
+
+                if (!stats[region]) {
+                    stats[region] = {
+                        current: { total: 0, a: 0, b: 0, c: 0, probA: {}, probB: {}, probC: {}, probUnknown: {} },
+                        prev: { total: 0, a: 0, b: 0, c: 0 }
+                    };
+                }
+
+                const targetBucket = isCurrentMonth ? stats[region].current : stats[region].prev;
+
+                // 檢查是否有舊系統的 A級 / B級 / C級 彙總欄
+                let isA = isCheckedValue(row['A級']);
+                let isB = isCheckedValue(row['B級']);
+                let isC = isCheckedValue(row['C級']);
+
+                // 掃描所有異常問題欄位：
+                // 1) 在新系統中，車次是否屬於 A/B/C 級異常車，是由該車是否有勾選任一 A/B/C 級問題欄位決定
+                // 2) 若為本月數據，同步累計各異常問題的發生次數與字典分類
+                dataset.problemColumns.forEach(pCol => {
+                    if (isCheckedValue(row[pCol])) {
+                        let realGrade = autoGradeIssue(pCol, dataset.colGrades);
+                        if (realGrade === 'a') isA = true;
+                        else if (realGrade === 'b') isB = true;
+                        else if (realGrade === 'c') isC = true;
+
+                        if (isCurrentMonth) {
+                            problemDictionary[realGrade].add(pCol);
+                            let targetProbObj = realGrade === 'unknown' ? 'probUnknown' : 'prob' + realGrade.toUpperCase();
+                            targetBucket[targetProbObj][pCol] = (targetBucket[targetProbObj][pCol] || 0) + 1;
+                        }
+                    }
+                });
+
+                targetBucket.total += 1;
+                if (isA) targetBucket.a += 1;
+                if (isB) targetBucket.b += 1;
+                if (isC) targetBucket.c += 1;
+            });
+
+            return matchedRowCount;
+        }
+
         function processData() {
-            if (rawData.length === 0) {
-                alert("請先選擇 CSV 檔案並等待解析完成！");
+            if (!currParsedDataset || currParsedDataset.rows.length === 0) {
+                alert("請先在「1. 載入【本月】報表」選擇 Excel (.xlsx) 或 CSV 檔案！");
                 return;
             }
 
             // 重置字典狀態
             problemDictionary = { a: new Set(), b: new Set(), c: new Set(), unknown: new Set() };
 
-            const targetMonthNum = parseInt(document.getElementById('monthFilter').value);
+            const targetMonthNum = parseInt(document.getElementById('monthFilter').value, 10);
             const prevMonthNum = targetMonthNum === 1 ? 12 : targetMonthNum - 1;
             const targetMonthStr = targetMonthNum.toString();
             const prevMonthStr = prevMonthNum.toString();
 
             const stats = {};
 
-            rawData.forEach(row => {
-                const region = (row['地區'] || '').trim();
-                const month = (row['月份'] || '').trim();
+            // 1. 計算【本月】數據
+            const currCount = accumulateDatasetForMonth(currParsedDataset, targetMonthStr, stats, true);
+            if (currCount === 0) {
+                const avail = currParsedDataset.detectedMonths.map(m => m + '月').join('、');
+                alert(`⚠️ 在本月報表中找不到「${targetMonthNum}月」的資料！\n檔案內偵測到的月份為：${avail || '無'}\n請調整「3. 目標月份」後再試一次。`);
+                return;
+            }
 
-                if (!region || region === '') return;
-                if (month !== targetMonthStr && month !== prevMonthStr) return;
+            // 2. 計算【上月】數據（三層智慧對齊機制）：
+            //    優先序 A：若有單獨上傳「2. 上月報表」，優先從上月報表撈取 prevMonthStr（若上月報表只有單一月份則直接取該月份）
+            //    優先序 B：若未上傳上月報表，嘗試從「1. 本月報表」內撈取 prevMonthStr（相容舊版全年度 CSV）
+            //    優先序 C：若本月報表為新系統單月 Excel（無上月資料），自動從現有專案的 window.simJsonData 帶入上月數據！
+            let prevSourceLabel = '';
+            let prevCount = 0;
 
-                if (!stats[region]) {
-                    stats[region] = {
-                        // 🌟 新增 probUnknown 來裝載未知問題
-                        current: { total: 0, a: 0, b: 0, c: 0, probA: {}, probB: {}, probC: {}, probUnknown: {} },
-                        prev: { total: 0, a: 0, b: 0, c: 0 }
-                    };
+            if (prevParsedDataset && prevParsedDataset.rows.length > 0) {
+                let usePrevMonthStr = prevMonthStr;
+                if (!prevParsedDataset.detectedMonths.includes(prevMonthNum) && prevParsedDataset.detectedMonths.length === 1) {
+                    usePrevMonthStr = prevParsedDataset.detectedMonths[0].toString();
                 }
-
-                const valA = (row['A級'] || '').toString().toUpperCase();
-                const valB = (row['B級'] || '').toString().toUpperCase();
-                const valC = (row['C級'] || '').toString().toUpperCase();
-                const isA = valA.includes('V') || valA.includes('O') || valA.includes('1');
-                const isB = valB.includes('V') || valB.includes('O') || valB.includes('1');
-                const isC = valC.includes('V') || valC.includes('O') || valC.includes('1');
-
-                const targetBucket = (month === targetMonthStr) ? stats[region].current : stats[region].prev;
-
-                targetBucket.total += 1;
-                if (isA) targetBucket.a += 1;
-                if (isB) targetBucket.b += 1;
-                if (isC) targetBucket.c += 1;
-
-                if (month === targetMonthStr) {
-                    problemColumns.forEach(pCol => {
-                        const cellVal = (row[pCol] || '').toString().toUpperCase();
-                        // 只有這個問題真的被打勾時，才去驗證它
-                        if (cellVal.includes('V') || cellVal.includes('O') || cellVal.includes('1')) {
-                            let realGrade = autoGradeIssue(pCol); 
-                            
-                            // 記錄到全域字典供畫面顯示
-                            problemDictionary[realGrade].add(pCol);
-
-                            // 如果是 unknown，先塞進 probUnknown 不參與 top_problems 計算
-                            let targetProbObj = realGrade === 'unknown' ? 'probUnknown' : 'prob' + realGrade.toUpperCase(); 
-                            targetBucket[targetProbObj][pCol] = (targetBucket[targetProbObj][pCol] || 0) + 1;
+                prevCount = accumulateDatasetForMonth(prevParsedDataset, usePrevMonthStr, stats, false);
+                prevSourceLabel = `來自上傳之上月報表 (${usePrevMonthStr}月)`;
+            } else {
+                prevCount = accumulateDatasetForMonth(currParsedDataset, prevMonthStr, stats, false);
+                if (prevCount > 0) {
+                    prevSourceLabel = `來自同份報表內之歷史月份 (${prevMonthStr}月)`;
+                } else if (typeof simJsonData !== 'undefined' && Array.isArray(simJsonData)) {
+                    simJsonData.forEach(item => {
+                        const reg = normalizeRegion(item.region);
+                        if (!stats[reg]) return;
+                        // 若現有 sim_data.js 的 current_month 有值 (>0)，取 current_month 作為上月；若已被歸零則取 prev_month
+                        const src = (item.current_month && item.current_month.total > 0) ? item.current_month : item.prev_month;
+                        if (src) {
+                            stats[reg].prev = {
+                                total: src.total || 0,
+                                a: src.a || 0,
+                                b: src.b || 0,
+                                c: src.c || 0
+                            };
                         }
                     });
+                    prevSourceLabel = `自動從現有 sim_data.js 帶入上月基準數據`;
                 }
-            });
+            }
 
-            renderUI(stats, targetMonthNum, prevMonthNum);
+            renderUI(stats, targetMonthNum, prevMonthNum, prevSourceLabel);
         }
 
-        function renderUI(stats, mCurrent, mPrev) {
+        function renderUI(stats, mCurrent, mPrev, prevSourceLabel = '') {
             
             // --- 🌟 1. 渲染系統分級字典面板 ---
             let dictHtml = `
-                <h3>📚 系統分級字典庫與未知問題捕捉</h3>
+                <h3>📚 系統分級字典庫與未知問題捕捉 <span style="font-size:0.8em; font-weight:normal; color:var(--text-secondary);">(${prevSourceLabel ? '上月資料來源：' + prevSourceLabel : ''})</span></h3>
                 <p>以下為本次資料中「有實際發生過」的異常，系統將它們歸類的結果：</p>
                 <div class="dict-section">
-                    <h4>🟢 A級判定成功</h4>
+                    <h4>🟢 A級判定成功 (${problemDictionary.a.size} 項)</h4>
                     <p>${Array.from(problemDictionary.a).join('、') || '無'}</p>
                 </div>
                 <div class="dict-section">
-                    <h4>🟡 B級判定成功</h4>
+                    <h4>🟡 B級判定成功 (${problemDictionary.b.size} 項)</h4>
                     <p>${Array.from(problemDictionary.b).join('、') || '無'}</p>
                 </div>
                 <div class="dict-section">
-                    <h4>🟠 C級判定成功</h4>
+                    <h4>🟠 C級判定成功 (${problemDictionary.c.size} 項)</h4>
                     <p>${Array.from(problemDictionary.c).join('、') || '無'}</p>
                 </div>
                 <div class="dict-section dict-unknown">
@@ -632,7 +1035,7 @@
                     <p style="font-weight: bold; font-size: 1.1em;">
                         ${Array.from(problemDictionary.unknown).join('、') || '✨ 太棒了！所有發生的問題皆已成功配對分類 ✨'}
                     </p>
-                    <p style="font-size: 0.85em; margin-top: 5px;">* 提示：如果上方出現紅字，代表該問題沒有出現在程式碼的 <code>GRADING_RULES</code> 關鍵字中。請複製關鍵字並補入程式碼後，重新點擊執行！(未能判定的問題將不會顯示在 JSON 的 Top3 中)</p>
+                    <p style="font-size: 0.85em; margin-top: 5px;">* 提示：新系統 Excel 會自動讀取第 1 列的 A/B/C 分級標記；若上傳無分級標記的 CSV 且出現紅字，請將關鍵字補入程式碼的 <code>GRADING_RULES</code>。</p>
                 </div>
             `;
             document.getElementById('dictContainer').innerHTML = dictHtml;
@@ -753,7 +1156,7 @@
         function copyJson() {
             const jsonText = document.getElementById('jsonOutput').value;
             if (!jsonText) {
-                alert("⚠️ 請先載入 CSV 並點擊「執行趨勢與異常運算」！");
+                alert("⚠️ 請先載入報表並點擊「執行趨勢與異常運算」！");
                 return;
             }
             navigator.clipboard.writeText(jsonText).then(() => {
@@ -767,12 +1170,11 @@
         function downloadJson() {
             const jsonText = document.getElementById('jsonOutput').value;
             if (!jsonText) {
-                alert("⚠️ 請先載入 CSV 並點擊「執行趨勢與異常運算」！");
+                alert("⚠️ 請先載入報表並點擊「執行趨勢與異常運算」！");
                 return;
             }
 
-            const month = document.getElementById('monthFilter').value;
-            const fileName = `本月模擬體驗數據_${month}月.js`;
+            const fileName = `sim_data.js`;
 
             const blob = new Blob([jsonText], { type: "text/javascript;charset=utf-8" });
             const url = URL.createObjectURL(blob);
