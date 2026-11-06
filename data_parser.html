@@ -250,7 +250,7 @@
         let prevParsedDataset = null;
 
         // 🌟 記錄有實際發生的問題分別被判定到哪一級
-        let problemDictionary = { a: new Set(), b: new Set(), c: new Set(), unknown: new Set() };
+        let problemDictionary = { a: new Set(), b: new Set(), c: new Set(), tire: new Set(), unknown: new Set() };
 
         // --- 頂部設定檔 (Config) ---
         const DATA_PARSER_CONFIG = {
@@ -258,12 +258,26 @@
                 "雙北", "桃園", "新竹", "苗栗", "台中", 
                 "彰化", "雲林", "嘉義", "台南", "高雄", "屏東", "台東"
             ],
-            // 舊版與新版系統的基本資料欄位（非異常問題欄位）
+            // 🌟 胎壓相關欄位：歸類為基本資料（不計入 A/B/C 級模擬體驗），但獨立統計並提供給「報告模式第 2 頁 (前後胎壓未達標準)」點擊檢視
+            tireProblemCols: [
+                "自行車重要機能_輪胎_胎壓過低 (<50)",
+                "自行車重要機能_輪胎_胎壓過高 (>90)",
+                "自行車重要機能_輪胎_胎壓偏高 (76~90)",
+                "胎壓<50 (含爆胎)",
+                "胎壓>90",
+                "90>胎壓>75",
+                "胎壓異常"
+            ],
+            // 舊版與新版系統的基本資料欄位（非異常問題欄位，包含胎壓欄位以排除於 A/B/C 級之外）
             metadataCols: [
                 "地區", "月份", "A級", "B級", "C級", "編號", "公號", 
                 "測驗日期", "城市", "車號", "車柱柱號", "一級檢修日期", "一級檢修日",
                 "一級檢修人員", "一級異常", "車輛異常", "一級維修異常", "總計",
                 "前胎壓", "後胎壓", "可用電量", "胎壓異常",
+                "自行車重要機能_輪胎_胎壓過低 (<50)",
+                "自行車重要機能_輪胎_胎壓過高 (>90)",
+                "自行車重要機能_輪胎_胎壓偏高 (76~90)",
+                "胎壓<50 (含爆胎)", "胎壓>90", "90>胎壓>75",
                 "車種", "縣市", "場站名稱", "照片數量", "照片連結",
                 "其他備註", "車柱備註", "外觀備註", "結構備註", "Id"
             ],
@@ -306,8 +320,6 @@
                     '傳動制動_煞車功能_無法煞車',
                     '傳動制動_煞車功能_過鬆(2/3)',
                     '傳動制動_煞車功能_過緊(1/3)',
-                    '自行車重要機能_輪胎_胎壓過低 (<50)',
-                    '自行車重要機能_輪胎_胎壓過高 (>90)',
                     '車體結構_隨車鎖_上鎖／解鎖失敗',
                     '車機_功能測試_刷卡／掃碼後暫停服務／未解鎖／未上鎖',
                     '車體結構_腳踏_斷裂／遺失',
@@ -342,8 +354,6 @@
                     '前/後燈[後燈脫落、破損、不亮]',
                     '煞車[無法煞車]',
                     '煞車[過鬆或過緊]',
-                    '胎壓<50 (含爆胎)',
-                    '胎壓>90',
                     '作動 [停車靜止時 有動力推進]'
                 ] 
             },
@@ -526,7 +536,6 @@
                     '傳動制動_前後燈（靜止）_歸還靠柱未滅',
                     '傳動制動_前後燈（靜止）_後燈下反光片破損',
                     '傳動制動_變速功能_銀蓋脫落',
-                    '自行車重要機能_輪胎_胎壓偏高 (76~90)',
                     // --- 舊系統欄位 ---
                     '一級檢修貼紙(無法辨識／資訊不完整)',
                     '一級檢修貼紙(未撕除舊貼紙)',
@@ -598,7 +607,6 @@
                     '防轉彈簧及停車架[停車架架起後 , 車輛不會倒]',
                     '座墊桿[反轉後無法固定位置]',
                     '變速[指示蓋(銀)脫落]',
-                    '90>胎壓>75',
                     '電量顯示 [電量低於15系統未鎖車]',
                     '前 / 後燈 [靜止狀態借出未亮/歸還未滅]',
                     '置物籃(鉸線頭固定座 上下皆破損)',
@@ -892,6 +900,15 @@
                     top_problems[grade] = "目前無具體問題紀錄";
                 }
             });
+            // 🌟 胎壓未達標準明細（獨立供應給報告模式第 2 頁「前後胎壓未達標準」點擊檢視）
+            let tireIssues = cityCurrentData.probTire;
+            if (tireIssues && Object.keys(tireIssues).length > 0) {
+                let sortedTire = Object.entries(tireIssues)
+                    .sort((a, b) => b[1] - a[1]);
+                top_problems.tire = sortedTire.map(p => `${p[0]}(${p[1]})`).join('、');
+            } else {
+                top_problems.tire = "目前無具體問題紀錄";
+            }
             return top_problems;
         }
 
@@ -909,7 +926,7 @@
 
                 if (!stats[region]) {
                     stats[region] = {
-                        current: { total: 0, a: 0, b: 0, c: 0, probA: {}, probB: {}, probC: {}, probUnknown: {} },
+                        current: { total: 0, a: 0, b: 0, c: 0, probA: {}, probB: {}, probC: {}, probTire: {}, probUnknown: {} },
                         prev: { total: 0, a: 0, b: 0, c: 0 }
                     };
                 }
@@ -921,15 +938,27 @@
                 let isB = isCheckedValue(row['B級']);
                 let isC = isCheckedValue(row['C級']);
 
+                // 🌟 掃描胎壓相關欄位（歸類為基本資料，不列入 A/B/C 級計算，但記錄至 probTire 供報告模式第 2 頁顯示）
+                if (isCurrentMonth && DATA_PARSER_CONFIG.tireProblemCols) {
+                    DATA_PARSER_CONFIG.tireProblemCols.forEach(tCol => {
+                        if (row[tCol] !== undefined && isCheckedValue(row[tCol])) {
+                            problemDictionary.tire.add(tCol);
+                            targetBucket.probTire[tCol] = (targetBucket.probTire[tCol] || 0) + 1;
+                        }
+                    });
+                }
+
                 // 掃描所有異常問題欄位：
-                // 1) 在新系統中，車次是否屬於 A/B/C 級異常車，是由該車是否有勾選任一 A/B/C 級問題欄位決定
+                // 1) 在新系統中，車次是否屬於 A/B/C 級異常車，是由該車是否有勾選任一 A/B/C 級問題欄位決定（已排除胎壓欄位）
                 // 2) 若為本月數據，同步累計各異常問題的發生次數與字典分類
                 dataset.problemColumns.forEach(pCol => {
                     if (isCheckedValue(row[pCol])) {
                         let realGrade = autoGradeIssue(pCol, dataset.colGrades);
-                        if (realGrade === 'a') isA = true;
-                        else if (realGrade === 'b') isB = true;
-                        else if (realGrade === 'c') isC = true;
+                        if (dataset.isNewSystemFormat) {
+                            if (realGrade === 'a') isA = true;
+                            else if (realGrade === 'b') isB = true;
+                            else if (realGrade === 'c') isC = true;
+                        }
 
                         if (isCurrentMonth) {
                             problemDictionary[realGrade].add(pCol);
@@ -955,7 +984,7 @@
             }
 
             // 重置字典狀態
-            problemDictionary = { a: new Set(), b: new Set(), c: new Set(), unknown: new Set() };
+            problemDictionary = { a: new Set(), b: new Set(), c: new Set(), tire: new Set(), unknown: new Set() };
 
             const targetMonthNum = parseInt(document.getElementById('monthFilter').value, 10);
             const prevMonthNum = targetMonthNum === 1 ? 12 : targetMonthNum - 1;
@@ -1029,6 +1058,10 @@
                 <div class="dict-section">
                     <h4>🟠 C級判定成功 (${problemDictionary.c.size} 項)</h4>
                     <p>${Array.from(problemDictionary.c).join('、') || '無'}</p>
+                </div>
+                <div class="dict-section">
+                    <h4 style="color: #38bdf8;">🛞 胎壓未達標項目 (${problemDictionary.tire.size} 項｜歸類為基本資料，不列入 A/B/C 級，移至報告第 2 頁顯示)</h4>
+                    <p>${Array.from(problemDictionary.tire).join('、') || '無'}</p>
                 </div>
                 <div class="dict-section dict-unknown">
                     <h4>🚨 未能被判定的問題 (漏網之魚)</h4>
@@ -1130,6 +1163,7 @@
                         <div class="prob-row"><span class="prob-label label-a">A級常見:</span><span class="prob-text">${topProbs.a}</span></div>
                         <div class="prob-row"><span class="prob-label label-b">B級常見:</span><span class="prob-text">${topProbs.b}</span></div>
                         <div class="prob-row"><span class="prob-label label-c">C級常見:</span><span class="prob-text">${topProbs.c}</span></div>
+                        <div class="prob-row" style="margin-top:6px; padding-top:6px; border-top:1px dashed var(--border-color);"><span class="prob-label" style="color:#38bdf8;">胎壓未達標:</span><span class="prob-text">${topProbs.tire}</span></div>
                     </div>
                 `;
 

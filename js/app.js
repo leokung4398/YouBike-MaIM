@@ -504,16 +504,30 @@ window.highlightRow = function(region) {
 };
 
 window.handleRowDblClick = function(region) {
-    if (currentMode === 'simulation') {
+    if (currentMode === 'simulation' || currentMode === 'tire') {
         const item = rawData.find(r => r.region === region);
-        let grade = currentSimulationMetric.replace('sim_', ''); 
-        let gDesc = "", gColor = "";
-        if (grade === 'a') { gDesc = "重大問題 (安全)"; gColor = "var(--danger-color)"; }
-        else if (grade === 'b') { gDesc = "重點問題 (觀感)"; gColor = "var(--warning-color)"; }
-        else if (grade === 'c') { gDesc = "一般問題 (內部管理)"; gColor = "var(--text-secondary)"; }
+        let grade = currentMode === 'tire' ? 'tire' : currentSimulationMetric.replace('sim_', ''); 
+        let gDesc = "", gColor = "", titlePrefix = "";
+        if (grade === 'tire') {
+            gDesc = "前後胎壓未達標準";
+            gColor = "var(--danger-color)";
+            titlePrefix = `[${gDesc}]`;
+        } else if (grade === 'a') {
+            gDesc = "重大問題 (安全)";
+            gColor = "var(--danger-color)";
+            titlePrefix = `[A級: ${gDesc}]`;
+        } else if (grade === 'b') {
+            gDesc = "重點問題 (觀感)";
+            gColor = "var(--warning-color)";
+            titlePrefix = `[B級: ${gDesc}]`;
+        } else if (grade === 'c') {
+            gDesc = "一般問題 (內部管理)";
+            gColor = "var(--text-secondary)";
+            titlePrefix = `[C級: ${gDesc}]`;
+        }
 
-        if (item && item.top_problems && item.top_problems[grade]) {
-            document.getElementById('simModalTitle').innerHTML = `Top 異常項目 - ${region} <span style="color:${gColor}; font-size:18px;">[${grade.toUpperCase()}級: ${gDesc}]</span>`;
+        if (item && item.top_problems && item.top_problems[grade] && item.top_problems[grade] !== '目前無具體問題紀錄') {
+            document.getElementById('simModalTitle').innerHTML = `異常項目明細 - ${region} <span style="color:${gColor}; font-size:18px;">${titlePrefix}</span>`;
             let formattedProbs = item.top_problems[grade].replace(/\((\d+)\)/g, '($1件)');
             let probsArray = formattedProbs.split(')、');
             let probs = probsArray.map((p, index) => {
@@ -521,10 +535,10 @@ window.handleRowDblClick = function(region) {
                 return `<li style="border-left: 5px solid ${gColor};">${text}</li>`;
             }).join('');
 
-            document.getElementById('simModalBody').innerHTML = `<ul>${probs}</ul><div style="font-size:12px; color:var(--text-secondary); margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color);">* 註：一台車可能同時發生多項異常，故「異常項目件數」與外層「異常車輛數」不同。</div>`;
+            document.getElementById('simModalBody').innerHTML = `<ul>${probs}</ul><div style="font-size:12px; color:var(--text-secondary); margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color);">* 註：一台車可能同時發生多項異常，故「異常項目件數」與外層「異常車輛數」可能不同。</div>`;
             document.getElementById('simModal').classList.remove('hidden');
         } else {
-            document.getElementById('simModalTitle').innerHTML = `${region} - ${grade.toUpperCase()}級異常`;
+            document.getElementById('simModalTitle').innerHTML = `${region} - ${gDesc}`;
             document.getElementById('simModalBody').innerHTML = `<p style="padding: 10px; color: var(--text-secondary);">此縣市目前無具體問題紀錄。</p>`;
             document.getElementById('simModal').classList.remove('hidden');
         }
@@ -1691,12 +1705,12 @@ function buildReportSlideHTML(page) {
 
     } else if (mode === 'tire') {
         let legendHTML = `<div style="margin-bottom: 15px; font-size: 15px; background: var(--surface-color); padding: 12px 18px; border-radius: 8px; border-left: 5px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold;">當月未達標準 ≥ 5% (紅色字體)</span> ｜ <span style="color:#fca5a5; font-weight:bold;">歷史月份未達標準 ≥ 5% (淺紅色字體)</span>
+            📌 邏輯說明：<span style="color:#ef4444; font-weight:bold;">當月未達標準 ≥ 5% (紅色字體)</span> ｜ <span style="color:#fca5a5; font-weight:bold;">歷史月份未達標準 ≥ 5% (淺紅色字體)</span> ｜ <span style="color:var(--accent-color); font-weight:bold;">💡 點擊各縣市資料列或當月表頭可檢視胎壓問題明細與數量</span>
         </div>`;
         html = legendHTML + html;
         html += `<thead><tr><th>縣市</th>`;
-        // 🌟 報告模式胎壓表頭反轉：當月在最前面，並加入與第5頁相同的 active-col 聚焦效果
-        html += `<th class="active-col" style="color:#ffffff;">${globalMonth.toString().padStart(2,'0')}月 (當月)</th>`;
+        // 🌟 報告模式胎壓表頭反轉：當月在最前面，並加入與模擬體驗頁相同的 report-sim-th 點擊展開全國統計效果
+        html += `<th class="report-sim-th active-col" data-grade="tire" title="點擊查看全國胎壓未達標準問題總和" style="color:#ffffff;">${globalMonth.toString().padStart(2,'0')}月 (當月)</th>`;
         for (let i = 1; i <= 5; i++) {
             let m = globalMonth - i;
             let y = globalYear;
@@ -1711,7 +1725,7 @@ function buildReportSlideHTML(page) {
             // 當月份字體全面調整為黑色粗體，套用 active-col
             let vStyle = v >= 5 ? 'color:#ef4444; font-weight:bold;' : 'color:var(--text-primary); font-weight:bold;';
             let getHistStyle = (val) => val >= 5 ? 'color:#fca5a5; font-weight:bold;' : 'color:inherit;';
-            html += `<tr>${getRegionColReport(r)}
+            html += `<tr class="report-sim-row" data-region="${r.region}" data-grade="tire">${getRegionColReport(r)}
                 <td class="active-col" style="${vStyle}">${v}% (${r.tire_count}輛)</td>
                 <td style="${getHistStyle(hist[1])}">${hist[1]}%</td>
                 <td style="${getHistStyle(hist[2])}">${hist[2]}%</td>
@@ -2070,13 +2084,14 @@ function showReportSimTooltip(region, grade, x, y) {
     if (!item) return;
 
     let gDesc = '', gColor = '';
-    if (grade === 'a') { gDesc = 'A級重大問題 (安全)'; gColor = 'var(--danger-color)'; }
+    if (grade === 'tire') { gDesc = '前後胎壓未達標準'; gColor = 'var(--danger-color)'; }
+    else if (grade === 'a') { gDesc = 'A級重大問題 (安全)'; gColor = 'var(--danger-color)'; }
     else if (grade === 'b') { gDesc = 'B級重點問題 (觀感)'; gColor = 'var(--warning-color)'; }
     else { gDesc = 'C級一般問題 (內部管理)'; gColor = 'var(--text-secondary)'; }
 
     // 建立 HTML 內容
     let bodyHtml = '';
-    if (item.top_problems && item.top_problems[grade]) {
+    if (item.top_problems && item.top_problems[grade] && item.top_problems[grade] !== '目前無具體問題紀錄') {
         let formattedProbs = item.top_problems[grade].replace(/\((\d+)\)/g, '($1件)');
         let probs = formattedProbs.split(')\u3001');
         bodyHtml = '<ul>' + probs.map((p, idx) => {
@@ -2093,30 +2108,34 @@ function showReportSimTooltip(region, grade, x, y) {
         '屏東': '屏東縣', '台東': '台東縣'
     };
     const displayName = TOOLTIP_REGION_NAMES[region] || region;
+    const footerNote = grade === 'tire'
+        ? `* 註：統計當月前後胎壓未達標準（胎壓過低 &lt;50、偏高 76~90、過高 &gt;90）之實際問題與數量。`
+        : `* 註：一台車可能同時發生多項異常，故「異常項目件數」與外層「異常車輛數」不同。`;
 
     tip.innerHTML = `
         <div class="tooltip-title">${displayName} · <span style="color:${gColor};">${gDesc}</span></div>
         ${bodyHtml}
-        <div style="font-size:12px; color:var(--text-secondary); margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color);">* 註：一台車可能同時發生多項異常，故「異常項目件數」與外層「異常車輛數」不同。</div>
+        <div style="font-size:12px; color:var(--text-secondary); margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color);">${footerNote}</div>
     `;
 
     positionReportTooltip(tip, x, y, 20, 280, 150);
 }
 
-// 🌟 全國最常發生問題總和 Tooltip（點擊 A級/B級/C級 表頭時觸發）
+// 🌟 全國最常發生問題總和 Tooltip（點擊 A級/B級/C級 或 胎壓當月表頭時觸發）
 function showReportSimTotalTooltip(grade, x, y) {
     if (window.tooltipHideTimer) clearTimeout(window.tooltipHideTimer);
     const tip = ensureReportSimTooltip();
 
     let gDesc = '', gColor = '';
-    if (grade === 'a') { gDesc = 'A級重大問題 (安全)'; gColor = 'var(--danger-color)'; }
+    if (grade === 'tire') { gDesc = '前後胎壓未達標準'; gColor = 'var(--danger-color)'; }
+    else if (grade === 'a') { gDesc = 'A級重大問題 (安全)'; gColor = 'var(--danger-color)'; }
     else if (grade === 'b') { gDesc = 'B級重點問題 (觀感)'; gColor = 'var(--warning-color)'; }
     else { gDesc = 'C級一般問題 (內部管理)'; gColor = 'var(--text-secondary)'; }
 
     // 彙整全區各縣市該級別的異常項目與件數
     const countsMap = {};
     rawData.forEach(item => {
-        if (item.top_problems && item.top_problems[grade]) {
+        if (item.top_problems && item.top_problems[grade] && item.top_problems[grade] !== '目前無具體問題紀錄') {
             let rawStr = item.top_problems[grade];
             let parts = rawStr.split(')\u3001').map((p, idx, arr) => idx === arr.length - 1 ? p : p + ')');
             parts.forEach(p => {
@@ -2143,10 +2162,14 @@ function showReportSimTotalTooltip(grade, x, y) {
         bodyHtml = `<p style="color:var(--text-secondary);margin:0;font-size:13px;">目前無具體問題紀錄。</p>`;
     }
 
+    const totalFooterNote = grade === 'tire'
+        ? `* 註：統計全國各縣市前後胎壓未達標準問題之件數總和。`
+        : `* 註：統計各縣市最常發生問題之件數總和（Top 3）。`;
+
     tip.innerHTML = `
         <div class="tooltip-title">全國總和 · <span style="color:${gColor};">${gDesc}</span></div>
         ${bodyHtml}
-        <div style="font-size:12px; color:var(--text-secondary); margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color);">* 註：統計各縣市最常發生問題之件數總和（Top 3）。</div>
+        <div style="font-size:12px; color:var(--text-secondary); margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color);">${totalFooterNote}</div>
     `;
 
     positionReportTooltip(tip, x, y, 20, 300, 150);
