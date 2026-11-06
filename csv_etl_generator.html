@@ -198,6 +198,13 @@
             overall_feb: oldGlobalAverages.overall
         };
 
+        function normalizeMonthStr(str) {
+            if (!str) return "";
+            let m = String(str).trim().match(/^(\d{4})[\/\-](\d{1,2})$/);
+            if (!m) return "";
+            return `${m[1]}/${m[2].padStart(2, '0')}`;
+        }
+
         function handleCSV(file, type) {
             Papa.parse(file, {
                 header: false,
@@ -218,11 +225,12 @@
                     for (let i = 0; i < data.length; i++) {
                         let row = data[i].map(cell => String(cell).trim());
                         let val0 = row[0];
+                        let normVal0 = normalizeMonthStr(val0);
 
                         // 【2. 自動辨識並動態分割「標題月份」與單區塊狀態機】
-                        if (/^\d{4}[\/\-]\d{1,2}$/.test(val0)) {
+                        if (normVal0 !== "") {
                             if (targetMonth === "") {
-                                targetMonth = val0;
+                                targetMonth = normVal0;
                                 globalTargetMonth = targetMonth;
                                 isTargetMonthBlock = true;
                                 isHeaderParsed = true;
@@ -249,7 +257,7 @@
                                     }
                                 }
                                 continue;
-                            } else if (val0 === targetMonth && isHeaderParsed) {
+                            } else if (normVal0 === targetMonth && isHeaderParsed) {
                                 // 攔截「第二個」相同月份字串作為綜合分數
                                 if (type === 'eval') {
                                     if (avgColIdx !== -1 && row[avgColIdx]) {
@@ -269,7 +277,7 @@
                                     }
                                 }
                                 continue;
-                            } else if (val0 !== targetMonth) {
+                            } else if (normVal0 !== targetMonth) {
                                 // 遇到舊的月份區塊立刻 break 中斷
                                 isTargetMonthBlock = false;
                                 break;

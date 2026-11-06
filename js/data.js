@@ -9,7 +9,7 @@ const rawData = [
             "台北市",
             "新北市"
         ],
-        overall: 89.71,
+        overall: 90.66,
         overall_feb: 92.23,
         station: 91,
         station_feb: 93,
@@ -74,7 +74,7 @@ const rawData = [
             "桃園市",
             "桃園縣"
         ],
-        overall: 89.83,
+        overall: 88.94,
         overall_feb: 91.15,
         station: 99,
         station_feb: 99,
@@ -139,7 +139,7 @@ const rawData = [
             "新竹市",
             "新竹縣"
         ],
-        overall: 95.41,
+        overall: 92.3,
         overall_feb: 91.64,
         station: 95,
         station_feb: 99,
@@ -203,7 +203,7 @@ const rawData = [
         mapNames: [
             "苗栗縣"
         ],
-        overall: 92.96,
+        overall: 91.41,
         overall_feb: 95.31,
         station: 99,
         station_feb: 99,
@@ -268,7 +268,7 @@ const rawData = [
             "臺中市",
             "台中市"
         ],
-        overall: 96.46,
+        overall: 89.89,
         overall_feb: 92.18,
         station: 95,
         station_feb: 96,
@@ -333,7 +333,7 @@ const rawData = [
             "嘉義市",
             "嘉義縣"
         ],
-        overall: 93.83,
+        overall: 89.79,
         overall_feb: 92.06,
         station: 97,
         station_feb: 99,
@@ -398,7 +398,7 @@ const rawData = [
             "臺南市",
             "台南市"
         ],
-        overall: 94.03,
+        overall: 94.79,
         overall_feb: 95.81,
         station: 99,
         station_feb: 100,
@@ -462,7 +462,7 @@ const rawData = [
         mapNames: [
             "高雄市"
         ],
-        overall: 91.72,
+        overall: 90.15,
         overall_feb: 87.73,
         station: 99,
         station_feb: 99,
@@ -526,7 +526,7 @@ const rawData = [
         mapNames: [
             "屏東縣"
         ],
-        overall: 95.2,
+        overall: 94,
         overall_feb: 91.8,
         station: 100,
         station_feb: 100,
@@ -591,7 +591,7 @@ const rawData = [
             "臺東縣",
             "台東縣"
         ],
-        overall: 96.58,
+        overall: 97.83,
         overall_feb: 97.92,
         station: 96,
         station_feb: 100,
@@ -653,6 +653,7 @@ const rawData = [
 ];
 
 const globalAverages = {
+    overall: 90.79,
     overall_feb: 91.91,
     total_s: 298,
     total_v: 2109,

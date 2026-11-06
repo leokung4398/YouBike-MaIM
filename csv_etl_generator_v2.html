@@ -276,6 +276,13 @@
             return isNaN(num) ? 0 : num;
         }
 
+        function normalizeMonthStr(str) {
+            if (!str) return "";
+            let m = String(str).trim().match(/^(\d{4})[\/\-](\d{1,2})$/);
+            if (!m) return "";
+            return `${m[1]}/${m[2].padStart(2, '0')}`;
+        }
+
         function handleCSV(file, type, isPrevData = false, domId = '') {
             Papa.parse(file, {
                 header: false,
@@ -296,10 +303,11 @@
                     for (let i = 0; i < data.length; i++) {
                         let row = data[i].map(cell => String(cell).trim());
                         let val0 = row[0];
+                        let normVal0 = normalizeMonthStr(val0);
 
-                        if (/^\d{4}[\/\-]\d{1,2}$/.test(val0)) {
+                        if (normVal0 !== "") {
                             if (targetMonth === "") {
-                                targetMonth = val0;
+                                targetMonth = normVal0;
                                 if (!isPrevData) globalTargetMonth = targetMonth;
                                 isTargetMonthBlock = true;
                                 isHeaderParsed = true;
@@ -325,7 +333,7 @@
                                     }
                                 }
                                 continue;
-                            } else if (val0 === targetMonth && isHeaderParsed) {
+                            } else if (normVal0 === targetMonth && isHeaderParsed) {
                                 if (type === 'eval') {
                                     if (avgColIdx !== -1 && row[avgColIdx]) {
                                         let overallKey = isPrevData ? 'overall_feb' : 'overall';
@@ -346,7 +354,26 @@
                                     }
                                 }
                                 continue;
-                            } else if (val0 !== targetMonth) {
+                            } else if (normVal0 !== targetMonth) {
+                                // 🌟 若在單月模式或同一份成績表中緊接著出現「上個月」的綜合分數列（例如 2026-09），且尚未設定 overall_feb，自動順便帶入！
+                                if (type === 'eval' && !isPrevData && (exportedAverages['overall_feb'] === null || exportedAverages['overall_feb'] === 91.84)) {
+                                    let secondCellNum = parseNumberValue(row[1]);
+                                    if (secondCellNum > 50 && secondCellNum <= 100) {
+                                        if (avgColIdx !== -1 && row[avgColIdx]) {
+                                            exportedAverages['overall_feb'] = parseNumberValue(row[avgColIdx]);
+                                        }
+                                        for (let colIdx in cityColMap) {
+                                            let region = cityColMap[colIdx];
+                                            let targetData = finalOutputData.find(d => d.region === region);
+                                            if (!targetData) continue;
+                                            let rawVal = row[colIdx];
+                                            if (rawVal !== undefined && rawVal !== "") {
+                                                targetData['overall_feb'] = parseNumberValue(rawVal);
+                                                updatedFields[region]['overall_feb'] = true;
+                                            }
+                                        }
+                                    }
+                                }
                                 isTargetMonthBlock = false;
                                 break;
                             }
