@@ -1197,7 +1197,11 @@ async function initDashboard() {
 }
 
 initDashboard();
-enterReportMode();
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (!isReportMode) enterReportMode();
+    }, 50);
+});
 
 // 優化 ECharts 防抖重繪 (Debounce + requestAnimationFrame)
 let resizeTimer;
