@@ -1426,7 +1426,7 @@ function exitReportMode() {
     }
 
     // 🛑 退出報告模式時暫停所有影片
-    document.querySelectorAll('#evidence-panel-screen video').forEach(v => {
+    document.querySelectorAll('#report-mode-container video').forEach(v => {
         if (!v.paused) v.pause();
     });
 
@@ -1831,30 +1831,75 @@ function buildReportSlideHTML(page) {
         });
     } else if (mode === 'evidence') {
         html = `
-        <div id="evidence-panel-screen" style="padding: 10px 0 30px 0;">
+        <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 22px;">
+            <button id="evidence-tab-btn-fork" onclick="window.switchReportEvidenceTab('fork')" 
+                    style="padding: 10px 24px; font-size: 16px; font-weight: bold; border-radius: 30px; border: 2px solid var(--accent-color); background: var(--accent-color); color: #ffffff; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 14px rgba(37,99,235,0.3);">
+                🔄 交叉測試 沒電電池替換成有電電池
+            </button>
+            <button id="evidence-tab-btn-screen" onclick="window.switchReportEvidenceTab('screen')" 
+                    style="padding: 10px 24px; font-size: 16px; font-weight: bold; border-radius: 30px; border: 2px solid var(--border-color); background: rgba(30,41,59,0.5); color: var(--text-secondary); cursor: pointer; transition: all 0.25s ease;">
+                🔄 交叉測試 有電電池替換成沒電電池
+            </button>
+        </div>
+
+        <!-- 分頁一：交叉測試 沒電電池替換成有電電池 -->
+        <div id="evidence-panel-fork" style="display: block; padding: 10px 0 30px 0;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 36px; max-width: 1400px; margin: 0 auto; align-items: start;">
                 
-                <!-- 左側：換電前(沒電) -->
+                <!-- 左側：電池沒電 -->
                 <div style="display: flex; flex-direction: column; gap: 14px;">
                     <div style="font-size: 22px; font-weight: bold; color: #ef4444; text-align: center; background: var(--surface-color); padding: 12px 16px; border-radius: 10px; border-top: 4px solid #ef4444; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                        🔋 換電前(沒電)
+                        🔋 電池沒電
                     </div>
                     <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
-                        <video controls preload="metadata" style="width: 100%; height: 62vh; max-height: 620px; object-fit: contain; background: #000; display: block;">
-                            <source src="816055047.944558.mp4" type="video/mp4">
+                        <video controls preload="metadata" style="width: 100%; height: 58vh; max-height: 580px; object-fit: contain; background: #000; display: block;">
+                            <source src="816055029.640565.mp4" type="video/mp4">
                             您的瀏覽器不支援影片播放
                         </video>
                     </div>
                 </div>
 
-                <!-- 右側：換電後(有電) -->
+                <!-- 右側：電池有電 -->
                 <div style="display: flex; flex-direction: column; gap: 14px;">
                     <div style="font-size: 22px; font-weight: bold; color: #10b981; text-align: center; background: var(--surface-color); padding: 12px 16px; border-radius: 10px; border-top: 4px solid #10b981; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                        ⚡ 換電後(有電)
+                        ⚡ 電池有電
                     </div>
                     <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
-                        <video controls preload="metadata" style="width: 100%; height: 62vh; max-height: 620px; object-fit: contain; background: #000; display: block;">
+                        <video controls preload="metadata" style="width: 100%; height: 58vh; max-height: 580px; object-fit: contain; background: #000; display: block;">
+                            <source src="816055004.424297.mp4" type="video/mp4">
+                            您的瀏覽器不支援影片播放
+                        </video>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 分頁二：交叉測試 有電電池替換成沒電電池 -->
+        <div id="evidence-panel-screen" style="display: none; padding: 10px 0 30px 0;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 36px; max-width: 1400px; margin: 0 auto; align-items: start;">
+                
+                <!-- 左側：電池有電 -->
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="font-size: 22px; font-weight: bold; color: #10b981; text-align: center; background: var(--surface-color); padding: 12px 16px; border-radius: 10px; border-top: 4px solid #10b981; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        ⚡ 電池有電
+                    </div>
+                    <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
+                        <video controls preload="metadata" style="width: 100%; height: 58vh; max-height: 580px; object-fit: contain; background: #000; display: block;">
                             <source src="816055073.551392.mp4" type="video/mp4">
+                            您的瀏覽器不支援影片播放
+                        </video>
+                    </div>
+                </div>
+
+                <!-- 右側：電池沒電 -->
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="font-size: 22px; font-weight: bold; color: #ef4444; text-align: center; background: var(--surface-color); padding: 12px 16px; border-radius: 10px; border-top: 4px solid #ef4444; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        🔋 電池沒電
+                    </div>
+                    <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
+                        <video controls preload="metadata" style="width: 100%; height: 58vh; max-height: 580px; object-fit: contain; background: #000; display: block;">
+                            <source src="816055047.944558.mp4" type="video/mp4">
                             您的瀏覽器不支援影片播放
                         </video>
                     </div>
@@ -1876,7 +1921,7 @@ function scrollToReportPage(pageIndex, animate = true) {
     reportCurrentPage = pageIndex;
 
     // 🛑 切換頁面時自動暫停第 8 頁正在播放的影片，避免背景漏音
-    document.querySelectorAll('#evidence-panel-screen video').forEach(v => {
+    document.querySelectorAll('#report-mode-container video').forEach(v => {
         if (!v.paused) v.pause();
     });
 
@@ -2385,6 +2430,9 @@ window.switchReportEvidenceTab = function(tabName) {
         btnFork.style.borderColor = 'var(--border-color)';
         btnFork.style.color = 'var(--text-secondary)';
         btnFork.style.boxShadow = 'none';
+
+        // 停止分頁一影片播放（若有在播的話）
+        forkPanel.querySelectorAll('video').forEach(v => v.pause());
     }
 };
 
