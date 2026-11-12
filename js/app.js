@@ -1197,6 +1197,7 @@ async function initDashboard() {
 }
 
 initDashboard();
+enterReportMode();
 
 // 優化 ECharts 防抖重繪 (Debounce + requestAnimationFrame)
 let resizeTimer;
@@ -1347,7 +1348,7 @@ const BASE_REPORT_PAGES = [
 ];
 
 let REPORT_PAGES = [...BASE_REPORT_PAGES];
-let forceToggleEvidence = false; // 默認關閉第八頁，按 E 才開啟
+let forceToggleEvidence = true; // 默認顯示第八頁，按 E 可切換隱藏/顯示
 
 function updateReportPages() {
     let shouldShow = !!forceToggleEvidence;
@@ -1419,6 +1420,12 @@ function exitReportMode() {
     if (document.getElementById('report-mode-container')) {
         document.getElementById('report-mode-container').style.display = 'none';
     }
+
+    // 🔄 切回一般模式時重繪地圖與長條圖，確保尺寸自適應
+    setTimeout(() => {
+        if (mapChart) mapChart.resize();
+        if (barChart) barChart.resize();
+    }, 100);
 
     // 🖥️ 自動退出瀏覽器全螢幕模式
     if (document.fullscreenElement && document.exitFullscreen) {
