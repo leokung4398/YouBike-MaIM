@@ -1831,75 +1831,32 @@ function buildReportSlideHTML(page) {
         });
     } else if (mode === 'evidence') {
         html = `
-        <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 22px;">
-            <button id="evidence-tab-btn-fork" onclick="window.switchReportEvidenceTab('fork')" 
-                    style="padding: 10px 24px; font-size: 16px; font-weight: bold; border-radius: 30px; border: 2px solid var(--accent-color); background: var(--accent-color); color: #ffffff; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 14px rgba(37,99,235,0.3);">
-                🎨 問題一：前岔油漆塗抹問題
-            </button>
-            <button id="evidence-tab-btn-screen" onclick="window.switchReportEvidenceTab('screen')" 
-                    style="padding: 10px 24px; font-size: 16px; font-weight: bold; border-radius: 30px; border: 2px solid var(--border-color); background: rgba(30,41,59,0.5); color: var(--text-secondary); cursor: pointer; transition: all 0.25s ease;">
-                🖥️ 問題二：車機顯示無畫面異常 (影音實證)
-            </button>
-        </div>
-
-        <!-- 區塊一：前岔油漆塗抹問題 -->
-        <div id="evidence-panel-fork" style="display: block;">
-            <h3 style="margin-bottom: 10px; color: var(--text-primary); text-align: center;">最佳樣品參考</h3>
-            <div style="display: flex; justify-content: center; margin-bottom: 30px;">
-                <div class="evidence-card" onclick="openCompareLightbox(null)" style="position:relative; cursor:zoom-in; width: 100%; max-width: 350px;">
-                    <img src="assets/images/完美對比圖.jpg" class="evidence-card-media" loading="lazy" />
-                    <div class="media-caption">完美對比圖</div>
-                </div>
-            </div>
-            <div class="evidence-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 450px)); justify-content: center;">
-                <div class="evidence-card" onclick="openCompareLightbox(0)" style="position:relative; cursor:zoom-in;">
-                    <img src="assets/images/前岔油漆塗抹問題.jpg" class="evidence-card-media" loading="lazy" />
-                    <div class="media-caption">現場照片：前岔油漆塗抹問題</div>
-                </div>
-                <div class="evidence-card" onclick="openCompareLightbox(1)" style="position:relative; cursor:zoom-in;">
-                    <img src="assets/images/前岔油漆塗抹問題2.jpg" class="evidence-card-media" loading="lazy" />
-                    <div class="media-caption">現場照片：前岔油漆塗抹問題</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 區塊二：車機顯示異常問題 (左排影片 + 右排照片) -->
-        <div id="evidence-panel-screen" style="display: none; padding-bottom: 40px;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 1400px; margin: 0 auto; align-items: start;">
+        <div id="evidence-panel-screen" style="padding: 10px 0 30px 0;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 36px; max-width: 1400px; margin: 0 auto; align-items: start;">
                 
-                <!-- 左排：現場影片實證 (2部) -->
-                <div style="display: flex; flex-direction: column; gap: 20px;">
-                    <div style="font-size: 17px; font-weight: bold; color: var(--accent-color); text-align: center; border-bottom: 2px solid rgba(56,189,248,0.3); padding-bottom: 6px;">
-                        🎥 現場錄影實證 (2部)
+                <!-- 左側：換電前(沒電) -->
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="font-size: 22px; font-weight: bold; color: #ef4444; text-align: center; background: var(--surface-color); padding: 12px 16px; border-radius: 10px; border-top: 4px solid #ef4444; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        🔋 換電前(沒電)
                     </div>
-                    <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
-                        <video controls preload="metadata" style="width: 100%; height: 230px; object-fit: contain; background: #000; display: block;">
-                            <source src="assets/videos/車機顯示無畫面.mp4" type="video/mp4">
+                    <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
+                        <video controls preload="metadata" style="width: 100%; height: 62vh; max-height: 620px; object-fit: contain; background: #000; display: block;">
+                            <source src="816055047.944558.mp4" type="video/mp4">
                             您的瀏覽器不支援影片播放
                         </video>
-                        <div class="media-caption" style="padding: 10px; font-size: 15px;">車機顯示無畫面 (案例一)</div>
-                    </div>
-                    <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
-                        <video controls preload="metadata" style="width: 100%; height: 230px; object-fit: contain; background: #000; display: block;">
-                            <source src="assets/videos/車機顯示無畫面2.mp4" type="video/mp4">
-                            您的瀏覽器不支援影片播放
-                        </video>
-                        <div class="media-caption" style="padding: 10px; font-size: 15px;">車機顯示無畫面 (案例二)</div>
                     </div>
                 </div>
 
-                <!-- 右排：現場照片實證 (2張) -->
-                <div style="display: flex; flex-direction: column; gap: 20px;">
-                    <div style="font-size: 17px; font-weight: bold; color: var(--accent-color); text-align: center; border-bottom: 2px solid rgba(56,189,248,0.3); padding-bottom: 6px;">
-                        📸 現場照片實證 (2張，點擊放大)
+                <!-- 右側：換電後(有電) -->
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="font-size: 22px; font-weight: bold; color: #10b981; text-align: center; background: var(--surface-color); padding: 12px 16px; border-radius: 10px; border-top: 4px solid #10b981; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        ⚡ 換電後(有電)
                     </div>
-                    <div class="evidence-card" onclick="openLightbox('assets/videos/車機顯示異常1.jpg', 'image')" style="position:relative; cursor:zoom-in; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
-                        <img src="assets/videos/車機顯示異常1.jpg" style="width: 100%; height: 230px; object-fit: contain; background: #000; display: block;" loading="lazy" />
-                        <div class="media-caption" style="padding: 10px; font-size: 15px;">現場照片：車機顯示異常 (1)</div>
-                    </div>
-                    <div class="evidence-card" onclick="openLightbox('assets/videos/車機顯示異常2.jpg', 'image')" style="position:relative; cursor:zoom-in; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
-                        <img src="assets/videos/車機顯示異常2.jpg" style="width: 100%; height: 230px; object-fit: contain; background: #000; display: block;" loading="lazy" />
-                        <div class="media-caption" style="padding: 10px; font-size: 15px;">現場照片：車機顯示異常 (2)</div>
+                    <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
+                        <video controls preload="metadata" style="width: 100%; height: 62vh; max-height: 620px; object-fit: contain; background: #000; display: block;">
+                            <source src="816055073.551392.mp4" type="video/mp4">
+                            您的瀏覽器不支援影片播放
+                        </video>
                     </div>
                 </div>
 

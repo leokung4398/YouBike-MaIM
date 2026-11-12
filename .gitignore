@@ -9,6 +9,7 @@ index_magic*.html
 js/magic*.js
 auto_push.ps1
 一鍵自動上傳更新到GitHub.bat
+push_to_github.py
 
 # 臨時生成腳本
 check_cols.py
@@ -19,6 +20,7 @@ merge.py
 presentation_guide.html
 proposal_*.html
 YouBike_MaIM_*.html
+AI工具產品化與資料庫架構指南_PDF匯出器.html
 SetRes.cs
 SetRes1080.cs
 
