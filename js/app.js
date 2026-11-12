@@ -1853,7 +1853,7 @@ function buildReportSlideHTML(page) {
                     </div>
                     <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
                         <video controls preload="metadata" style="width: 100%; height: 58vh; max-height: 580px; object-fit: contain; background: #000; display: block;">
-                            <source src="816055029.640565.mp4" type="video/mp4">
+                            <source src="816055004.424297.mp4" type="video/mp4">
                             您的瀏覽器不支援影片播放
                         </video>
                     </div>
@@ -1866,7 +1866,7 @@ function buildReportSlideHTML(page) {
                     </div>
                     <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
                         <video controls preload="metadata" style="width: 100%; height: 58vh; max-height: 580px; object-fit: contain; background: #000; display: block;">
-                            <source src="816055004.424297.mp4" type="video/mp4">
+                            <source src="816055029.640565.mp4" type="video/mp4">
                             您的瀏覽器不支援影片播放
                         </video>
                     </div>
@@ -1886,7 +1886,7 @@ function buildReportSlideHTML(page) {
                     </div>
                     <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
                         <video controls preload="metadata" style="width: 100%; height: 58vh; max-height: 580px; object-fit: contain; background: #000; display: block;">
-                            <source src="816055073.551392.mp4" type="video/mp4">
+                            <source src="816055047.944558.mp4" type="video/mp4">
                             您的瀏覽器不支援影片播放
                         </video>
                     </div>
@@ -1899,7 +1899,7 @@ function buildReportSlideHTML(page) {
                     </div>
                     <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
                         <video controls preload="metadata" style="width: 100%; height: 58vh; max-height: 580px; object-fit: contain; background: #000; display: block;">
-                            <source src="816055047.944558.mp4" type="video/mp4">
+                            <source src="816055073.551392.mp4" type="video/mp4">
                             您的瀏覽器不支援影片播放
                         </video>
                     </div>
