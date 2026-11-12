@@ -1846,10 +1846,10 @@ function buildReportSlideHTML(page) {
         <div id="evidence-panel-fork" style="display: block; padding: 10px 0 30px 0;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 36px; max-width: 1400px; margin: 0 auto; align-items: start;">
                 
-                <!-- 左側：電池沒電 -->
+                <!-- 左側：抽換測試前 -->
                 <div style="display: flex; flex-direction: column; gap: 14px;">
                     <div style="font-size: 22px; font-weight: bold; color: #ef4444; text-align: center; background: var(--surface-color); padding: 12px 16px; border-radius: 10px; border-top: 4px solid #ef4444; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                        🔋 電池沒電
+                        🔋 抽換測試前
                     </div>
                     <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
                         <video controls preload="metadata" style="width: 100%; height: 58vh; max-height: 580px; object-fit: contain; background: #000; display: block;">
@@ -1859,10 +1859,10 @@ function buildReportSlideHTML(page) {
                     </div>
                 </div>
 
-                <!-- 右側：電池有電 -->
+                <!-- 右側：抽換測試後 -->
                 <div style="display: flex; flex-direction: column; gap: 14px;">
                     <div style="font-size: 22px; font-weight: bold; color: #10b981; text-align: center; background: var(--surface-color); padding: 12px 16px; border-radius: 10px; border-top: 4px solid #10b981; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                        ⚡ 電池有電
+                        ⚡ 抽換測試後
                     </div>
                     <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
                         <video controls preload="metadata" style="width: 100%; height: 58vh; max-height: 580px; object-fit: contain; background: #000; display: block;">
@@ -1879,10 +1879,10 @@ function buildReportSlideHTML(page) {
         <div id="evidence-panel-screen" style="display: none; padding: 10px 0 30px 0;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 36px; max-width: 1400px; margin: 0 auto; align-items: start;">
                 
-                <!-- 左側：電池有電 -->
+                <!-- 左側：抽換測試前 -->
                 <div style="display: flex; flex-direction: column; gap: 14px;">
                     <div style="font-size: 22px; font-weight: bold; color: #10b981; text-align: center; background: var(--surface-color); padding: 12px 16px; border-radius: 10px; border-top: 4px solid #10b981; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                        ⚡ 電池有電
+                        ⚡ 抽換測試前
                     </div>
                     <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
                         <video controls preload="metadata" style="width: 100%; height: 58vh; max-height: 580px; object-fit: contain; background: #000; display: block;">
@@ -1892,10 +1892,10 @@ function buildReportSlideHTML(page) {
                     </div>
                 </div>
 
-                <!-- 右側：電池沒電 -->
+                <!-- 右側：抽換測試後 -->
                 <div style="display: flex; flex-direction: column; gap: 14px;">
                     <div style="font-size: 22px; font-weight: bold; color: #ef4444; text-align: center; background: var(--surface-color); padding: 12px 16px; border-radius: 10px; border-top: 4px solid #ef4444; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                        🔋 電池沒電
+                        🔋 抽換測試後
                     </div>
                     <div class="evidence-card" style="position:relative; background: var(--surface-color); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
                         <video controls preload="metadata" style="width: 100%; height: 58vh; max-height: 580px; object-fit: contain; background: #000; display: block;">
