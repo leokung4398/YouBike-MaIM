@@ -1,0 +1,7 @@
+*.exe
+*.bat
+*.mp4
+*.py
+csv_etl_generator*.html
+data_parser.html
+YouBike外勤問卷專案/
